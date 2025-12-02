@@ -1,0 +1,10 @@
+{
+  "name": "Ficto styles",
+  "scripts": {
+    "build": "lessc Styles/site.less wwwroot/css/site.css",
+    "dev": "lessc --watch Styles/site.less wwwroot/css/site.css"
+  },
+  "devDependencies": {
+    "less": "^4.4.2"
+  }
+}
