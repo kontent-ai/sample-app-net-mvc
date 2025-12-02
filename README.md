@@ -51,15 +51,15 @@ Distributed under the MIT License. See [`LICENSE.md`](./LICENSE.md) for more inf
 
 <!-- MARKDOWN LINKS & IMAGES -->
 <!-- https://github.com/kontent-ai/Home/wiki/Checklist-for-publishing-a-new-OS-project#badges-->
-[contributors-shield]: https://img.shields.io/github/contributors/kontent-ai/data-ops.svg?style=for-the-badge
-[contributors-url]: https://github.com/kontent-ai/repo-template/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/kontent-ai/data-ops.svg?style=for-the-badge
-[forks-url]: https://github.com/kontent-ai/repo-template/network/members
-[stars-shield]: https://img.shields.io/github/stars/kontent-ai/data-ops.svg?style=for-the-badge
-[stars-url]: https://github.com/kontent-ai/repo-template/stargazers
-[issues-shield]: https://img.shields.io/github/issues/kontent-ai/data-ops.svg?style=for-the-badge
-[issues-url]:https://github.com/kontent-ai/repo-template/issues
-[license-shield]: https://img.shields.io/github/license/kontent-ai/data-ops.svg?style=for-the-badge
-[license-url]:https://github.com/kontent-ai/repo-template/blob/master/LICENSE.md
+[contributors-shield]: https://img.shields.io/github/contributors/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
+[contributors-url]: https://github.com/kontent-ai/sample-app-net-mvc/graphs/contributors
+[forks-shield]: https://img.shields.io/github/forks/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
+[forks-url]: https://github.com/kontent-ai/sample-app-net-mvc/network/members
+[stars-shield]: https://img.shields.io/github/stars/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
+[stars-url]: https://github.com/kontent-ai/sample-app-net-mvc/stargazers
+[issues-shield]: https://img.shields.io/github/issues/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
+[issues-url]:https://github.com/kontent-ai/sample-app-net-mvc/issues
+[license-shield]: https://img.shields.io/github/license/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
+[license-url]:https://github.com/kontent-ai/sample-app-net-mvc/blob/main/LICENSE.md
 [discussion-shield]: https://img.shields.io/discord/821885171984891914?color=%237289DA&label=Kontent%2Eai%20Discord&logo=discord&style=for-the-badge
 [discussion-url]: https://discord.com/invite/SKCxwPtevJ
