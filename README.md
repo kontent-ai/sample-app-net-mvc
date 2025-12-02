@@ -75,6 +75,17 @@ Run the application:
 dotnet run
 ```
 
+#### Styles (LESS) in development
+
+To work on styles with automatic recompilation:
+
+```bash
+npm install
+npm run dev
+```
+
+This watches `Styles/site.less` and recompiles to `wwwroot/css/site.css` whenever you save changes.
+
 
 
 <!-- USAGE EXAMPLES -->

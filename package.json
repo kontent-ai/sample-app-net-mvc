@@ -2,9 +2,10 @@
   "name": "Ficto styles",
   "scripts": {
     "build": "lessc Styles/site.less wwwroot/css/site.css",
-    "dev": "lessc --watch Styles/site.less wwwroot/css/site.css"
+    "dev": "less-watch-compiler Styles wwwroot/css site.less"
   },
   "devDependencies": {
-    "less": "^4.4.2"
+    "less": "^4.4.2",
+    "less-watch-compiler": "^1.16.3"
   }
 }

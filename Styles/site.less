@@ -1,18 +1,62 @@
-// Root theme variables (per-site overrides will come from CSS classes)
+// Base theme variables used across all sites.
+// Individual sites override these via [data-theme="..."] selectors below.
 :root {
-  --brand-bg: #ffffff;
-  --brand-text: #212529;
-  --brand-accent: #0d6efd;
+  --mainBackgroundColor: #ffffff;
+  --mainHoverColor: #0d6efd;
+  --mainButtonColor: #0d6efd;
+  --mainBorderColor: #0d6efd;
+  --mainTextColor: #212529;
+  --mainAfterColor: #0b5ed7;
+  --mainAnchorColor: #0d6efd;
 }
 
-body {
-  background-color: var(--brand-bg);
-  color: var(--brand-text);
+// Ficto Healthtech – mapped from Tailwind emerald palette
+[data-theme="ficto_healthtech"] {
+  --mainBackgroundColor: #022c22; // emerald-950
+  --mainHoverColor: #10b981;      // emerald-500
+  --mainButtonColor: #065f46;     // emerald-800
+  --mainBorderColor: #065f46;     // emerald-800
+  --mainTextColor: #047857;       // emerald-700
+  --mainAfterColor: #064e3b;      // emerald-900
+  --mainAnchorColor: #065f46;     // emerald-800
+}
+
+// Ficto Imaging – mapped from Tailwind indigo palette
+[data-theme="ficto_imaging"] {
+  --mainBackgroundColor: #020617; // indigo-950
+  --mainHoverColor: #6366f1;      // indigo-500
+  --mainButtonColor: #3730a3;     // indigo-800
+  --mainBorderColor: #3730a3;     // indigo-800
+  --mainTextColor: #4338ca;       // indigo-700
+  --mainAfterColor: #312e81;      // indigo-900
+  --mainAnchorColor: #3730a3;     // indigo-800
+}
+
+// Ficto Surgical – mapped from Tailwind rose palette
+[data-theme="ficto_surgical"] {
+  --mainBackgroundColor: #4c0519; // rose-950
+  --mainHoverColor: #f43f5e;      // rose-500
+  --mainButtonColor: #9f1239;     // rose-800
+  --mainBorderColor: #9f1239;     // rose-800
+  --mainTextColor: #be123c;       // rose-700
+  --mainAfterColor: #881337;      // rose-900
+  --mainAnchorColor: #9f1239;     // rose-800
+}
+
+a {
+  color: var(--mainAnchorColor);
+}
+
+a:hover {
+  color: var(--mainHoverColor);
 }
 
 .btn-primary {
-  background-color: var(--brand-accent);
-  border-color: var(--brand-accent);
+  background-color: var(--mainButtonColor);
+  border-color: var(--mainBorderColor);
 }
 
-
+.btn-primary:hover {
+  background-color: var(--mainHoverColor);
+  border-color: var(--mainHoverColor);
+}
