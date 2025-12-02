@@ -1,4 +1,5 @@
-> [!WARNING] This sample app is under active development. Details and documentation will evolve over time.
+> [!WARNING]
+> This sample app is under active development. Details and documentation will evolve over time.
 
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
