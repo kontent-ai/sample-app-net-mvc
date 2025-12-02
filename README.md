@@ -18,15 +18,62 @@ It is based on the **Kontent.ai Ficto multisite** project. Once finalized, it wi
 <!-- GETTING STARTED -->
 ## Getting Started
 
-TBD
+Follow these steps to get the app running locally.
 
 ### Prerequisites
 
-TBD
+- .NET SDK **8.0** or newer
+- A Kontent.ai Ficto multisite sample with:
+  - Environment ID
+  - (Optional) Preview API key
+  - (Optional) Secure Access API key
 
 ### Installation
 
-TBD
+1. Clone this repository:
+
+```bash
+git clone https://github.com/kontent-ai/sample-app-net-mvc.git
+cd sample-app-net-mvc
+```
+
+2. Restore .NET dependencies:
+
+```bash
+dotnet restore
+```
+
+### Configuration & secrets
+
+> [!IMPORTANT]
+> Do **not** store sensitive keys such as `PreviewApiKey` or `SecureAccessApiKey` in `appsettings.json` or any other tracked file. This helps you avoid accidentally committing secrets to source control.
+
+1. Set your Kontent.ai environment ID in `appsettings.json`:
+   - `DeliveryOptions.EnvironmentId` = your environment ID.
+
+2. Store sensitive keys using .NET user secrets instead of `appsettings.json`:
+
+```bash
+dotnet user-secrets init
+dotnet user-secrets set "DeliveryOptions:PreviewApiKey" "your-preview-api-key"
+dotnet user-secrets set "DeliveryOptions:SecureAccessApiKey" "your-secure-access-api-key"
+```
+
+These values are kept in your local user profile and are not committed to the repository. They will become part of the corresponding `DeliveryOptions` section of `appSettings.json` during runtime.
+
+### Build and run
+
+Build the application:
+
+```bash
+dotnet build
+```
+
+Run the application:
+
+```bash
+dotnet run
+```
 
 
 
