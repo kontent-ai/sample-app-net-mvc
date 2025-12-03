@@ -1,4 +1,4 @@
-namespace sample_app_net_mvc.Models;
+namespace Ficto.Models;
 
 public class ErrorViewModel
 {

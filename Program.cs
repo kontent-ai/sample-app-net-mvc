@@ -1,8 +1,13 @@
+using Ficto.Services.Content;
+using Ficto.Services.Content.Interfaces;
+
 var builder = WebApplication.CreateBuilder(args);
 var services = builder.Services;
 
 // Add services to the container.
 services.AddControllersWithViews();
+services.AddScoped<IContentService, ContentService>();
+// TODO: Add delivery client and other services here.
 
 
 var app = builder.Build();

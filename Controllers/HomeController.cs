@@ -1,20 +1,25 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
-using sample_app_net_mvc.Models;
+using Ficto.Models;
+using Ficto.Services.Content.Interfaces;
 
-namespace sample_app_net_mvc.Controllers;
+namespace Ficto.Controllers;
 
 public class HomeController : Controller
 {
     private readonly ILogger<HomeController> _logger;
+    private readonly IContentService _contentService;
 
-    public HomeController(ILogger<HomeController> logger)
+    public HomeController(ILogger<HomeController> logger, IContentService contentService)
     {
         _logger = logger;
+        _contentService = contentService;
     }
 
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
+        var articlePlaceholder = await _contentService.GetArticleAsync();
+        ViewBag.ArticlePlaceholder = articlePlaceholder;
         return View();
     }
 

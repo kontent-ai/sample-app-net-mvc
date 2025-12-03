@@ -2,7 +2,37 @@
     ViewData["Title"] = "Home Page";
 }
 
-<div class="text-center">
-    <h1 class="display-4">Welcome</h1>
-    <p>Learn about <a href="https://learn.microsoft.com/aspnet/core">building Web apps with ASP.NET Core</a>.</p>
+@* TODO: Replace the hard-coded data-theme value with a contextual value
+   (e.g., from a future SiteContext) once multisite logic is implemented. *@
+<div class="text-center" data-theme="ficto_imaging">
+    <h1 class="display-4 mb-3">Kontent.ai Ficto multisite sample</h1>
+    <p class="lead">
+        This ASP.NET Core MVC app runs on <strong>.NET 8</strong> and demonstrates a three-site setup
+        (Ficto Imaging, Ficto Healthtech, Ficto Surgical) backed by a single Kontent.ai project.
+    </p>
+
+    <hr class="my-4" />
+
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="alert alert-info text-start">
+                <h2 class="h5">First-time run checklist</h2>
+                <ol class="mb-0">
+                    <li>Set <code>DeliveryOptions.EnvironmentId</code> in <code>appsettings.json</code>.</li>
+                    <li>Configure secrets with <code>dotnet user-secrets</code> for preview/secure access keys.</li>
+                    <li>Build and run the app with <code>dotnet run</code>.</li>
+                    <li>Optionally run <code>npm run dev</code> to watch and rebuild LESS styles.</li>
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <p class="mt-4">
+        As we extend and add features to this sample, we will wire up the content service, generated models,
+        and multisite theming so each Ficto site renders its own content and colors.
+    </p>
+
+    <p class="mt-3 text-muted">
+        @ViewBag.ArticlePlaceholder
+    </p>
 </div>
