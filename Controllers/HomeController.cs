@@ -18,7 +18,15 @@ public class HomeController(ILogger<HomeController> logger, IContentService cont
         {
             _logger.LogWarning("Failed to load homepage: {Error} (Status: {StatusCode})",
                 result.Error?.Message, result.StatusCode);
-            return RedirectToAction("Error");
+
+            return View("Error", new ErrorViewModel
+            {
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+                ErrorMessage = result.Error?.Message,
+                StatusCode = result.StatusCode,
+                ErrorCode = result.Error?.ErrorCode,
+                ContentRequestUrl = result.RequestUrl
+            });
         }
 
         return View(result.Value.Elements);
@@ -29,6 +37,7 @@ public class HomeController(ILogger<HomeController> logger, IContentService cont
         return View();
     }
 
+    // This is global exception handler. Program.cs registers this with app.UseExceptionHandler("/Home/Error");
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

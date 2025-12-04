@@ -12,11 +12,13 @@ var services = builder.Services;
 services.AddControllersWithViews();
 services.AddScoped<IContentService, ContentService>();
 services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
-services.AddSingleton<ITypeProvider, CustomTypeProvider>();
+
 // TODO: Configure webhook options
-services.AddDeliveryClient(configuration);
 
 // TODO: Add delivery client and other services here.
+
+// TODO: Add a singleton CustomTypeProvider from Generated/Models. Overrides the default type provider from the SDK.
+// Make sure to specify the type provider interface as the first type param (similarly to how we inject the ContentService).
 
 
 var app = builder.Build();
@@ -34,8 +36,10 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
+// Possibly use for preview mode gating, likely not in scope for this project.
 app.UseAuthorization();
 
+// This is default routing for the application. If a segment is not found, it will default to Home controller and Index action.
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
