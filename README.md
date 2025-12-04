@@ -45,13 +45,12 @@ dotnet restore
 
 ### Configuration & secrets
 
-> [!IMPORTANT]
-> Do **not** store sensitive keys such as `PreviewApiKey` or `SecureAccessApiKey` in `appsettings.json` or any other tracked file. This helps you avoid accidentally committing secrets to source control.
-
 1. Set your Kontent.ai environment ID in `appsettings.json`:
    - `DeliveryOptions.EnvironmentId` = your environment ID.
 
-2. Store sensitive keys using .NET user secrets instead of `appsettings.json`:
+2. Optionally set preview or secure access keys:
+> [!CAUTION]
+> While for sample app purposes, storing keys directly in `appsettings.json` doesn't present any major risk, even if accidentally committed, consider using local secrets as described below.
 
 ```bash
 dotnet user-secrets init

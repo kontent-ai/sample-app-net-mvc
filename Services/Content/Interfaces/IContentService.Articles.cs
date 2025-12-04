@@ -12,6 +12,6 @@ public partial interface IContentService
     /// Temporary placeholder used to demonstrate wiring the content service into MVC.
     /// Replace with a real implementation that fetches an article from Kontent.ai.
     /// </summary>
-    /// <returns>Placeholder text describing the future implementation.</returns>
+    /// <returns>Placeholder text and current collection codename as defined in AppSettings.json.</returns>
     Task<string> GetArticleAsync();
 }
