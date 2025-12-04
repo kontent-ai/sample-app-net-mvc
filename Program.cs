@@ -1,5 +1,8 @@
 using Ficto.Services.Content;
 using Ficto.Services.Content.Interfaces;
+using Ficto.Generated.Models;
+using Kontent.Ai.Delivery.Extensions;
+using Kontent.Ai.Delivery.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -9,6 +12,10 @@ var services = builder.Services;
 services.AddControllersWithViews();
 services.AddScoped<IContentService, ContentService>();
 services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
+services.AddSingleton<ITypeProvider, CustomTypeProvider>();
+// TODO: Configure webhook options
+services.AddDeliveryClient(configuration);
+
 // TODO: Add delivery client and other services here.
 
 

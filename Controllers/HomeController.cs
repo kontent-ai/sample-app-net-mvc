@@ -5,22 +5,23 @@ using Ficto.Services.Content.Interfaces;
 
 namespace Ficto.Controllers;
 
-public class HomeController : Controller
+public class HomeController(ILogger<HomeController> logger, IContentService contentService) : Controller
 {
-    private readonly ILogger<HomeController> _logger;
-    private readonly IContentService _contentService;
-
-    public HomeController(ILogger<HomeController> logger, IContentService contentService)
-    {
-        _logger = logger;
-        _contentService = contentService;
-    }
+    private readonly ILogger<HomeController> _logger = logger;
+    private readonly IContentService _contentService = contentService;
 
     public async Task<IActionResult> Index()
     {
-        var articlePlaceholder = await _contentService.GetArticleAsync();
-        ViewBag.ArticlePlaceholder = articlePlaceholder;
-        return View();
+        var result = await _contentService.GetHomepageAsync();
+
+        if (!result.IsSuccess)
+        {
+            _logger.LogWarning("Failed to load homepage: {Error} (Status: {StatusCode})",
+                result.Error?.Message, result.StatusCode);
+            return RedirectToAction("Error");
+        }
+
+        return View(result.Value.Elements);
     }
 
     public IActionResult Privacy()

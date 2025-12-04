@@ -1,3 +1,6 @@
+using Ficto.Generated.Models;
+using Kontent.Ai.Delivery.Abstractions;
+
 namespace Ficto.Services.Content.Interfaces;
 
 /// <summary>
@@ -9,9 +12,9 @@ namespace Ficto.Services.Content.Interfaces;
 public partial interface IContentService
 {
     /// <summary>
-    /// Temporary placeholder used to demonstrate wiring the content service into MVC.
-    /// Replace with a real implementation that fetches an article from Kontent.ai.
+    /// Fetches an article by its URL slug.
     /// </summary>
-    /// <returns>Placeholder text and current collection codename as defined in AppSettings.json.</returns>
-    Task<string> GetArticleAsync();
+    /// <param name="slug">The URL-friendly slug of the article.</param>
+    /// <returns>An IDeliveryResult containing the Article content item.</returns>
+    Task<IDeliveryResult<IContentItem<Article>>> GetArticleBySlugAsync(string slug);
 }
