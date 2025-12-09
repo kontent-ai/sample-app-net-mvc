@@ -3,6 +3,7 @@ using Ficto.Services.Content.Interfaces;
 using Ficto.Generated.Models;
 using Kontent.Ai.Delivery.Extensions;
 using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.AspNetCore.Webhooks;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -12,13 +13,17 @@ var services = builder.Services;
 services.AddControllersWithViews();
 services.AddScoped<IContentService, ContentService>();
 services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
+services.Configure<WebhookOptions>(configuration.GetSection("WebhookOptions"));
+services.AddSingleton<ITypeProvider, CustomTypeProvider>();
 
 // TODO: Configure webhook options
 
 // TODO: Add delivery client and other services here.
+builder.Services.AddDeliveryClient(configuration);
 
 // TODO: Add a singleton CustomTypeProvider from Generated/Models. Overrides the default type provider from the SDK.
 // Make sure to specify the type provider interface as the first type param (similarly to how we inject the ContentService).
+builder.Services.AddSingleton<ITypeProvider, CustomTypeProvider>();
 
 
 var app = builder.Build();
