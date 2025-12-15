@@ -32,9 +32,11 @@ public class ContentService(ILogger<ContentService> logger, IDeliveryClient deli
 
         return _deliveryClient.GetItem<Article>(slug)
         .InFilter("system.collection", new[] { siteCollection, "default"})
+        .Depth(1)
         .ExecuteAsync();
     }
     public Task <IDeliveryResult<IContentItem<T>>> GetItemAsync<T>(string codename)
+        where T : class, IElementsModel
     {
         var siteCollection = _siteOptions.CurrentValue.CollectionCodename;
 
