@@ -9,10 +9,11 @@ namespace Ficto.Services.Content;
 /// Central content access layer that wraps the Kontent.ai Delivery SDK.
 /// Returns IDeliveryResult directly from the SDK for full access to response metadata.
 /// </summary>
-public class ContentService(ILogger<ContentService> logger, IDeliveryClient deliveryClient) : IContentService
+public class ContentService(ILogger<ContentService> logger, IOptionsMonitor<SiteOptions> siteOptions, IDeliveryClient deliveryClient) : IContentService
 {
     private readonly ILogger<ContentService> _logger = logger;
     private readonly IDeliveryClient _deliveryClient = deliveryClient;
+    private readonly IOptionsMonitor<SiteOptions> _siteOptions = siteOptions;
 
 
     public Task<IDeliveryResult<IContentItem<Page>>> GetHomepageAsync()
