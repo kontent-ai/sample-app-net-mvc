@@ -17,9 +17,11 @@ services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
 
 // TODO: Add delivery client and other services here.
 
+services.AddDeliveryClient(configuration);
+
 // TODO: Add a singleton CustomTypeProvider from Generated/Models. Overrides the default type provider from the SDK.
 // Make sure to specify the type provider interface as the first type param (similarly to how we inject the ContentService).
-
+services.AddSingleton<ITypeProvider, CustomTypeProvider>();
 
 var app = builder.Build();
 
