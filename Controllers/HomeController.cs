@@ -23,7 +23,7 @@ public class HomeController(ILogger<HomeController> logger, IContentService cont
             {
                 RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
                 ErrorMessage = result.Error?.Message,
-                StatusCode = result.StatusCode,
+                StatusCode = (int)result.StatusCode,
                 ErrorCode = result.Error?.ErrorCode,
                 ContentRequestUrl = result.RequestUrl
             });
