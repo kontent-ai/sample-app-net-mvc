@@ -1,0 +1,22 @@
+@model VisualContainerViewModel
+
+<section class="visual-container visual-container--grid py-5">
+    <div class="container">
+        @if (!string.IsNullOrEmpty(Model.Title))
+        {
+            <h2 class="text-center mb-3">@Model.Title</h2>
+        }
+        @if (!string.IsNullOrEmpty(Model.Subtitle))
+        {
+            <p class="text-center text-muted mb-4">@Model.Subtitle</p>
+        }
+        <div class="row g-4">
+            @foreach (var fact in Model.Items)
+            {
+                <div class="col-md-6 col-lg-4">
+                    @await Html.PartialAsync("_FactCard", fact)
+                </div>
+            }
+        </div>
+    </div>
+</section>

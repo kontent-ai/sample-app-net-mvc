@@ -15,9 +15,11 @@ public class ContentService(ILogger<ContentService> logger, IDeliveryClient deli
     private readonly IDeliveryClient _deliveryClient = deliveryClient;
 
 
-    public Task<IDeliveryResult<IContentItem<Page>>> GetHomepageAsync()
+    public Task<IDeliveryResult<IContentItem<WebsiteRoot>>> GetHomepageAsync()
     {
-        return _deliveryClient.GetItem<Page>("ficto_healthtech").ExecuteAsync();
+        return _deliveryClient.GetItem<WebsiteRoot>("ficto_healthtech")
+            .Depth(3)
+            .ExecuteAsync();
     }
 
     public Task<IDeliveryResult<IContentItem<Article>>> GetArticleBySlugAsync(string slug)

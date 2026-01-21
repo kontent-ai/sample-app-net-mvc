@@ -1,0 +1,14 @@
+@model VisualContainerViewModel
+
+@switch (Model.VisualRepresentation)
+{
+    case VisualRepresentation.Grid:
+        @await Html.PartialAsync("_VisualContainerGrid", Model)
+        break;
+    case VisualRepresentation.HeroUnit:
+        @await Html.PartialAsync("_VisualContainerHeroUnit", Model)
+        break;
+    case VisualRepresentation.Stack:
+        @await Html.PartialAsync("_VisualContainerStack", Model)
+        break;
+}
