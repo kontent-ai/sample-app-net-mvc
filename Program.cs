@@ -1,6 +1,7 @@
 using Ficto.Services.Content;
 using Ficto.Services.Content.Interfaces;
 using Ficto.Generated.Models;
+using Ficto.Models.Mappers;
 using Kontent.Ai.Delivery.Extensions;
 using Kontent.Ai.Delivery.Abstractions;
 
@@ -19,6 +20,20 @@ services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
 
 // TODO: Add a singleton CustomTypeProvider from Generated/Models. Overrides the default type provider from the SDK.
 // Make sure to specify the type provider interface as the first type param (similarly to how we inject the ContentService).
+
+// Mappers
+services.AddScoped<ReferenceMapper>();
+services.AddScoped<FactMapper>();
+services.AddScoped<PersonMapper>();
+services.AddScoped<ProductMapper>();
+services.AddScoped<NavigationItemMapper>();
+services.AddScoped<ContentChunkMapper>();
+services.AddScoped<SolutionMapper>();
+services.AddScoped<VisualContainerMapper>();
+services.AddScoped<IPageBlockMapperFactory, PageBlockMapperFactory>();
+services.AddScoped<PageMapper>();
+services.AddScoped<ArticleMapper>();
+services.AddScoped<WebsiteRootMapper>();
 
 
 var app = builder.Build();
