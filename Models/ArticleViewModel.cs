@@ -10,6 +10,7 @@ public record ArticleViewModel
     public string? Abstract { get; init; }
     public string? Content { get; init; }
     public IAsset? HeroImage { get; init; }
+    public IReadOnlyList<PersonViewModel> Authors { get; init; } = [];
     public string? MetadataDescription { get; init; }
     public string? MetadataKeywords { get; init; }
     public string? MetadataTitle { get; init; }
