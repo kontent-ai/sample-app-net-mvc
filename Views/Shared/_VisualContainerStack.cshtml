@@ -1,0 +1,104 @@
+@model VisualContainerViewModel
+
+@{
+    var carouselId = $"stack-carousel-{Guid.NewGuid():N}";
+    var hasMultipleItems = Model.Items.Count > 1;
+}
+
+<section class="visual-container visual-container--stack py-5">
+    <div class="container">
+        @if (!string.IsNullOrEmpty(Model.Title))
+        {
+            <h2 class="text-center mb-3">@Model.Title</h2>
+        }
+        @if (!string.IsNullOrEmpty(Model.Subtitle))
+        {
+            <p class="text-center text-muted mb-4">@Model.Subtitle</p>
+        }
+
+        @if (hasMultipleItems)
+        {
+            <div id="@carouselId" class="carousel slide stack-carousel" data-bs-ride="false">
+                <div class="carousel-inner">
+                    @for (var i = 0; i < Model.Items.Count; i++)
+                    {
+                        var fact = Model.Items[i];
+                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                            <div class="row align-items-center">
+                                <div class="col-md-6">
+                                    @if (fact.Image != null)
+                                    {
+                                        <img src="@fact.Image.Url" class="img-fluid rounded" alt="@(fact.Image.Description ?? fact.Title ?? "")">
+                                    }
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="stack-content p-4">
+                                        @if (!string.IsNullOrEmpty(fact.Title))
+                                        {
+                                            <h3 class="stack-title">@fact.Title</h3>
+                                        }
+                                        @if (!string.IsNullOrEmpty(fact.Message))
+                                        {
+                                            <p class="stack-message">@fact.Message</p>
+                                        }
+                                        @if (fact.Reference != null)
+                                        {
+                                            @await Html.PartialAsync("_FactReference", fact.Reference)
+                                        }
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+                <button class="carousel-control-prev" type="button" data-bs-target="#@carouselId" data-bs-slide="prev">
+                    <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Previous</span>
+                </button>
+                <button class="carousel-control-next" type="button" data-bs-target="#@carouselId" data-bs-slide="next">
+                    <span class="carousel-control-next-icon" aria-hidden="true"></span>
+                    <span class="visually-hidden">Next</span>
+                </button>
+                <div class="carousel-indicators position-relative mt-3">
+                    @for (var i = 0; i < Model.Items.Count; i++)
+                    {
+                        <button type="button"
+                                data-bs-target="#@carouselId"
+                                data-bs-slide-to="@i"
+                                class="@(i == 0 ? "active" : "")"
+                                aria-current="@(i == 0 ? "true" : "false")"
+                                aria-label="Slide @(i + 1)"></button>
+                    }
+                </div>
+            </div>
+        }
+        else if (Model.Items.Count == 1)
+        {
+            var fact = Model.Items[0];
+            <div class="row align-items-center">
+                <div class="col-md-6">
+                    @if (fact.Image != null)
+                    {
+                        <img src="@fact.Image.Url" class="img-fluid rounded" alt="@(fact.Image.Description ?? fact.Title ?? "")">
+                    }
+                </div>
+                <div class="col-md-6">
+                    <div class="stack-content p-4">
+                        @if (!string.IsNullOrEmpty(fact.Title))
+                        {
+                            <h3 class="stack-title">@fact.Title</h3>
+                        }
+                        @if (!string.IsNullOrEmpty(fact.Message))
+                        {
+                            <p class="stack-message">@fact.Message</p>
+                        }
+                        @if (fact.Reference != null)
+                        {
+                            @await Html.PartialAsync("_FactReference", fact.Reference)
+                        }
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</section>

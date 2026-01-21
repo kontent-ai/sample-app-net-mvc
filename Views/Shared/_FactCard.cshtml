@@ -1,0 +1,24 @@
+@model FactViewModel
+
+<div class="card h-100 fact-card">
+    @if (Model.Image != null)
+    {
+        <img src="@Model.Image.Url" class="card-img-top" alt="@(Model.Image.Description ?? Model.Title ?? "")">
+    }
+    <div class="card-body d-flex flex-column">
+        @if (!string.IsNullOrEmpty(Model.Title))
+        {
+            <h5 class="card-title">@Model.Title</h5>
+        }
+        @if (!string.IsNullOrEmpty(Model.Message))
+        {
+            <p class="card-text flex-grow-1">@Model.Message</p>
+        }
+        @if (Model.Reference != null)
+        {
+            <div class="mt-auto">
+                @await Html.PartialAsync("_FactReference", Model.Reference)
+            </div>
+        }
+    </div>
+</div>

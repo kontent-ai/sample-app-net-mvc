@@ -1,0 +1,17 @@
+@model Reference
+
+@{
+    var href = Model switch
+    {
+        ItemReference itemRef => $"/{itemRef.Type}/{itemRef.Slug}",
+        UrlReference urlRef => urlRef.Url,
+        _ => "#"
+    };
+    var isExternal = Model is UrlReference;
+}
+
+<a href="@href"
+   class="btn btn-primary"
+   @(isExternal ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
+    @(Model.Label ?? "Learn more")
+</a>

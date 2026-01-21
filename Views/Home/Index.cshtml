@@ -1,52 +1,10 @@
-﻿@using Ficto.Generated.Models
-@using Kontent.Ai.Delivery.Abstractions
-@using Kontent.Ai.Delivery.ContentItems
-@using Kontent.Ai.Delivery.ContentItems.RichText
-@using Kontent.Ai.Delivery.Extensions
-@model Page
+@model WebsiteRootViewModel
 
 @{
     ViewData["Title"] = Model.MetadataTitle ?? Model.Title ?? "Home";
 }
 
-<div class="container py-4">
-    <h1 class="display-4">@Model.Title</h1>
-
-    @if (!string.IsNullOrEmpty(Model.MetadataDescription))
-    {
-        <p class="lead text-muted">@Model.MetadataDescription</p>
-    }
-
-    <hr class="my-4" />
-
-    @if (Model.Content?.Any() == true)
-    {
-        <div class="content-blocks">
-            @foreach (var item in Model.Content)
-            {
-                <div class="content-block mb-4 p-3 border rounded">
-                    @switch (item)
-                    {
-                        case IEmbeddedContent<Article> article:
-                            <h3>@article.Elements.Title</h3>
-                            <p>@article.Elements.Abstract</p>
-                            break;
-                        case IEmbeddedContent<ContentChunk> chunk:
-                            @* ContentChunk contains structured rich text blocks *@
-                            <div class="rich-text">
-                                @Html.Raw(await chunk.Elements.Content.ToHtmlAsync())
-                            </div>
-                            break;
-                        default:
-                            <p class="text-muted">[@item.GetType().GenericTypeArguments[0].Name]</p>
-                            break;
-                    }
-                </div>
-            }
-        </div>
-    }
-    else
-    {
-        <p class="text-muted">No content blocks found.</p>
-    }
-</div>
+@foreach (var block in Model.Content)
+{
+    @await Html.PartialAsync(block.PartialViewName, block)
+}

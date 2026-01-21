@@ -6,8 +6,8 @@ namespace Ficto.Services.Content.Interfaces;
 public partial interface IContentService
 {
     /// <summary>
-    /// Fetches the homepage content item.
+    /// Fetches the homepage (website root) content item.
     /// </summary>
-    /// <returns>An IDeliveryResult containing the Page content item.</returns>
-    Task<IDeliveryResult<IContentItem<Page>>> GetHomepageAsync();
+    /// <returns>An IDeliveryResult containing the WebsiteRoot content item.</returns>
+    Task<IDeliveryResult<IContentItem<WebsiteRoot>>> GetHomepageAsync();
 }

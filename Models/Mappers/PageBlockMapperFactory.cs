@@ -1,6 +1,7 @@
 using Ficto.Generated.Models;
 using Ficto.Models.Helpers;
 using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.Delivery.ContentItems;
 
 namespace Ficto.Models.Mappers;
 
@@ -15,6 +16,10 @@ public class PageBlockMapperFactory(
     {
         return content switch
         {
+            // Handle wrapped embedded content (SDK wraps items in IEmbeddedContent<T>)
+            IEmbeddedContent<ContentChunk> embeddedChunk => await _contentChunkMapper.MapAsync(embeddedChunk.Elements),
+            IEmbeddedContent<VisualContainer> embeddedContainer => await _visualContainerMapper.MapAsync(embeddedContainer.Elements),
+            // Handle direct types (fallback)
             ContentChunk chunk => await _contentChunkMapper.MapAsync(chunk),
             VisualContainer container => await _visualContainerMapper.MapAsync(container),
             _ => null

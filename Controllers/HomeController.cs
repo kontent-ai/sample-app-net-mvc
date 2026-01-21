@@ -1,14 +1,19 @@
 using System.Diagnostics;
 using Microsoft.AspNetCore.Mvc;
 using Ficto.Models;
+using Ficto.Models.Mappers;
 using Ficto.Services.Content.Interfaces;
 
 namespace Ficto.Controllers;
 
-public class HomeController(ILogger<HomeController> logger, IContentService contentService) : Controller
+public class HomeController(
+    ILogger<HomeController> logger,
+    IContentService contentService,
+    WebsiteRootMapper websiteRootMapper) : Controller
 {
     private readonly ILogger<HomeController> _logger = logger;
     private readonly IContentService _contentService = contentService;
+    private readonly WebsiteRootMapper _websiteRootMapper = websiteRootMapper;
 
     public async Task<IActionResult> Index()
     {
@@ -29,7 +34,8 @@ public class HomeController(ILogger<HomeController> logger, IContentService cont
             });
         }
 
-        return View(result.Value.Elements);
+        var viewModel = await _websiteRootMapper.MapAsync(result.Value.Elements);
+        return View(viewModel);
     }
 
     public IActionResult Privacy()

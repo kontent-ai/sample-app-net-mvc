@@ -1,5 +1,7 @@
 using Ficto.Generated.Models;
 using Ficto.Models.Helpers;
+using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.Delivery.ContentItems;
 
 namespace Ficto.Models.Mappers;
 
@@ -10,8 +12,8 @@ public class VisualContainerMapper(FactMapper factMapper) : IAsyncMapper<VisualC
     public Task<VisualContainerViewModel> MapAsync(VisualContainer source)
     {
         var items = source.Items
-            .OfType<Fact>()
-            .Select(_factMapper.Map)
+            .OfType<IEmbeddedContent<Fact>>()
+            .Select(embedded => _factMapper.Map(embedded.Elements))
             .ToList();
 
         var visualRepresentation = ParseVisualRepresentation(source.VisualRepresentation.FirstOrDefault()?.Codename);
