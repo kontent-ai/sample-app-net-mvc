@@ -1,5 +1,5 @@
 using Ficto.Generated.Models;
-using Kontent.Ai.Delivery.Extensions;
+using Kontent.Ai.Delivery;
 
 namespace Ficto.Models.Mappers;
 

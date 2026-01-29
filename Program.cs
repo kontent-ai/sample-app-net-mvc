@@ -2,7 +2,7 @@ using Ficto.Services.Content;
 using Ficto.Services.Content.Interfaces;
 using Ficto.Generated.Models;
 using Ficto.Models.Mappers;
-using Kontent.Ai.Delivery.Extensions;
+using Kontent.Ai.Delivery;
 using Kontent.Ai.Delivery.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -17,7 +17,10 @@ services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
 // TODO: Configure webhook options
 
 // Register Kontent.ai Delivery Client
-services.AddDeliveryClient(configuration.GetSection("DeliveryOptions"));
+services.AddDeliveryClient(options =>
+{
+    configuration.GetSection("DeliveryOptions").Bind(options);
+});
 
 // Register custom type provider for strongly-typed models
 services.AddSingleton<ITypeProvider, CustomTypeProvider>();

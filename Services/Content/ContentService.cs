@@ -1,6 +1,7 @@
 using Ficto.Generated.Models;
 using Ficto.Services.Content.Interfaces;
 using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.Delivery.Configuration;
 using Microsoft.Extensions.Options;
 
 namespace Ficto.Services.Content;
