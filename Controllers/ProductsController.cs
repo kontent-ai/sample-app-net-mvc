@@ -1,40 +1,59 @@
 using Microsoft.AspNetCore.Mvc;
+using Ficto.Models.Mappers;
+using Ficto.Services.Content.Interfaces;
 
 namespace Ficto.Controllers;
 
-public class ProductsController : Controller
+public class ProductsController(
+    IContentService contentService,
+    ProductMapper productMapper) : Controller
 {
+    private readonly IContentService _contentService = contentService;
+    private readonly ProductMapper _productMapper = productMapper;
+
     // Convention: /Products or /Products/Index
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        var products = new[] { "Widget", "Gadget", "Gizmo" };
-        return View(products);
+        var products = await _contentService.GetProductsAsync();
+        var viewModels = products.Select(p => _productMapper.Map(p.Elements)).ToList();
+        return View(viewModels);
     }
 
-    // Convention: /Products/Details/5
-    public IActionResult Details(int id)
+    // Route: /Products/{slug}
+    [Route("[controller]/{slug}")]
+    public async Task<IActionResult> Details(string slug)
     {
-        return View(model: $"Product #{id}");
+        var product = await _contentService.GetProductBySlugAsync(slug);
+
+        if (product == null)
+        {
+            return NotFound();
+        }
+
+        var viewModel = _productMapper.Map(product.Elements);
+        return View(viewModel);
     }
 
     // Attribute routing: /api/products
     [Route("api/products")]
-    public IActionResult ApiList()
+    public async Task<IActionResult> ApiList()
     {
-        return Json(new[] { "Widget", "Gadget" });
+        var products = await _contentService.GetProductsAsync();
+
+        var result = products.Select(p => new
+        {
+            name = p.Elements.ProductBaseName,
+            slug = p.Elements.Slug,
+            price = p.Elements.Price
+        });
+
+        return Json(result);
     }
 
     // Custom route: /p/{slug}
     [Route("p/{slug}")]
-    public IActionResult BySlug(string slug)
+    public async Task<IActionResult> BySlug(string slug)
     {
-        return Content($"Looking up: {slug}");
-    }
-
-    // Route constraint: /Products/Item/123 (only integers)
-    [Route("Products/Item/{id:int}")]
-    public IActionResult Item(int id)
-    {
-        return Content($"Item ID: {id}");
+        return await Details(slug);
     }
 }

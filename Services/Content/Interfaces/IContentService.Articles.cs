@@ -15,6 +15,6 @@ public partial interface IContentService
     /// Fetches an article by its URL slug.
     /// </summary>
     /// <param name="slug">The URL-friendly slug of the article.</param>
-    /// <returns>An IDeliveryResult containing the Article content item.</returns>
-    Task<IDeliveryResult<IContentItem<Article>>> GetArticleBySlugAsync(string slug);
+    /// <returns>The Article content item, or null if not found or on error.</returns>
+    Task<IContentItem<Article>?> GetArticleBySlugAsync(string slug);
 }

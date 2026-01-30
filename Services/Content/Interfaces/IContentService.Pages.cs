@@ -8,6 +8,6 @@ public partial interface IContentService
     /// <summary>
     /// Fetches the homepage (website root) content item.
     /// </summary>
-    /// <returns>An IDeliveryResult containing the WebsiteRoot content item.</returns>
-    Task<IDeliveryResult<IContentItem<WebsiteRoot>>> GetHomepageAsync();
+    /// <returns>The WebsiteRoot content item, or null if not found or on error.</returns>
+    Task<IContentItem<WebsiteRoot>?> GetHomepageAsync();
 }

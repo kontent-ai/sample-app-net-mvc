@@ -7,34 +7,25 @@ using Ficto.Services.Content.Interfaces;
 namespace Ficto.Controllers;
 
 public class HomeController(
-    ILogger<HomeController> logger,
     IContentService contentService,
     WebsiteRootMapper websiteRootMapper) : Controller
 {
-    private readonly ILogger<HomeController> _logger = logger;
     private readonly IContentService _contentService = contentService;
     private readonly WebsiteRootMapper _websiteRootMapper = websiteRootMapper;
 
     public async Task<IActionResult> Index()
     {
-        var result = await _contentService.GetHomepageAsync();
+        var homepage = await _contentService.GetHomepageAsync();
 
-        if (!result.IsSuccess)
+        if (homepage == null)
         {
-            _logger.LogWarning("Failed to load homepage: {Error} (Status: {StatusCode})",
-                result.Error?.Message, result.StatusCode);
-
             return View("Error", new ErrorViewModel
             {
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
-                ErrorMessage = result.Error?.Message,
-                StatusCode = (int)result.StatusCode,
-                ErrorCode = result.Error?.ErrorCode,
-                ContentRequestUrl = result.RequestUrl
+                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
             });
         }
 
-        var viewModel = await _websiteRootMapper.MapAsync(result.Value.Elements);
+        var viewModel = await _websiteRootMapper.MapAsync(homepage.Elements);
         return View(viewModel);
     }
 
