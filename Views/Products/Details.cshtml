@@ -1,0 +1,20 @@
+@model Ficto.Models.ProductViewModel
+
+<h1>@Model.Name</h1>
+
+@if (Model.Price.HasValue)
+{
+    <p><strong>Price:</strong> $@Model.Price.Value.ToString("F2")</p>
+}
+
+@if (!string.IsNullOrEmpty(Model.Description))
+{
+    <p>@Model.Description</p>
+}
+
+@if (Model.MainImage != null)
+{
+    <img src="@Model.MainImage.Url" alt="@Model.Name" style="max-width: 400px;" />
+}
+
+<p><a asp-action="Index">Back to Products</a></p>

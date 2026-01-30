@@ -11,9 +11,9 @@ public class ProductMapper : IMapper<Product, ProductViewModel>
             Slug = source.Slug,
             Name = source.ProductBaseName,
             Description = source.ProductBaseDescription,
-            MainImage = source.ProductBaseMainImage.FirstOrDefault(),
+            MainImage = source.ProductBaseMainImage?.FirstOrDefault(),
             Price = source.Price,
-            Category = source.Category.Select(t => t.Codename).ToList(),
+            Category = source.Category?.Select(t => t.Codename).ToList() ?? [],
             MetadataTitle = source.MetadataTitle,
             MetadataDescription = source.MetadataDescription,
             MetadataKeywords = source.MetadataKeywords
