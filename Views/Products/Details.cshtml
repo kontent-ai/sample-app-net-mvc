@@ -2,6 +2,12 @@
 
 <h1>@Model.Name</h1>
 
+
+@if (Model.MainImage != null)
+{
+    <img src="@Model.MainImage.Url" alt="@Model.Name" style="max-width: 400px;" />
+}
+
 @if (Model.Price.HasValue)
 {
     <p><strong>Price:</strong> $@Model.Price.Value.ToString("F2")</p>
@@ -12,9 +18,4 @@
     <p>@Model.Description</p>
 }
 
-@if (Model.MainImage != null)
-{
-    <img src="@Model.MainImage.Url" alt="@Model.Name" style="max-width: 400px;" />
-}
-
-<p><a asp-action="Index">Back to Products</a></p>
+<p>@Model.Category.FirstOrDefault()</p>
