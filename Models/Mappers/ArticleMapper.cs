@@ -1,5 +1,6 @@
 using Ficto.Generated.Models;
 using Kontent.Ai.Delivery;
+using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
@@ -12,9 +13,9 @@ public class ArticleMapper(PersonMapper personMapper) : IAsyncMapper<Article, Ar
         var content = await source.Content.ToHtmlAsync();
 
         var authors = new List<PersonViewModel>();
-        foreach (var author in source.Author.OfType<Person>())
+        foreach (var author in source.Author.OfType<IContentItem<Person>>())
         {
-            authors.Add(await _personMapper.MapAsync(author));
+            authors.Add(await _personMapper.MapAsync(author.Elements));
         }
 
         return new ArticleViewModel
