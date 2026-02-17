@@ -1,6 +1,7 @@
 using Ficto.Generated.Models;
 using Ficto.Services.Content.Interfaces;
 using Kontent.Ai.Delivery.Abstractions;
+using Microsoft.Extensions.Options;
 
 namespace Ficto.Services.Content;
 
@@ -8,14 +9,20 @@ namespace Ficto.Services.Content;
 /// Central content access layer that wraps the Kontent.ai Delivery SDK.
 /// Handles errors internally and returns domain types directly.
 /// </summary>
-public class ContentService(ILogger<ContentService> logger, IDeliveryClient deliveryClient) : IContentService
+public class ContentService(
+    ILogger<ContentService> logger,
+    IDeliveryClient deliveryClient,
+    IOptions<SiteOptions> siteOptions) : IContentService
 {
     private readonly ILogger<ContentService> _logger = logger;
     private readonly IDeliveryClient _deliveryClient = deliveryClient;
+    // NOTE: The website root codename currently matches the collection codename by coincidence.
+    // These are separate concepts — this should be its own config value.
+    private readonly string _collectionCodename = siteOptions.Value.CollectionCodename;
 
     public async Task<IContentItem<WebsiteRoot>?> GetHomepageAsync()
     {
-        var result = await _deliveryClient.GetItem<WebsiteRoot>("ficto_healthtech")
+        var result = await _deliveryClient.GetItem<WebsiteRoot>(_collectionCodename)
             .Depth(3)
             .ExecuteAsync();
 
@@ -73,5 +80,29 @@ public class ContentService(ILogger<ContentService> logger, IDeliveryClient deli
         }
 
         return result.Value.Items.Count > 0 ? result.Value.Items[0] : null;
+    }
+
+    public async Task<IReadOnlyList<NavigationItem>> GetNavigationAsync()
+    {
+        var result = await _deliveryClient.GetItems<WebsiteRoot>()
+            .Where(i => i.System("collection").IsEqualTo(_collectionCodename))
+            .Depth(3)
+            .ExecuteAsync();
+
+        if (!result.IsSuccess)
+        {
+            _logger.LogWarning("Failed to load navigation: {Error}", result.Error?.Message);
+            return [];
+        }
+
+        // The root navigation contains a single "Header navigation" container item.
+        // Unwrap it to return the actual top-level nav items.
+        var rootItem = result.Value.Items[0].Elements.Navigation
+            .OfType<IContentItem<NavigationItem>>().FirstOrDefault();
+            
+        return rootItem?.Elements.Subitems
+            .OfType<IContentItem<NavigationItem>>()
+            .Select(x => x.Elements)
+            .ToList() ?? [];
     }
 }
