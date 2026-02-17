@@ -1,15 +1,10 @@
 @model List<Ficto.Models.ProductViewModel>
 
 <h1>Products</h1>
+
 <ul>
-@foreach (var product in Model)
-{
-    <li>
-        <a asp-action="Details" asp-route-slug="@product.Slug">@product.Name</a>
-        @if (product.Price.HasValue)
-        {
-            <span>- $@product.Price.Value.ToString("F2")</span>
-        }
-    </li>
-}
+    @foreach (var product in Model)
+    {
+        <li><a asp-action="Details" asp-route-slug="@product.Slug">@product.Name</a></li>
+    }
 </ul>
