@@ -1,12 +1,7 @@
 @model Reference
 
 @{
-    var href = Model switch
-    {
-        ItemReference itemRef => $"/{itemRef.Type}/{itemRef.Slug}",
-        UrlReference urlRef => urlRef.Url,
-        _ => "#"
-    };
+    var href = RouteHelper.ResolveUrl(Model);
     var isExternal = Model is UrlReference;
 }
 
