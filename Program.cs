@@ -22,9 +22,6 @@ services.AddDeliveryClient(options =>
     configuration.GetSection("DeliveryOptions").Bind(options);
 });
 
-// Register custom type provider for strongly-typed models
-services.AddSingleton<ITypeProvider, CustomTypeProvider>();
-
 // Mappers
 services.AddScoped<ReferenceMapper>();
 services.AddScoped<FactMapper>();
