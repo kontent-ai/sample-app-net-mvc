@@ -8,8 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Kontent.Ai.Delivery" Version="19.0.0-beta-5" />
-    <PackageReference Include="Kontent.Ai.Delivery.Abstractions" Version="19.0.0-beta-5" />
+    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery\Kontent.Ai.Delivery.csproj" />
+    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery.Abstractions\Kontent.Ai.Delivery.Abstractions.csproj" />
   </ItemGroup>
 
 </Project>

@@ -1,0 +1,8 @@
+@model IReadOnlyList<NavigationViewModel>
+
+<ul class="navbar-nav flex-grow-1">
+    @foreach (var item in Model)
+    {
+        @await Html.PartialAsync("_NavigationItem", item)
+    }
+</ul>

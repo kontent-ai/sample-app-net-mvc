@@ -84,7 +84,7 @@ public class ContentService(
 
     public async Task<IReadOnlyList<NavigationItem>> GetNavigationAsync()
     {
-        var result = await _deliveryClient.GetItems<WebsiteRoot>()
+        var result = await _deliveryClient.GetItems()
             .Where(i => i.System("collection").IsEqualTo(_collectionCodename))
             .Depth(3)
             .ExecuteAsync();
@@ -97,7 +97,10 @@ public class ContentService(
 
         // The root navigation contains a single "Header navigation" container item.
         // Unwrap it to return the actual top-level nav items.
-        var rootItem = result.Value.Items[0].Elements.Navigation
+        var root = result.Value.Items
+            .OfType<IContentItem<WebsiteRoot>>().FirstOrDefault();
+
+        var rootItem = root?.Elements.Navigation
             .OfType<IContentItem<NavigationItem>>().FirstOrDefault();
             
         return rootItem?.Elements.Subitems
