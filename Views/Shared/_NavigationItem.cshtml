@@ -1,0 +1,48 @@
+@model NavigationViewModel
+
+@{
+    var hasSubitems = Model.Subitems is { Count: > 0 };
+    var href = RouteHelper.ResolveUrl(Model.Reference);
+    var label = Model.Label ?? "Link";
+    var isExternal = Model.Reference is UrlReference;
+}
+
+@if (hasSubitems)
+{
+    <li class="nav-item dropdown">
+        <a class="nav-link dropdown-toggle text-dark" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+            @label
+        </a>
+        <ul class="dropdown-menu">
+            @foreach (var subitem in Model.Subitems!)
+            {
+                var subHref = RouteHelper.ResolveUrl(subitem.Reference);
+                var subLabel = subitem.Label ?? "Link";
+                var subIsExternal = subitem.Reference is UrlReference;
+                <li>
+                    <a class="dropdown-item"
+                       href="@subHref"
+                       @(subIsExternal ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
+                        @subLabel
+                    </a>
+                </li>
+            }
+        </ul>
+    </li>
+}
+else if (isExternal)
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark" href="@href" target="_blank" rel="noopener noreferrer">
+            @label
+        </a>
+    </li>
+}
+else if (Model.Reference is ItemReference)
+{
+    <li class="nav-item">
+        <a class="nav-link text-dark" href="@href">
+            @label
+        </a>
+    </li>
+}
