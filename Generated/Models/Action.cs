@@ -12,9 +12,11 @@ using Kontent.Ai.Delivery.Abstractions;
 using Kontent.Ai.Delivery.ContentItems;
 using Kontent.Ai.Delivery.ContentItems.RichText;
 using Kontent.Ai.Delivery.SharedModels;
+using Kontent.Ai.Delivery.Attributes;
 
 namespace Ficto.Generated.Models;
 
+[ContentTypeCodename("action")]
 public partial record Action
 {
     [JsonPropertyName("image")]
