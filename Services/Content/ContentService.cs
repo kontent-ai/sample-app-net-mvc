@@ -1,3 +1,4 @@
+using System.Net;
 using Ficto.Generated.Models;
 using Ficto.Services.Content.Interfaces;
 using Kontent.Ai.Delivery.Abstractions;
@@ -7,7 +8,7 @@ namespace Ficto.Services.Content;
 
 /// <summary>
 /// Central content access layer that wraps the Kontent.ai Delivery SDK.
-/// Handles errors internally and returns domain types directly.
+/// Returns null/empty for content not found; throws <see cref="ContentDeliveryException"/> on server errors.
 /// </summary>
 public class ContentService(
     ILogger<ContentService> logger,
@@ -28,8 +29,20 @@ public class ContentService(
 
         if (!result.IsSuccess)
         {
-            _logger.LogWarning("Failed to load homepage: {Error} (Status: {StatusCode})",
-                result.Error?.Message, result.StatusCode);
+            LogAndThrowOnServerError(result, "Failed to load homepage");
+            return null;
+        }
+
+        return result.Value;
+    }
+
+    public async Task<IContentItem<Page>?> GetPageBySlugAsync(string slug)
+    {
+        var result = await _deliveryClient.GetItem<Page>(slug).ExecuteAsync();
+
+        if (!result.IsSuccess)
+        {
+            LogAndThrowOnServerError(result, "Failed to load page '{Slug}'", slug);
             return null;
         }
 
@@ -42,8 +55,7 @@ public class ContentService(
 
         if (!result.IsSuccess)
         {
-            _logger.LogWarning("Failed to load article '{Slug}': {Error} (Status: {StatusCode})",
-                slug, result.Error?.Message, result.StatusCode);
+            LogAndThrowOnServerError(result, "Failed to load article '{Slug}'", slug);
             return null;
         }
 
@@ -58,8 +70,7 @@ public class ContentService(
 
         if (!result.IsSuccess)
         {
-            _logger.LogWarning("Failed to load products: {Error} (Status: {StatusCode})",
-                result.Error?.Message, result.StatusCode);
+            LogAndThrowOnServerError(result, "Failed to load products");
             return [];
         }
 
@@ -74,8 +85,7 @@ public class ContentService(
 
         if (!result.IsSuccess)
         {
-            _logger.LogWarning("Failed to load product by slug '{Slug}': {Error} (Status: {StatusCode})",
-                slug, result.Error?.Message, result.StatusCode);
+            LogAndThrowOnServerError(result, "Failed to load product by slug '{Slug}'", slug);
             return null;
         }
 
@@ -91,7 +101,7 @@ public class ContentService(
 
         if (!result.IsSuccess)
         {
-            _logger.LogWarning("Failed to load navigation: {Error}", result.Error?.Message);
+            LogAndThrowOnServerError(result, "Failed to load navigation");
             return [];
         }
 
@@ -102,10 +112,19 @@ public class ContentService(
 
         var rootItem = root?.Elements.Navigation
             .OfType<IContentItem<NavigationItem>>().FirstOrDefault();
-            
+
         return rootItem?.Elements.Subitems
             .OfType<IContentItem<NavigationItem>>()
             .Select(x => x.Elements)
             .ToList() ?? [];
+    }
+
+    private void LogAndThrowOnServerError<T>(IDeliveryResult<T> result, string messageTemplate, params object[] args)
+    {
+        var allArgs = args.Append(result.Error?.Message).Append(result.StatusCode).ToArray();
+        _logger.LogWarning(messageTemplate + ": {Error} (Status: {StatusCode})", allArgs);
+
+        if ((int)result.StatusCode >= 500)
+            throw new ContentDeliveryException(result.StatusCode, result.Error);
     }
 }

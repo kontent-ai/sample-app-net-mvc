@@ -1,4 +1,5 @@
 using Ficto.Generated.Models;
+using Ficto.Services.Content;
 using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Services.Content.Interfaces;
@@ -15,6 +16,7 @@ public partial interface IContentService
     /// Fetches an article by its URL slug.
     /// </summary>
     /// <param name="slug">The URL-friendly slug of the article.</param>
-    /// <returns>The Article content item, or null if not found or on error.</returns>
+    /// <returns>The Article content item, or null if not found.</returns>
+    /// <exception cref="ContentDeliveryException">Thrown when the Delivery API returns a server error (5xx).</exception>
     Task<IContentItem<Article>?> GetArticleBySlugAsync(string slug);
 }
