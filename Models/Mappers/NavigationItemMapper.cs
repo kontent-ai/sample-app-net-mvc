@@ -25,10 +25,9 @@ public class NavigationItemMapper(ReferenceMapper referenceMapper) : IAsyncMappe
 
         return new NavigationViewModel
         {
-            Reference = reference,
             Label = source.ReferenceLabel,
-            Caption = source.ReferenceCaption,
-            ExternalUri = source.ReferenceExternalUri,
+            Url = RouteHelper.ResolveUrl(reference),
+            IsExternal = reference is UrlReference,
             Subitems = subitems
         };
     }

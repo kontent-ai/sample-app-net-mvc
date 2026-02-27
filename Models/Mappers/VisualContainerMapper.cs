@@ -9,24 +9,23 @@ public class VisualContainerMapper(FactMapper factMapper) : IAsyncMapper<VisualC
 {
     private readonly FactMapper _factMapper = factMapper;
 
-    public Task<VisualContainerViewModel> MapAsync(VisualContainer source)
+    public async Task<VisualContainerViewModel> MapAsync(VisualContainer source)
     {
-        var items = source.Items
-            .OfType<IEmbeddedContent<Fact>>()
-            .Select(embedded => _factMapper.Map(embedded.Elements))
-            .ToList();
+        var items = new List<FactViewModel>();
+        foreach (var embedded in source.Items.OfType<IEmbeddedContent<Fact>>())
+        {
+            items.Add(await _factMapper.MapAsync(embedded.Elements));
+        }
 
         var visualRepresentation = ParseVisualRepresentation(source.VisualRepresentation.FirstOrDefault()?.Codename);
 
-        var result = new VisualContainerViewModel
+        return new VisualContainerViewModel
         {
             Title = source.Title,
             Subtitle = source.Subtitle,
             Items = items,
             VisualRepresentation = visualRepresentation
         };
-
-        return Task.FromResult(result);
     }
 
     private static VisualRepresentation ParseVisualRepresentation(string? codename)

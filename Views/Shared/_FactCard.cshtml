@@ -14,10 +14,10 @@
         {
             <p class="card-text flex-grow-1">@Model.Message</p>
         }
-        @if (Model.Reference != null)
+        @if (Model.LinkUrl != null)
         {
             <div class="mt-auto">
-                @await Html.PartialAsync("_FactReference", Model.Reference)
+                @await Html.PartialAsync("_FactReference", Model)
             </div>
         }
     </div>
