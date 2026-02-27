@@ -1,0 +1,26 @@
+@model Ficto.Models.ErrorViewModel
+@{
+    ViewData["Title"] = Model.StatusCode switch
+    {
+        404 => "Page Not Found",
+        _ => $"Error {Model.StatusCode}"
+    };
+}
+
+<h1 class="text-danger">@ViewData["Title"]</h1>
+
+@if (Model.StatusCode == 404)
+{
+    <p>The page you requested could not be found.</p>
+}
+else
+{
+    <p>An unexpected error occurred while processing your request.</p>
+}
+
+@if (Model.ShowRequestId)
+{
+    <p>
+        <strong>Request ID:</strong> <code>@Model.RequestId</code>
+    </p>
+}

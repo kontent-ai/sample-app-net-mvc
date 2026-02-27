@@ -16,14 +16,8 @@ public class HomeController(
     public async Task<IActionResult> Index()
     {
         var homepage = await _contentService.GetHomepageAsync();
-
         if (homepage == null)
-        {
-            return View("Error", new ErrorViewModel
-            {
-                RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier
-            });
-        }
+            return NotFound();
 
         var viewModel = await _websiteRootMapper.MapAsync(homepage.Elements);
         return View(viewModel);
@@ -34,7 +28,25 @@ public class HomeController(
         return View();
     }
 
-    // This is global exception handler. Program.cs registers this with app.UseExceptionHandler("/Home/Error");
+    /// <summary>
+    /// Renders a user-friendly page for HTTP error status codes (404, 500, etc.).
+    /// Registered via <c>UseStatusCodePagesWithReExecute</c> in Program.cs.
+    /// </summary>
+    [Route("/StatusCode/{code:int}")]
+    [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
+    public IActionResult HttpError(int code)
+    {
+        Response.StatusCode = code;
+        return View(new ErrorViewModel
+        {
+            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier,
+            StatusCode = code
+        });
+    }
+
+    /// <summary>
+    /// Global exception handler. Program.cs registers this with <c>app.UseExceptionHandler</c>.
+    /// </summary>
     [ResponseCache(Duration = 0, Location = ResponseCacheLocation.None, NoStore = true)]
     public IActionResult Error()
     {

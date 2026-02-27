@@ -1,4 +1,4 @@
-﻿@model ErrorViewModel
+@model ErrorViewModel
 @{
     ViewData["Title"] = "Error";
 }
@@ -11,32 +11,6 @@
     <p>
         <strong>Request ID:</strong> <code>@Model.RequestId</code>
     </p>
-}
-
-@if (Model.HasContentError)
-{
-    <div class="alert alert-warning mt-3">
-        <h4>Content Delivery Error</h4>
-        <dl class="mb-0">
-            <dt>Message</dt>
-            <dd>@Model.ErrorMessage</dd>
-            @if (Model.StatusCode.HasValue)
-            {
-                <dt>HTTP Status</dt>
-                <dd>@Model.StatusCode</dd>
-            }
-            @if (Model.ErrorCode.HasValue)
-            {
-                <dt>Error Code</dt>
-                <dd>@Model.ErrorCode</dd>
-            }
-            @if (!string.IsNullOrEmpty(Model.ContentRequestUrl))
-            {
-                <dt>Request URL</dt>
-                <dd><code>@Model.ContentRequestUrl</code></dd>
-            }
-        </dl>
-    </div>
 }
 
 <h3>Development Mode</h3>
