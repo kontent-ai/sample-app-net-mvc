@@ -1,12 +1,10 @@
-@model Reference
+@model FactViewModel
 
-@{
-    var href = RouteHelper.ResolveUrl(Model);
-    var isExternal = Model is UrlReference;
+@if (Model.LinkUrl is not null)
+{
+    <a href="@Model.LinkUrl"
+       class="btn btn-primary"
+       @(Model.LinkIsExternal ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
+        @(Model.LinkLabel ?? "Learn more")
+    </a>
 }
-
-<a href="@href"
-   class="btn btn-primary"
-   @(isExternal ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
-    @(Model.Label ?? "Learn more")
-</a>

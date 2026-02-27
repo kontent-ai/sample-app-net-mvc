@@ -2,9 +2,7 @@
 
 @{
     var hasSubitems = Model.Subitems is { Count: > 0 };
-    var href = RouteHelper.ResolveUrl(Model.Reference);
     var label = Model.Label ?? "Link";
-    var isExternal = Model.Reference is UrlReference;
 }
 
 @if (hasSubitems)
@@ -16,13 +14,11 @@
         <ul class="dropdown-menu">
             @foreach (var subitem in Model.Subitems!)
             {
-                var subHref = RouteHelper.ResolveUrl(subitem.Reference);
                 var subLabel = subitem.Label ?? "Link";
-                var subIsExternal = subitem.Reference is UrlReference;
                 <li>
                     <a class="dropdown-item"
-                       href="@subHref"
-                       @(subIsExternal ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
+                       href="@subitem.Url"
+                       @(subitem.IsExternal ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
                         @subLabel
                     </a>
                 </li>
@@ -30,18 +26,18 @@
         </ul>
     </li>
 }
-else if (isExternal)
+else if (Model.IsExternal)
 {
     <li class="nav-item">
-        <a class="nav-link text-dark" href="@href" target="_blank" rel="noopener noreferrer">
+        <a class="nav-link text-dark" href="@Model.Url" target="_blank" rel="noopener noreferrer">
             @label
         </a>
     </li>
 }
-else if (Model.Reference is ItemReference)
+else
 {
     <li class="nav-item">
-        <a class="nav-link text-dark" href="@href">
+        <a class="nav-link text-dark" href="@Model.Url">
             @label
         </a>
     </li>
