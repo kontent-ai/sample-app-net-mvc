@@ -8,9 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Kontent.Ai.Delivery" Version="19.0.0-rc1" />
-    <PackageReference Include="Kontent.Ai.Delivery.Abstractions" Version="19.0.0-rc1" />
-    <PackageReference Include="Kontent.Ai.Delivery.SourceGeneration" Version="19.0.0-rc1" />
+    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery\Kontent.Ai.Delivery.csproj" />
+    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery.Abstractions\Kontent.Ai.Delivery.Abstractions.csproj" />
+    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery.SourceGeneration\Kontent.Ai.Delivery.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>

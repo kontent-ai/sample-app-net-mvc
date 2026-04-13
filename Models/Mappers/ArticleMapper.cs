@@ -6,17 +6,12 @@ namespace Ficto.Models.Mappers;
 
 public class ArticleMapper(PersonMapper personMapper) : IAsyncMapper<Article, ArticleViewModel>
 {
-    private readonly PersonMapper _personMapper = personMapper;
-
     public async Task<ArticleViewModel> MapAsync(Article source)
     {
         var content = await source.Content.ToHtmlAsync();
 
-        var authors = new List<PersonViewModel>();
-        foreach (var author in source.Author.OfType<IContentItem<Person>>())
-        {
-            authors.Add(await _personMapper.MapAsync(author.Elements));
-        }
+        var author = source.Author.OfType<IContentItem<Person>>().FirstOrDefault();
+        var authorViewModel = author != null ? await personMapper.MapAsync(author.Elements) : null;
 
         return new ArticleViewModel
         {
@@ -25,12 +20,12 @@ public class ArticleMapper(PersonMapper personMapper) : IAsyncMapper<Article, Ar
             ArticleType = source.Type.FirstOrDefault()?.Codename ?? string.Empty,
             Abstract = source.Abstract,
             Content = content,
-            HeroImage = source.HeroImage.FirstOrDefault(),
-            Authors = authors,
+            HeroImage = AssetViewModel.From(source.HeroImage.FirstOrDefault()),
+            Author = authorViewModel,
             MetadataTitle = source.MetadataTitle,
             MetadataDescription = source.MetadataDescription,
             MetadataKeywords = source.MetadataKeywords,
-            PublishingDate = source.PublishingDate.Value ?? DateTime.MinValue
+            PublishingDate = source.PublishingDate.Value
         };
     }
 }

@@ -14,7 +14,7 @@ public class PersonMapper : IAsyncMapper<Person, PersonViewModel>
             Name = source.FirstName,
             LastName = source.LastName,
             Occupation = source.Occupation,
-            Photograph = source.Photograph.FirstOrDefault(),
+            Photograph = AssetViewModel.From(source.Photograph.FirstOrDefault()),
             Bio = bio
         };
     }

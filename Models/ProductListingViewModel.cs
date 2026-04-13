@@ -1,0 +1,9 @@
+using Ficto.Models.Helpers;
+
+namespace Ficto.Models;
+
+public record ProductListingViewModel
+{
+    public IReadOnlyList<PageBlockViewModel> HeaderContent { get; init; } = [];
+    public IReadOnlyList<ProductViewModel> Products { get; init; } = [];
+}

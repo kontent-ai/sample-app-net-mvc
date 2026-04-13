@@ -1,9 +1,8 @@
+using Ficto.Models.Helpers;
+using Ficto.Models.Mappers;
 using Ficto.Services.Content;
 using Ficto.Services.Content.Interfaces;
-using Ficto.Generated.Models;
-using Ficto.Models.Mappers;
 using Kontent.Ai.Delivery;
-using Kontent.Ai.Delivery.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -12,6 +11,7 @@ var services = builder.Services;
 // Add services to the container.
 services.AddControllersWithViews();
 services.AddScoped<IContentService, ContentService>();
+services.AddSingleton<IRouteResolver, RouteResolver>();
 services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
 
 // TODO: Configure webhook options
@@ -61,5 +61,11 @@ app.UseAuthorization();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");
+
+// CMS page fallback — matches any single segment not claimed by a controller above.
+app.MapControllerRoute(
+    name: "page",
+    pattern: "{slug}",
+    defaults: new { controller = "Page", action = "Index" });
 
 app.Run();

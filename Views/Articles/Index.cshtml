@@ -1,0 +1,38 @@
+@model ArticleListingViewModel
+
+@{
+    ViewData["Title"] = "Articles";
+}
+
+@foreach (var block in Model.HeaderContent)
+{
+    @await Html.PartialAsync(block.PartialViewName, block)
+}
+
+<div class="container py-4">
+    <div class="row">
+        @foreach (var article in Model.Articles)
+        {
+            <div class="col-md-4 mb-4">
+                <div class="card h-100">
+                    @if (article.HeroImage != null)
+                    {
+                        <img src="@article.HeroImage.Url" class="card-img-top" alt="@(article.HeroImage.Description ?? article.Title)">
+                    }
+                    <div class="card-body d-flex flex-column">
+                        <h5 class="card-title">@article.Title</h5>
+                        @if (!string.IsNullOrEmpty(article.Abstract))
+                        {
+                            <p class="card-text flex-grow-1">@article.Abstract</p>
+                        }
+                        @if (article.PublishingDate.HasValue)
+                        {
+                            <p class="text-muted small mt-auto">@article.PublishingDate.Value.ToString("d MMM yyyy")</p>
+                        }
+                        <a asp-action="Details" asp-route-slug="@article.Slug" class="btn btn-outline-primary mt-2">Read more</a>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+</div>

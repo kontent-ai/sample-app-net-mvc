@@ -7,4 +7,12 @@ public record SiteOptions
 {
     public string CollectionCodename { get; set; } = "ficto_healthtech";
     public int CacheExpirationSeconds { get; set; } = 60;
+
+    public Dictionary<string, string> RouteTemplates { get; set; } = new()
+    {
+        ["page"] = "/{slug}",
+        ["article"] = "/Articles/{slug}",
+        ["product"] = "/Products/{slug}",
+        ["solution"] = "/Solutions/{slug}",
+    };
 }

@@ -1,5 +1,3 @@
-using Kontent.Ai.Delivery.Abstractions;
-
 namespace Ficto.Models;
 
 public record SolutionViewModel
@@ -7,7 +5,7 @@ public record SolutionViewModel
     public string Slug { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }
-    public IAsset? MainImage { get; init; }
+    public AssetViewModel? MainImage { get; init; }
     public string? Showcase { get; init; }
     public string? ImagingTechnology { get; init; }
     public string? MetadataTitle { get; init; }
