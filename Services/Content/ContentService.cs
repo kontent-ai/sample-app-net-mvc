@@ -14,9 +14,16 @@ public class ContentService(
     IDeliveryClient deliveryClient,
     IOptions<SiteOptions> siteOptions) : IContentService
 {
-    // NOTE: The website root codename currently matches the collection codename by coincidence.
-    // These are separate concepts — this should be its own config value (step 2 of implementation plan).
+    // The website root item codename matches the collection/space codename by design in the sample project.
+    // Step 2 of the implementation plan will make this per-request from the active space cookie.
     private readonly string _collectionCodename = siteOptions.Value.CollectionCodename;
+
+    /// <summary>
+    /// Returns a filter that scopes queries to the active space's collection plus
+    /// the "common" collection, which holds content shared across all subsites.
+    /// </summary>
+    private IItemsFilterBuilder CollectionFilter(IItemsFilterBuilder b) =>
+        b.System("collection").IsIn(_collectionCodename, "common");
 
     public async Task<IContentItem<WebsiteRoot>?> GetHomepageAsync()
     {
@@ -37,6 +44,7 @@ public class ContentService(
     {
         var result = await deliveryClient.GetItems<Page>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
+            .Where(CollectionFilter)
             .Depth(3)
             .ExecuteAsync();
 
@@ -52,6 +60,7 @@ public class ContentService(
     public async Task<IReadOnlyList<IContentItem<Article>>> GetArticlesAsync()
     {
         var result = await deliveryClient.GetItems<Article>()
+            .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
@@ -67,6 +76,7 @@ public class ContentService(
     {
         var result = await deliveryClient.GetItems<Article>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
+            .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
@@ -81,6 +91,7 @@ public class ContentService(
     public async Task<IReadOnlyList<IContentItem<Product>>> GetProductsAsync()
     {
         var result = await deliveryClient.GetItems<Product>()
+            .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
@@ -96,6 +107,7 @@ public class ContentService(
     {
         var result = await deliveryClient.GetItems<Product>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
+            .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
@@ -110,6 +122,7 @@ public class ContentService(
     public async Task<IReadOnlyList<IContentItem<Solution>>> GetSolutionsAsync()
     {
         var result = await deliveryClient.GetItems<Solution>()
+            .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
@@ -125,6 +138,7 @@ public class ContentService(
     {
         var result = await deliveryClient.GetItems<Solution>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
+            .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
