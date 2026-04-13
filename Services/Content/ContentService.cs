@@ -1,3 +1,5 @@
+using System.Diagnostics.CodeAnalysis;
+using System.Net;
 using Ficto.Generated.Models;
 using Ficto.Services.Content.Interfaces;
 using Kontent.Ai.Delivery.Abstractions;
@@ -6,13 +8,34 @@ namespace Ficto.Services.Content;
 
 /// <summary>
 /// Central content access layer that wraps the Kontent.ai Delivery SDK.
-/// Returns null/empty for content not found; throws <see cref="ContentDeliveryException"/> on server errors.
+/// Returns null/empty when content is not found (404); throws <see cref="ContentDeliveryException"/> on all other errors.
 /// </summary>
 public class ContentService(
     ILogger<ContentService> logger,
-    IDeliveryClient deliveryClient,
-    ISpaceContext spaceContext) : IContentService
+    IDeliveryClientFactory clientFactory,
+    ISpaceContext spaceContext,
+    IPreviewContext previewContext) : IContentService
 {
+    // Resolved once at construction — no per-request factory calls or exception-based branching.
+    private readonly IDeliveryClient _production = clientFactory.Get("production");
+    private readonly IDeliveryClient? _preview = clientFactory.TryGet("preview");
+
+    /// <summary>
+    /// Selects the preview or production client based on the current request host.
+    /// Falls back to production with a warning if the preview client is not configured.
+    /// </summary>
+    private IDeliveryClient Client
+    {
+        get
+        {
+            if (!previewContext.IsPreview) return _production;
+            if (_preview is not null) return _preview;
+
+            logger.LogWarning("Preview client is not configured — fill in DeliveryOptions:PreviewApiKey in appsettings.json. Serving production content.");
+            return _production;
+        }
+    }
+
     /// <summary>
     /// The active collection/space codename for this request, set by <see cref="Ficto.Middleware.SpaceContextMiddleware"/>.
     /// The WebsiteRoot item codename matches the collection codename by design in the sample project.
@@ -28,13 +51,14 @@ public class ContentService(
 
     public async Task<IContentItem<WebsiteRoot>?> GetHomepageAsync()
     {
-        var result = await deliveryClient.GetItem<WebsiteRoot>(CollectionCodename)
+        var result = await Client.GetItem<WebsiteRoot>(CollectionCodename)
             .Depth(3)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
         {
-            LogAndThrowOnServerError(result, "homepage");
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "homepage");
             return null;
         }
 
@@ -43,7 +67,7 @@ public class ContentService(
 
     public async Task<IContentItem<Page>?> GetPageBySlugAsync(string slug)
     {
-        var result = await deliveryClient.GetItems<Page>()
+        var result = await Client.GetItems<Page>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
             .Where(CollectionFilter)
             .Depth(3)
@@ -51,7 +75,8 @@ public class ContentService(
 
         if (!result.IsSuccess)
         {
-            LogAndThrowOnServerError(result, "page", slug);
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "page", slug);
             return null;
         }
 
@@ -60,13 +85,14 @@ public class ContentService(
 
     public async Task<IReadOnlyList<IContentItem<Article>>> GetArticlesAsync()
     {
-        var result = await deliveryClient.GetItems<Article>()
+        var result = await Client.GetItems<Article>()
             .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
         {
-            LogAndThrowOnServerError(result, "articles");
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "articles");
             return [];
         }
 
@@ -75,14 +101,15 @@ public class ContentService(
 
     public async Task<IContentItem<Article>?> GetArticleBySlugAsync(string slug)
     {
-        var result = await deliveryClient.GetItems<Article>()
+        var result = await Client.GetItems<Article>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
             .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
         {
-            LogAndThrowOnServerError(result, "article", slug);
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "article", slug);
             return null;
         }
 
@@ -91,13 +118,14 @@ public class ContentService(
 
     public async Task<IReadOnlyList<IContentItem<Product>>> GetProductsAsync()
     {
-        var result = await deliveryClient.GetItems<Product>()
+        var result = await Client.GetItems<Product>()
             .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
         {
-            LogAndThrowOnServerError(result, "products");
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "products");
             return [];
         }
 
@@ -106,14 +134,15 @@ public class ContentService(
 
     public async Task<IContentItem<Product>?> GetProductBySlugAsync(string slug)
     {
-        var result = await deliveryClient.GetItems<Product>()
+        var result = await Client.GetItems<Product>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
             .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
         {
-            LogAndThrowOnServerError(result, "product", slug);
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "product", slug);
             return null;
         }
 
@@ -122,13 +151,14 @@ public class ContentService(
 
     public async Task<IReadOnlyList<IContentItem<Solution>>> GetSolutionsAsync()
     {
-        var result = await deliveryClient.GetItems<Solution>()
+        var result = await Client.GetItems<Solution>()
             .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
         {
-            LogAndThrowOnServerError(result, "solutions");
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "solutions");
             return [];
         }
 
@@ -137,14 +167,15 @@ public class ContentService(
 
     public async Task<IContentItem<Solution>?> GetSolutionBySlugAsync(string slug)
     {
-        var result = await deliveryClient.GetItems<Solution>()
+        var result = await Client.GetItems<Solution>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
             .Where(CollectionFilter)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
         {
-            LogAndThrowOnServerError(result, "solution", slug);
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "solution", slug);
             return null;
         }
 
@@ -155,13 +186,14 @@ public class ContentService(
     {
         // Fetch the WebsiteRoot directly by its codename with Depth(2) to reach
         // WebsiteRoot → NavigationItem container → NavigationItem subitems.
-        var result = await deliveryClient.GetItem<WebsiteRoot>(CollectionCodename)
+        var result = await Client.GetItem<WebsiteRoot>(CollectionCodename)
             .Depth(2)
             .ExecuteAsync();
 
         if (!result.IsSuccess)
         {
-            LogAndThrowOnServerError(result, "navigation");
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "navigation");
             return [];
         }
 
@@ -176,13 +208,13 @@ public class ContentService(
             .ToList() ?? [];
     }
 
-    private void LogAndThrowOnServerError<T>(IDeliveryResult<T> result, string contentContext, string? slug = null)
+    [DoesNotReturn]
+    private void LogAndThrow<T>(IDeliveryResult<T> result, string contentContext, string? slug = null)
     {
         logger.LogWarning(
             "Content delivery failed. Context: {ContentContext}, Slug: {Slug}, Error: {Error}, Status: {StatusCode}",
             contentContext, slug ?? "(none)", result.Error?.Message, result.StatusCode);
 
-        if ((int)result.StatusCode >= 500)
-            throw new ContentDeliveryException(result.StatusCode, result.Error);
+        throw new ContentDeliveryException(result.StatusCode, result.Error);
     }
 }
