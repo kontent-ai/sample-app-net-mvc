@@ -1,0 +1,27 @@
+@model Ficto.Models.SolutionViewModel
+
+<div class="container py-4">
+    <h1>@Model.Name</h1>
+
+    @if (!string.IsNullOrEmpty(Model.ImagingTechnology))
+    {
+        <p class="text-muted">@Model.ImagingTechnology</p>
+    }
+
+    @if (Model.MainImage != null)
+    {
+        <img src="@Model.MainImage.Url" alt="@(Model.MainImage.Description ?? Model.Name)" class="img-fluid mb-4" style="max-width: 600px;" />
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Description))
+    {
+        <p class="lead">@Model.Description</p>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Showcase))
+    {
+        <div class="showcase mt-4">
+            @Html.Raw(Model.Showcase)
+        </div>
+    }
+</div>

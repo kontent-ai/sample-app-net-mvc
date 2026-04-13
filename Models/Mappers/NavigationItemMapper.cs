@@ -4,13 +4,12 @@ using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
-public class NavigationItemMapper(ReferenceMapper referenceMapper) : IAsyncMapper<NavigationItem, NavigationViewModel>
+public class NavigationItemMapper(ReferenceMapper referenceMapper, IRouteResolver routeResolver)
+    : IAsyncMapper<NavigationItem, NavigationViewModel>
 {
-    private readonly ReferenceMapper _referenceMapper = referenceMapper;
-
     public async Task<NavigationViewModel> MapAsync(NavigationItem source)
     {
-        var reference = _referenceMapper.Map(new ReferenceInput(
+        var reference = referenceMapper.Map(new ReferenceInput(
             source.ReferenceLabel,
             source.ReferenceCaption,
             source.ReferenceExternalUri,
@@ -26,7 +25,7 @@ public class NavigationItemMapper(ReferenceMapper referenceMapper) : IAsyncMappe
         return new NavigationViewModel
         {
             Label = source.ReferenceLabel,
-            Url = RouteHelper.ResolveUrl(reference),
+            Url = routeResolver.ResolveUrl(reference),
             IsExternal = reference is UrlReference,
             Subitems = subitems
         };

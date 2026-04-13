@@ -1,0 +1,44 @@
+@model Ficto.Models.ArticleViewModel
+
+<div class="container py-4">
+    <h1>@Model.Title</h1>
+
+    @if (Model.PublishingDate.HasValue)
+    {
+        <p class="text-muted">@Model.PublishingDate.Value.ToString("d MMM yyyy")</p>
+    }
+
+    @if (Model.HeroImage != null)
+    {
+        <img src="@Model.HeroImage.Url" alt="@(Model.HeroImage.Description ?? Model.Title)" class="img-fluid mb-4" />
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Abstract))
+    {
+        <p class="lead">@Model.Abstract</p>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.Content))
+    {
+        <div class="article-body mt-4">
+            @Html.Raw(Model.Content)
+        </div>
+    }
+
+    @if (Model.Author != null)
+    {
+        <div class="author mt-5 d-flex align-items-center gap-3">
+            @if (Model.Author.Photograph != null)
+            {
+                <img src="@Model.Author.Photograph.Url" alt="@(Model.Author.Photograph.Description ?? Model.Author.Name)" class="rounded-circle" style="width:64px;height:64px;object-fit:cover;" />
+            }
+            <div>
+                <strong>@Model.Author.Name @Model.Author.LastName</strong>
+                @if (!string.IsNullOrEmpty(Model.Author.Occupation))
+                {
+                    <p class="text-muted mb-0">@Model.Author.Occupation</p>
+                }
+            </div>
+        </div>
+    }
+</div>

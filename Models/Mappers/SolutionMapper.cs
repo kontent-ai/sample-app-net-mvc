@@ -14,9 +14,9 @@ public class SolutionMapper : IAsyncMapper<Solution, SolutionViewModel>
             Slug = source.Slug,
             Name = source.ProductBaseName,
             Description = source.ProductBaseDescription,
-            MainImage = source.ProductBaseMainImage.FirstOrDefault(),
+            MainImage = AssetViewModel.From(source.ProductBaseMainImage.FirstOrDefault()),
             Showcase = showcase,
-            ImagingTechnology = source.ImagingTechnology.Select(t => t.Codename).ToList(),
+            ImagingTechnology = source.ImagingTechnology.FirstOrDefault()?.Codename,
             MetadataTitle = source.MetadataTitle,
             MetadataDescription = source.MetadataDescription,
             MetadataKeywords = source.MetadataKeywords

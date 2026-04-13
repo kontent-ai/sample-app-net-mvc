@@ -1,39 +1,18 @@
 using Ficto.Generated.Models;
-using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
-public class WebsiteRootMapper(
-    NavigationItemMapper navigationItemMapper,
-    IPageBlockMapperFactory pageBlockMapperFactory,
-    PageMapper pageMapper) : IAsyncMapper<WebsiteRoot, WebsiteRootViewModel>
+public class WebsiteRootMapper(IPageBlockMapperFactory pageBlockMapperFactory)
+    : IAsyncMapper<WebsiteRoot, WebsiteRootViewModel>
 {
-    private readonly NavigationItemMapper _navigationItemMapper = navigationItemMapper;
-    private readonly IPageBlockMapperFactory _pageBlockMapperFactory = pageBlockMapperFactory;
-    private readonly PageMapper _pageMapper = pageMapper;
-
     public async Task<WebsiteRootViewModel> MapAsync(WebsiteRoot source)
     {
-        var navigation = new List<NavigationViewModel>();
-        foreach (var navItem in source.Navigation.OfType<IContentItem<NavigationItem>>())
-        {
-            navigation.Add(await _navigationItemMapper.MapAsync(navItem.Elements));
-        }
-
-        var content = await _pageBlockMapperFactory.MapManyAsync(source.Content);
-
-        var subpages = new List<PageViewModel>();
-        foreach (var page in source.Subpages.OfType<IContentItem<Page>>())
-        {
-            subpages.Add(await _pageMapper.MapAsync(page.Elements));
-        }
+        var content = await pageBlockMapperFactory.MapManyAsync(source.Content);
 
         return new WebsiteRootViewModel
         {
             Title = source.Title,
-            Navigation = navigation,
             Content = content,
-            Subpages = subpages,
             MetadataTitle = source.MetadataTitle,
             MetadataDescription = source.MetadataDescription,
             MetadataKeywords = source.MetadataKeywords

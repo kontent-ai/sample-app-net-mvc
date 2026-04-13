@@ -1,0 +1,10 @@
+@model PageViewModel
+
+@{
+    ViewData["Title"] = Model.MetadataTitle ?? Model.Title ?? "Page";
+}
+
+@foreach (var block in Model.Content)
+{
+    @await Html.PartialAsync(block.PartialViewName, block)
+}

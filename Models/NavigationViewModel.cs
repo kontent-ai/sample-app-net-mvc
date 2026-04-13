@@ -5,5 +5,5 @@ public record NavigationViewModel
     public string? Label { get; init; }
     public string Url { get; init; } = "#";
     public bool IsExternal { get; init; }
-    public IReadOnlyList<NavigationViewModel>? Subitems { get; init; }
+    public IReadOnlyList<NavigationViewModel> Subitems { get; init; } = [];
 }

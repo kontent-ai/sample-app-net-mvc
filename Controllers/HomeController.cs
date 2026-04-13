@@ -10,16 +10,13 @@ public class HomeController(
     IContentService contentService,
     WebsiteRootMapper websiteRootMapper) : Controller
 {
-    private readonly IContentService _contentService = contentService;
-    private readonly WebsiteRootMapper _websiteRootMapper = websiteRootMapper;
-
     public async Task<IActionResult> Index()
     {
-        var homepage = await _contentService.GetHomepageAsync();
+        var homepage = await contentService.GetHomepageAsync();
         if (homepage == null)
             return NotFound();
 
-        var viewModel = await _websiteRootMapper.MapAsync(homepage.Elements);
+        var viewModel = await websiteRootMapper.MapAsync(homepage.Elements);
         return View(viewModel);
     }
 

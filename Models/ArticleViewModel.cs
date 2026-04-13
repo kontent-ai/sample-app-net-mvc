@@ -1,5 +1,3 @@
-using Kontent.Ai.Delivery.Abstractions;
-
 namespace Ficto.Models;
 
 public record ArticleViewModel
@@ -9,10 +7,10 @@ public record ArticleViewModel
     public string ArticleType { get; init; } = string.Empty;
     public string? Abstract { get; init; }
     public string? Content { get; init; }
-    public IAsset? HeroImage { get; init; }
+    public AssetViewModel? HeroImage { get; init; }
     public PersonViewModel? Author { get; init; }
     public string? MetadataDescription { get; init; }
     public string? MetadataKeywords { get; init; }
     public string? MetadataTitle { get; init; }
-    public DateTime PublishingDate { get; init; }
+    public DateTime? PublishingDate { get; init; }
 }

@@ -5,28 +5,28 @@ using Ficto.Services.Content.Interfaces;
 
 namespace Ficto.Controllers;
 
-public class ProductsController(
+public class ArticlesController(
     IContentService contentService,
-    ProductMapper productMapper,
+    ArticleMapper articleMapper,
     PageMapper pageMapper) : Controller
 {
     public async Task<IActionResult> Index()
     {
-        var page = await contentService.GetPageBySlugAsync("products");
-        var products = await contentService.GetProductsAsync();
+        var page = await contentService.GetPageBySlugAsync("articles");
+        var articles = await contentService.GetArticlesAsync();
 
         var pageViewModel = page != null ? await pageMapper.MapAsync(page.Elements) : null;
 
-        var productViewModels = new List<ProductViewModel>();
-        foreach (var product in products)
+        var articleViewModels = new List<ArticleViewModel>();
+        foreach (var article in articles)
         {
-            productViewModels.Add(await productMapper.MapAsync(product.Elements));
+            articleViewModels.Add(await articleMapper.MapAsync(article.Elements));
         }
 
-        var viewModel = new ProductListingViewModel
+        var viewModel = new ArticleListingViewModel
         {
             HeaderContent = pageViewModel?.Content ?? [],
-            Products = productViewModels
+            Articles = articleViewModels
         };
 
         return View(viewModel);
@@ -35,11 +35,11 @@ public class ProductsController(
     [Route("[controller]/{slug}")]
     public async Task<IActionResult> Details(string slug)
     {
-        var product = await contentService.GetProductBySlugAsync(slug);
-        if (product == null)
+        var article = await contentService.GetArticleBySlugAsync(slug);
+        if (article == null)
             return NotFound();
 
-        var viewModel = await productMapper.MapAsync(product.Elements);
+        var viewModel = await articleMapper.MapAsync(article.Elements);
         return View(viewModel);
     }
 }
