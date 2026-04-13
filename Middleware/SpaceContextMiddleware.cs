@@ -4,12 +4,18 @@ using Microsoft.Extensions.Options;
 namespace Ficto.Middleware;
 
 /// <summary>
-/// Resolves the active space/collection for each request and stores it in the scoped
-/// <see cref="SpaceContext"/>. Resolution priority:
+/// Resolves the active space/collection and preview flag for each request, storing them
+/// in the scoped <see cref="SpaceContext"/> and <see cref="PreviewContext"/>.
+///
+/// Preview is determined purely by a <c>preview.</c> host prefix:
+///   <c>preview.ficto-imaging.localhost</c> → IsPreview = true, space = ficto_imaging
+///   <c>ficto-imaging.localhost</c>         → IsPreview = false, space = ficto_imaging
+///
+/// Space resolution priority (after stripping the preview prefix):
 /// <list type="number">
-///   <item>Host subdomain — <c>ficto-imaging.localhost</c> → <c>ficto_imaging</c> (preview URL routing)</item>
-///   <item>Query string — <c>?space=ficto_imaging</c>, also sets the persistence cookie</item>
-///   <item>Cookie — <c>ficto_space</c> plain-text value set by a previous query-string selection</item>
+///   <item>Host subdomain</item>
+///   <item>Query string <c>?space=</c> — also sets a persistence cookie</item>
+///   <item>Cookie <c>ficto_space</c></item>
 ///   <item>Default — first entry in <see cref="SiteOptions.Spaces"/></item>
 /// </list>
 /// </summary>
@@ -17,17 +23,25 @@ public class SpaceContextMiddleware(RequestDelegate next, IOptions<SiteOptions> 
 {
     private const string CookieName = "ficto_space";
     private const string QueryParam = "space";
+    private const string PreviewPrefix = "preview.";
 
-    public async Task InvokeAsync(HttpContext context, SpaceContext spaceContext)
+    public async Task InvokeAsync(HttpContext context, SpaceContext spaceContext, PreviewContext previewContext)
     {
-        spaceContext.SpaceCodename = Resolve(context, siteOptions.Value.Spaces);
+        var host = context.Request.Host.Host;
+
+        previewContext.IsPreview = host.StartsWith(PreviewPrefix, StringComparison.OrdinalIgnoreCase);
+
+        // Strip the preview. prefix before resolving the space subdomain
+        var spaceHost = previewContext.IsPreview ? host[PreviewPrefix.Length..] : host;
+
+        spaceContext.SpaceCodename = ResolveSpace(context, spaceHost, siteOptions.Value.Spaces);
+
         await next(context);
     }
 
-    private static string Resolve(HttpContext context, string[] spaces)
+    private static string ResolveSpace(HttpContext context, string host, string[] spaces)
     {
-        // 1. Subdomain: ficto-imaging.localhost → ficto_imaging
-        var host = context.Request.Host.Host;
+        // 1. Subdomain from host (preview prefix already stripped)
         if (host.Contains('.'))
         {
             var subdomain = host.Split('.')[0].Replace('-', '_');
@@ -35,7 +49,7 @@ public class SpaceContextMiddleware(RequestDelegate next, IOptions<SiteOptions> 
                 return subdomain;
         }
 
-        // 2. Query string: ?space=ficto_imaging — also persists the choice to cookie
+        // 2. Query string ?space=ficto_imaging — also persists to cookie
         if (context.Request.Query.TryGetValue(QueryParam, out var qs))
         {
             var fromQuery = qs.ToString();

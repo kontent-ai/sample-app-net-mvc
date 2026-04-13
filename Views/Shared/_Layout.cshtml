@@ -1,4 +1,5 @@
-﻿<!DOCTYPE html>
+﻿@inject Ficto.Services.Content.IPreviewContext PreviewContext
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -26,6 +27,12 @@
             </div>
         </nav>
     </header>
+    @if (PreviewContext.IsPreview)
+    {
+        <div class="alert alert-success mb-0 rounded-0 text-center py-2" role="alert">
+            Preview mode &mdash; showing unpublished draft content
+        </div>
+    }
     <div class="container">
         <main role="main" class="pb-3">
             @RenderBody()
