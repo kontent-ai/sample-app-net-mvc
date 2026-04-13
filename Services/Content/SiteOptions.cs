@@ -1,11 +1,18 @@
 namespace Ficto.Services.Content;
 
 /// <summary>
-/// Contextual information about current site (collection). May also include selected language in the future.
+/// Static site-level options bound from configuration.
+/// The active space (collection) for a given request comes from the cookie-stored
+/// <see cref="Ficto.Configuration.ClientConfiguration"/> — not from here.
 /// </summary>
 public record SiteOptions
 {
-    public string CollectionCodename { get; set; } = "ficto_healthtech";
+    /// <summary>
+    /// Ordered list of collection/space codenames available in this Kontent.ai environment.
+    /// The "common" collection is always included in queries but is not listed as a selectable space.
+    /// </summary>
+    public string[] Spaces { get; set; } = ["ficto_imaging", "ficto_healthtech", "ficto_surgical"];
+
     public int CacheExpirationSeconds { get; set; } = 60;
 
     public Dictionary<string, string> RouteTemplates { get; set; } = new()

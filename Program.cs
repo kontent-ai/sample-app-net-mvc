@@ -1,3 +1,5 @@
+using Ficto.Configuration;
+using Ficto.Middleware;
 using Ficto.Models.Helpers;
 using Ficto.Models.Mappers;
 using Ficto.Services.Content;
@@ -10,13 +12,23 @@ var services = builder.Services;
 
 // Add services to the container.
 services.AddControllersWithViews();
+services.AddHttpContextAccessor();
+
+// Options
+services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
+services.Configure<PreviewOptions>(configuration.GetSection("PreviewOptions"));
+services.Configure<WebhookOptions>(configuration.GetSection("WebhookOptions"));
+
+// Space context — resolved once per request by SpaceContextMiddleware
+services.AddScoped<SpaceContext>();
+services.AddScoped<ISpaceContext>(sp => sp.GetRequiredService<SpaceContext>());
+
+// Content service
 services.AddScoped<IContentService, ContentService>();
 services.AddSingleton<IRouteResolver, RouteResolver>();
-services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
-
-// TODO: Configure webhook options
 
 // Register Kontent.ai Delivery Client
+// TODO (step 3): Replace with IDeliveryClientFactory for preview/production switching.
 services.AddDeliveryClient(options =>
 {
     configuration.GetSection("DeliveryOptions").Bind(options);
@@ -43,7 +55,6 @@ var app = builder.Build();
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
@@ -54,10 +65,11 @@ app.UseStaticFiles();
 
 app.UseRouting();
 
-// Possibly use for preview mode gating, likely not in scope for this project.
+// Resolve active space from subdomain / query string / cookie / default
+app.UseMiddleware<SpaceContextMiddleware>();
+
 app.UseAuthorization();
 
-// This is default routing for the application. If a segment is not found, it will default to Home controller and Index action.
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

@@ -1,7 +1,6 @@
 using Ficto.Generated.Models;
 using Ficto.Services.Content.Interfaces;
 using Kontent.Ai.Delivery.Abstractions;
-using Microsoft.Extensions.Options;
 
 namespace Ficto.Services.Content;
 
@@ -12,22 +11,24 @@ namespace Ficto.Services.Content;
 public class ContentService(
     ILogger<ContentService> logger,
     IDeliveryClient deliveryClient,
-    IOptions<SiteOptions> siteOptions) : IContentService
+    ISpaceContext spaceContext) : IContentService
 {
-    // The website root item codename matches the collection/space codename by design in the sample project.
-    // Step 2 of the implementation plan will make this per-request from the active space cookie.
-    private readonly string _collectionCodename = siteOptions.Value.CollectionCodename;
+    /// <summary>
+    /// The active collection/space codename for this request, set by <see cref="Ficto.Middleware.SpaceContextMiddleware"/>.
+    /// The WebsiteRoot item codename matches the collection codename by design in the sample project.
+    /// </summary>
+    private string CollectionCodename => spaceContext.SpaceCodename;
 
     /// <summary>
     /// Returns a filter that scopes queries to the active space's collection plus
     /// the "common" collection, which holds content shared across all subsites.
     /// </summary>
     private IItemsFilterBuilder CollectionFilter(IItemsFilterBuilder b) =>
-        b.System("collection").IsIn(_collectionCodename, "common");
+        b.System("collection").IsIn(CollectionCodename, "common");
 
     public async Task<IContentItem<WebsiteRoot>?> GetHomepageAsync()
     {
-        var result = await deliveryClient.GetItem<WebsiteRoot>(_collectionCodename)
+        var result = await deliveryClient.GetItem<WebsiteRoot>(CollectionCodename)
             .Depth(3)
             .ExecuteAsync();
 
@@ -154,7 +155,7 @@ public class ContentService(
     {
         // Fetch the WebsiteRoot directly by its codename with Depth(2) to reach
         // WebsiteRoot → NavigationItem container → NavigationItem subitems.
-        var result = await deliveryClient.GetItem<WebsiteRoot>(_collectionCodename)
+        var result = await deliveryClient.GetItem<WebsiteRoot>(CollectionCodename)
             .Depth(2)
             .ExecuteAsync();
 
