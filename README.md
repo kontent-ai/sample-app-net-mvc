@@ -94,6 +94,46 @@ TBD
 
 
 
+## Webhook-driven cache invalidation
+
+The app caches Delivery API responses via `Kontent.Ai.Delivery.Caching` (FusionCache backend). The `/webhooks/kontent` endpoint receives Kontent.ai webhook notifications, validates the `X-KC-Signature` HMAC against `WebhookOptions:Secret`, and invalidates the corresponding cache dependency keys.
+
+### How the cascade works
+
+The SDK does not traverse a dependency graph at invalidation time. Instead, every cached response is **tagged at write time** with a fan-out set of keys — for an item or item-list response that includes the response item codenames, every linked/modular-content item codename, every referenced asset id, every referenced taxonomy group codename, and the content type codename of every primary and modular-content item. Invalidating a single tag (e.g. `item_homepage`, `type_article`, `taxonomy_personas`) removes every cached entry that was tagged with it.
+
+The synthetic listing-scope keys (`scope_items_list`, `scope_types_list`, `scope_taxonomies_list`) are the safety net for **list-membership changes** — events where a new item should now appear in a previously cached filter that was never tagged with the new item's codename.
+
+### Invalidation matrix
+
+The endpoint only acts on notifications with `delivery_slot == "published"`. Preview events are skipped because the preview client is not cached.
+
+| `object_type` | `action` | Keys invalidated | Why |
+|---|---|---|---|
+| `content_item` | `published` | `item_<codename>` + `scope_items_list` | Could be first publish (membership shift) or republish — safe default. |
+| `content_item` | `unpublished` | `item_<codename>` | Existing listings tagged with the codename are evicted; the item cannot newly appear in unrelated listings. |
+| `content_item` | `metadata_changed` | `item_<codename>` + `scope_items_list` | Codename rename or collection move can shift filter membership. |
+| `asset` | `created` | _(no-op)_ | The new asset isn't yet referenced by any cached item. |
+| `asset` | `changed` / `metadata_changed` / `deleted` | `asset_<id>` | Items referencing the asset (asset element or rich-text inline image) carry the same tag. |
+| `content_type` | `created` | `scope_types_list` | New type joins `GetTypes()` listings; no cached item could reference it yet. |
+| `content_type` | `changed` / `deleted` | `type_<codename>` + `scope_types_list` | `type_<codename>` evicts the type definition **and** every cached item / item-list whose payload contains an item of that type (directly or via modular content / linked items / inline rich-text items). |
+| `taxonomy` | `created` | `scope_taxonomies_list` | |
+| `taxonomy` | `metadata_changed` / `deleted` | `taxonomy_<codename>` + `scope_taxonomies_list` | Items referencing terms in the group are tagged with the group codename and get evicted. |
+| `taxonomy` | `term_created` / `term_changed` / `term_deleted` / `terms_moved` | `taxonomy_<group_codename>` (from `data.system.taxonomy_group`) | Same fan-out as above — every item using a term in this group is tagged with the group codename. |
+| `language` | `created` / `changed` / `deleted` | **Full purge** via `IDeliveryCachePurger.PurgeAsync()` | No language-scope key exists; languages affect every variant of every cached entry. |
+
+Unknown `object_type` values are ignored and logged at `Debug`. Any notification processed in a webhook batch can opt into the full purge — if a single language event is present in the payload, the entire request is handled as a purge.
+
+### SDK version requirement
+
+`content_type.changed` and `content_type.deleted` rely on `type_<codename>` being attached to item and item-list caches by the SDK's `DependencyTrackingContext.TrackItemType` fan-out. The local `Kontent.Ai.Delivery` reference must include this change — without it, only the `GetType()` cache is invalidated and dependent item caches silently go stale.
+
+### Webhook payload reference
+
+See [Webhooks reference](https://kontent.ai/learn/docs/webhooks/webhooks/net) for the canonical payload structure. Codenames are read from `notifications[].data.system.codename`; asset ids from `notifications[].data.system.id`; taxonomy term events read the parent group from `notifications[].data.system.taxonomy_group`.
+
+
+
 <!-- CONTRIBUTING -->
 ## Contributing
 

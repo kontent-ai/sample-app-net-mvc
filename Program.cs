@@ -30,14 +30,23 @@ services.AddSingleton<IRouteResolver, RouteResolver>();
 
 // Kontent.ai Delivery clients — production uses published content, preview uses draft content.
 // Both share the same environment ID and endpoint config from DeliveryOptions.
+var cacheExpiration = TimeSpan.FromSeconds(
+    configuration.GetValue("SiteOptions:CacheExpirationSeconds", 60));
+
 services.AddDeliveryClient("production", options =>
 {
     configuration.GetSection("DeliveryOptions").Bind(options);
     options.UsePreviewApi = false;
 });
+services.AddDeliveryMemoryCache("production", opts =>
+{
+    opts.DefaultExpiration = cacheExpiration;
+    opts.IsFailSafeEnabled = true;
+});
 
 // Preview client is only registered when PreviewApiKey is set in appsettings.json.
 // Without it the app still starts; preview URLs fall back to production content with a warning.
+// No cache is registered for the preview client — editors expect to see changes immediately.
 var previewApiKey = configuration["DeliveryOptions:PreviewApiKey"];
 if (!string.IsNullOrWhiteSpace(previewApiKey))
 {
