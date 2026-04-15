@@ -4,11 +4,11 @@ using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
-public class ArticleMapper(PersonMapper personMapper) : IAsyncMapper<Article, ArticleViewModel>
+public class ArticleMapper(PersonMapper personMapper, IHtmlResolver htmlResolver) : IAsyncMapper<Article, ArticleViewModel>
 {
     public async Task<ArticleViewModel> MapAsync(Article source)
     {
-        var content = await source.Content.ToHtmlAsync();
+        var content = await source.Content.ToHtmlAsync(htmlResolver);
 
         var author = source.Author.OfType<IContentItem<Person>>().FirstOrDefault();
         var authorViewModel = author != null ? await personMapper.MapAsync(author.Elements) : null;
