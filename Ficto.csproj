@@ -10,6 +10,7 @@
   <ItemGroup>
     <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery\Kontent.Ai.Delivery.csproj" />
     <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery.Abstractions\Kontent.Ai.Delivery.Abstractions.csproj" />
+    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery.Caching\Kontent.Ai.Delivery.Caching.csproj" />
     <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery.SourceGeneration\Kontent.Ai.Delivery.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
