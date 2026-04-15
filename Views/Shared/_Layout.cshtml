@@ -30,7 +30,8 @@
     @if (PreviewContext.IsPreview)
     {
         <div class="alert alert-success mb-0 rounded-0 text-center py-2" role="alert">
-            Preview mode &mdash; showing unpublished draft content
+            Preview mode &mdash; showing unpublished draft content &middot;
+            <a asp-controller="Preview" asp-action="Disable" asp-route-returnUrl="@Context.Request.Path">Disable</a>
         </div>
     }
     <div class="container">

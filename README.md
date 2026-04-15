@@ -94,6 +94,46 @@ TBD
 
 
 
+## Preview mode
+
+The app ships with a working preview-mode toggle but **no authentication** on who can enable it — that's the sample's explicit responsibility to delegate to the consuming deployment.
+
+### Turning preview on/off in the sample
+
+- **Enable**: `GET /preview/enable?returnUrl=/Articles/<slug>` &mdash; sets a signed `ficto_preview` cookie (HttpOnly, SameSite=Lax, 1-day expiry), 302-redirects to `returnUrl` (local URLs only; external hosts fall back to `/`).
+- **Disable**: `GET /preview/disable?returnUrl=<path>` &mdash; clears the cookie. The banner rendered in `_Layout.cshtml` links to this endpoint.
+
+When the cookie is present and valid, `SpaceContextMiddleware` flips `IPreviewContext.IsPreview` on, `ContentService` routes reads through the `"preview"` named Delivery client (from `DeliveryOptions:PreviewApiKey`), and the green banner shows at the top of every page. If the preview client isn't configured, the app logs a warning and silently serves production content — drafts just won't appear, no hard failure.
+
+### ⚠ The default gate is NOT a security boundary
+
+`IPreviewAccessGate` is the authorization seam between an unauthenticated HTTP request and "you may turn preview on." The sample ships `AllowAnonymousPreviewAccessGate`, which always returns `true` and logs a warning every time it does. That means any visitor who hits `/preview/enable` sees drafts. This is fine for a local sample and a non-public demo; it is **not** fine for anything publicly reachable.
+
+Replace the registration in `Program.cs` with your own implementation before deploying:
+
+```csharp
+services.AddSingleton<IPreviewAccessGate, MyAuthBackedGate>();
+```
+
+A plausible shape for a real gate (not implemented here — your auth system, your code):
+
+```csharp
+public sealed class OidcPreviewAccessGate(IAuthorizationService authz) : IPreviewAccessGate
+{
+    public async ValueTask<bool> CanEnableAsync(HttpContext ctx, CancellationToken ct)
+    {
+        var result = await authz.AuthorizeAsync(ctx.User, resource: null, policy: "CanPreviewContent");
+        return result.Succeeded;
+    }
+}
+```
+
+Evolutions on the same theme: require a claim (`ctx.User.HasClaim("role", "editor")`), check an IP allow-list, require MFA, etc. The interface is deliberately minimal so it composes with whatever authz model you already run.
+
+### Why the cookie is signed even without a secret
+
+The `ficto_preview` cookie's value is opaque ciphertext protected by `IDataProtectionProvider`. Without signing, a visitor could type `ficto_preview=1` in devtools and bypass the gate entirely; with signing, a forged value fails `Unprotect` and the middleware ignores it. The payload itself is a constant &mdash; the cookie says "this browser has been approved," and the gate is the thing that decides who gets approved.
+
 ## Webhook-driven cache invalidation
 
 The app caches Delivery API responses via `Kontent.Ai.Delivery.Caching` (FusionCache backend). The `/webhooks/kontent` endpoint receives Kontent.ai webhook notifications, validates the `X-KC-Signature` HMAC against `WebhookOptions:Secret`, and invalidates the corresponding cache dependency keys.

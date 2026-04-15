@@ -15,6 +15,7 @@ var services = builder.Services;
 // Add services to the container.
 services.AddControllersWithViews();
 services.AddHttpContextAccessor();
+services.AddDataProtection();
 
 // Options
 services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
@@ -25,6 +26,13 @@ services.AddScoped<SpaceContext>();
 services.AddScoped<ISpaceContext>(sp => sp.GetRequiredService<SpaceContext>());
 services.AddScoped<PreviewContext>();
 services.AddScoped<IPreviewContext>(sp => sp.GetRequiredService<PreviewContext>());
+
+// Preview mode wiring:
+//   - IPreviewTokenProtector: signs/validates the ficto_preview cookie.
+//   - IPreviewAccessGate: pluggable authorization seam. The default AllowAnonymousPreviewAccessGate
+//     is sample-only; real deployments should register an implementation that checks their auth.
+services.AddSingleton<IPreviewTokenProtector, PreviewTokenProtector>();
+services.AddSingleton<IPreviewAccessGate, AllowAnonymousPreviewAccessGate>();
 
 // Content service
 services.AddScoped<IContentService, ContentService>();
