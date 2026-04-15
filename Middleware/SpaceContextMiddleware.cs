@@ -1,3 +1,4 @@
+using Ficto.Controllers;
 using Ficto.Services.Content;
 using Microsoft.Extensions.Options;
 
@@ -7,9 +8,11 @@ namespace Ficto.Middleware;
 /// Resolves the active space/collection and preview flag for each request, storing them
 /// in the scoped <see cref="SpaceContext"/> and <see cref="PreviewContext"/>.
 ///
-/// Preview is determined purely by a <c>preview.</c> host prefix:
-///   <c>preview.ficto-imaging.localhost</c> → IsPreview = true, space = ficto_imaging
-///   <c>ficto-imaging.localhost</c>         → IsPreview = false, space = ficto_imaging
+/// Preview is driven by the signed <c>ficto_preview</c> cookie that <see cref="PreviewController"/>
+/// issues after <see cref="IPreviewAccessGate.CanEnableAsync"/> approves the request. The host's
+/// <c>preview.</c> prefix is only used to resolve the space codename (e.g.
+/// <c>preview.ficto-imaging.localhost</c> still means "imaging space") — it does NOT authorize
+/// draft access on its own.
 ///
 /// Space resolution priority (after stripping the preview prefix):
 /// <list type="number">
@@ -25,14 +28,22 @@ public class SpaceContextMiddleware(RequestDelegate next, IOptions<SiteOptions> 
     private const string QueryParam = "space";
     private const string PreviewPrefix = "preview.";
 
-    public async Task InvokeAsync(HttpContext context, SpaceContext spaceContext, PreviewContext previewContext)
+    public async Task InvokeAsync(
+        HttpContext context,
+        SpaceContext spaceContext,
+        PreviewContext previewContext,
+        IPreviewTokenProtector previewTokenProtector)
     {
         var host = context.Request.Host.Host;
 
-        previewContext.IsPreview = host.StartsWith(PreviewPrefix, StringComparison.OrdinalIgnoreCase);
+        var previewCookie = context.Request.Cookies[PreviewController.CookieName];
+        previewContext.IsPreview = previewTokenProtector.IsValid(previewCookie);
 
-        // Strip the preview. prefix before resolving the space subdomain
-        var spaceHost = previewContext.IsPreview ? host[PreviewPrefix.Length..] : host;
+        // Strip the preview. prefix before resolving the space subdomain — the subdomain still
+        // encodes which space the preview URL targets, independent of the preview flag above.
+        var spaceHost = host.StartsWith(PreviewPrefix, StringComparison.OrdinalIgnoreCase)
+            ? host[PreviewPrefix.Length..]
+            : host;
 
         spaceContext.SpaceCodename = ResolveSpace(context, spaceHost, siteOptions.Value.Spaces);
 
