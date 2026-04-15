@@ -197,8 +197,8 @@ public class WebhooksController(
                 keys.Add($"asset_{system.Id}");
                 break;
 
-            // `created` is intentionally a no-op — a brand-new asset cannot be referenced by any
-            // already-cached item.
+                // `created` is intentionally a no-op — a brand-new asset cannot be referenced by any
+                // already-cached item.
         }
     }
 

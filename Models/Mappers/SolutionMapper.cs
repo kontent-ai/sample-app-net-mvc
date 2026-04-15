@@ -1,13 +1,14 @@
 using Ficto.Generated.Models;
 using Kontent.Ai.Delivery;
+using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
-public class SolutionMapper : IAsyncMapper<Solution, SolutionViewModel>
+public class SolutionMapper(IHtmlResolver htmlResolver) : IAsyncMapper<Solution, SolutionViewModel>
 {
     public async Task<SolutionViewModel> MapAsync(Solution source)
     {
-        var showcase = await source.Showcase.ToHtmlAsync();
+        var showcase = await source.Showcase.ToHtmlAsync(htmlResolver);
 
         return new SolutionViewModel
         {
