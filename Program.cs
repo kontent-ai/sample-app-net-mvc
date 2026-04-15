@@ -4,9 +4,8 @@ using Ficto.Models.Helpers;
 using Ficto.Models.Mappers;
 using Ficto.Services.Content;
 using Ficto.Services.Content.Interfaces;
-using Ficto.Services.Content.RichText;
-using Ficto.Services.Rendering;
 using Kontent.Ai.Delivery;
+using Kontent.Ai.Delivery.Abstractions;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -81,12 +80,11 @@ services.AddScoped<PageMapper>();
 services.AddScoped<ArticleMapper>();
 services.AddScoped<WebsiteRootMapper>();
 
-// Rich-text resolution: route content-item links via IRouteResolver and render inline
-// embedded content (linked items / components) through the same PageBlockMapperFactory →
-// partial pipeline used for top-level page blocks. Inline and block rendering produce
-// identical HTML for the same content item.
-services.AddScoped<IPartialRenderer, RazorPartialRenderer>();
-services.AddFictoRichTextResolver();
+// Rich-text resolution: a single IHtmlResolver instance, injected into mappers that call
+// .ToHtmlAsync(). Content-item links go through IRouteResolver; Fact/Action/Callout
+// components get inline HTML templates (distinct from their block-level rendering).
+services.AddSingleton<IHtmlResolver>(sp =>
+    RichTextResolver.Build(sp.GetRequiredService<IRouteResolver>()));
 
 
 var app = builder.Build();
