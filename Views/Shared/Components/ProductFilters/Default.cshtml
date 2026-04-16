@@ -1,0 +1,30 @@
+@using Ficto.ViewComponents
+@model ProductFiltersViewModel
+
+<div class="card product-filter">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <h5 class="card-title mb-0">Categories</h5>
+            @if (Model.HasSelection)
+            {
+                <a asp-controller="Products" asp-action="Index" class="small">Clear all</a>
+            }
+        </div>
+
+        @if (Model.Categories.Count == 0)
+        {
+            <p class="text-muted small mb-0">No categories available.</p>
+        }
+        else
+        {
+            <form method="get" asp-controller="Products" asp-action="Index" data-filter-form>
+                <ul class="list-unstyled mb-0 product-filter__list">
+                    @foreach (var term in Model.Categories)
+                    {
+                        @await Html.PartialAsync("_CategoryFilterItem", term)
+                    }
+                </ul>
+            </form>
+        }
+    </div>
+</div>

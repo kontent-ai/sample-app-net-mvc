@@ -116,11 +116,18 @@ public class ContentService(
         return result.Value.Items.Count > 0 ? result.Value.Items[0] : null;
     }
 
-    public async Task<IReadOnlyList<IContentItem<Product>>> GetProductsAsync()
+    public async Task<IReadOnlyList<IContentItem<Product>>> GetProductsAsync(
+        IReadOnlyCollection<string>? categoryCodenames = null)
     {
-        var result = await Client.GetItems<Product>()
-            .Where(CollectionFilter)
-            .ExecuteAsync();
+        var query = Client.GetItems<Product>().Where(CollectionFilter);
+
+        if (categoryCodenames is { Count: > 0 })
+        {
+            var codenames = categoryCodenames.ToArray();
+            query = query.Where(i => i.Element("category").ContainsAny(codenames));
+        }
+
+        var result = await query.ExecuteAsync();
 
         if (!result.IsSuccess)
         {
@@ -180,6 +187,20 @@ public class ContentService(
         }
 
         return result.Value.Items.Count > 0 ? result.Value.Items[0] : null;
+    }
+
+    public async Task<ITaxonomyGroup?> GetProductCategoryTaxonomyAsync()
+    {
+        var result = await Client.GetTaxonomy("product_category").ExecuteAsync();
+
+        if (!result.IsSuccess)
+        {
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "taxonomy", "product_category");
+            return null;
+        }
+
+        return result.Value;
     }
 
     public async Task<IReadOnlyList<NavigationItem>> GetNavigationAsync()

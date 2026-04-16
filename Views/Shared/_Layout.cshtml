@@ -24,7 +24,7 @@
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Ficto.styles.css" asp-append-version="true" />
 </head>
-<body>
+<body class="d-flex flex-column min-vh-100">
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark fixed-top">
             <div class="container">
@@ -56,11 +56,9 @@
             <a asp-controller="Preview" asp-action="Disable" asp-route-returnUrl="@Context.Request.Path">Disable</a>
         </div>
     }
-    <div class="container">
-        <main role="main">
-            @RenderBody()
-        </main>
-    </div>
+    <main role="main" class="container flex-grow-1">
+        @RenderBody()
+    </main>
 
     <footer class="site-footer">
         <div class="container text-center">
