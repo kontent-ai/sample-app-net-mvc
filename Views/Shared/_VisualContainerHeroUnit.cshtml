@@ -8,7 +8,7 @@
 <section class="visual-container visual-container--hero">
     @if (hasMultipleItems)
     {
-        <div id="@carouselId" class="carousel slide" data-bs-ride="carousel">
+        <div id="@carouselId" class="carousel slide" data-bs-ride="carousel" data-bs-interval="5000">
             <div class="carousel-indicators">
                 @for (var i = 0; i < Model.Items.Count; i++)
                 {
@@ -26,19 +26,21 @@
                     var fact = Model.Items[i];
                     <div class="carousel-item @(i == 0 ? "active" : "")">
                         <div class="hero-slide" style="background-image: url('@(fact.Image?.Url ?? "")');">
-                            <div class="hero-content">
-                                @if (!string.IsNullOrEmpty(fact.Title))
-                                {
-                                    <h1 class="hero-title">@fact.Title</h1>
-                                }
-                                @if (!string.IsNullOrEmpty(fact.Message))
-                                {
-                                    <p class="hero-message">@fact.Message</p>
-                                }
-                                @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
-                                {
-                                    @await Html.PartialAsync("_FactReference", fact)
-                                }
+                            <div class="container">
+                                <div class="hero-content">
+                                    @if (!string.IsNullOrEmpty(fact.Title))
+                                    {
+                                        <h1 class="hero-title">@fact.Title</h1>
+                                    }
+                                    @if (!string.IsNullOrEmpty(fact.Message))
+                                    {
+                                        <p class="hero-message">@fact.Message</p>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
+                                    {
+                                        @await Html.PartialAsync("_FactReference", fact)
+                                    }
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -58,19 +60,21 @@
     {
         var fact = Model.Items[0];
         <div class="hero-slide" style="background-image: url('@(fact.Image?.Url ?? "")');">
-            <div class="hero-content">
-                @if (!string.IsNullOrEmpty(fact.Title))
-                {
-                    <h1 class="hero-title">@fact.Title</h1>
-                }
-                @if (!string.IsNullOrEmpty(fact.Message))
-                {
-                    <p class="hero-message">@fact.Message</p>
-                }
-                @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
-                {
-                    @await Html.PartialAsync("_FactReference", fact)
-                }
+            <div class="container">
+                <div class="hero-content">
+                    @if (!string.IsNullOrEmpty(fact.Title))
+                    {
+                        <h1 class="hero-title">@fact.Title</h1>
+                    }
+                    @if (!string.IsNullOrEmpty(fact.Message))
+                    {
+                        <p class="hero-message">@fact.Message</p>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
+                    {
+                        @await Html.PartialAsync("_FactReference", fact)
+                    }
+                </div>
             </div>
         </div>
     }

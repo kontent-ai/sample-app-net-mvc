@@ -1,7 +1,9 @@
 @model PageViewModel
 
 @{
-    ViewData["Title"] = Model.MetadataTitle ?? Model.Title ?? "Page";
+    ViewData["Title"] = !string.IsNullOrWhiteSpace(Model.MetadataTitle) ? Model.MetadataTitle
+                      : !string.IsNullOrWhiteSpace(Model.Title) ? Model.Title
+                      : "Page";
 }
 
 @foreach (var block in Model.Content)

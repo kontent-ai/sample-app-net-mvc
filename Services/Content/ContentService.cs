@@ -184,10 +184,9 @@ public class ContentService(
 
     public async Task<IReadOnlyList<NavigationItem>> GetNavigationAsync()
     {
-        // Fetch the WebsiteRoot directly by its codename with Depth(2) to reach
-        // WebsiteRoot → NavigationItem container → NavigationItem subitems.
+        // Depth(3) reaches WebsiteRoot → container → top-level nav items → dropdown subitems.
         var result = await Client.GetItem<WebsiteRoot>(CollectionCodename)
-            .Depth(2)
+            .Depth(3)
             .ExecuteAsync();
 
         if (!result.IsSuccess)

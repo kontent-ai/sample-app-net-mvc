@@ -1,26 +1,48 @@
 ﻿@inject Ficto.Services.Content.IPreviewContext PreviewContext
+@inject Ficto.Services.Content.ISpaceContext SpaceContext
+@{
+    var subsiteName = SpaceContext.SpaceCodename switch
+    {
+        "ficto_imaging" => "Imaging",
+        "ficto_healthtech" => "Healthtech",
+        "ficto_surgical" => "Surgical",
+        _ => ""
+    };
+    var brandTitle = string.IsNullOrEmpty(subsiteName) ? "Ficto" : $"Ficto | {subsiteName}";
+    var pageTitle = ViewData["Title"]?.ToString();
+    var fullTitle = string.IsNullOrWhiteSpace(pageTitle) ? brandTitle : $"{pageTitle} - {brandTitle}";
+}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="@SpaceContext.SpaceCodename">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - Ficto</title>
+    <title>@fullTitle</title>
     <script type="importmap"></script>
+    <link rel="icon" type="image/png" href="~/logo.png" />
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Ficto.styles.css" asp-append-version="true" />
 </head>
 <body>
     <header>
-        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
-            <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Ficto</a>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark fixed-top">
+            <div class="container">
+                <a class="navbar-brand d-flex align-items-center gap-2" asp-area="" asp-controller="Home" asp-action="Index">
+                    <img src="~/logo.png" alt="" height="32" class="brand-logo" />
+                    <span class="brand-name">Ficto</span>
+                    @if (!string.IsNullOrEmpty(subsiteName))
+                    {
+                        <span class="brand-sep" aria-hidden="true">|</span>
+                        <span class="brand-site">@subsiteName</span>
+                    }
+                </a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
-                    <ul class="navbar-nav flex-grow-1">
+                <div class="navbar-collapse collapse d-sm-inline-flex">
+                    <ul class="navbar-nav ms-auto">
                         @await Component.InvokeAsync("Navigation")
                     </ul>
                 </div>
@@ -35,14 +57,14 @@
         </div>
     }
     <div class="container">
-        <main role="main" class="pb-3">
+        <main role="main">
             @RenderBody()
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
-        <div class="container">
-            &copy; 2025 - Ficto - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+    <footer class="site-footer">
+        <div class="container text-center">
+            &copy; 2026 - <a href="https://kontent.ai" target="_blank" rel="noopener">Kontent.ai</a>
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
