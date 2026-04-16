@@ -1,4 +1,6 @@
+using System.Text;
 using System.Text.Encodings.Web;
+using System.Text.RegularExpressions;
 using Ficto.Generated.Models;
 using Ficto.Models.Helpers;
 using Kontent.Ai.Delivery;
@@ -22,8 +24,9 @@ namespace Ficto.Services.Content;
 /// </summary>
 public static class RichTextResolver
 {
-    public static IHtmlResolver Build(IRouteResolver routes) =>
-        new HtmlResolverBuilder()
+    public static IHtmlResolver Build(IRouteResolver routes)
+    {
+        var builder = new HtmlResolverBuilder()
             .WithContentItemLinkResolver(async (link, resolveChildren) =>
             {
                 var innerHtml = await resolveChildren(link.Children);
@@ -41,11 +44,25 @@ public static class RichTextResolver
                     .Select(kv => $" {kv.Key}=\"{Enc(kv.Value)}\""));
 
                 return $"<a href=\"{Enc(url)}\" data-item-id=\"{link.ItemId}\"{attributes}>{innerHtml}</a>";
-            })
+            });
+
+        foreach (var tag in new[] { "h1", "h2", "h3", "h4", "h5", "h6" })
+        {
+            builder = builder.WithHtmlNodeResolver(tag, async (node, resolveChildren) =>
+            {
+                var innerHtml = await resolveChildren(node.Children);
+                var id = Slugify(ExtractText(node.Children));
+                var level = node.TagName.ToLowerInvariant();
+                return $"<{level} class=\"rt-heading\"><a id=\"{Enc(id)}\" href=\"#{Enc(id)}\">{innerHtml}</a></{level}>";
+            });
+        }
+
+        return builder
             .WithContentResolver<Fact>(content => new ValueTask<string>(RenderFact(content.Elements, routes)))
             .WithContentResolver<ActionModel>(content => new ValueTask<string>(RenderAction(content.Elements, routes)))
             .WithContentResolver<Callout>(async content => await RenderCalloutAsync(content.Elements))
             .Build();
+    }
 
     private static string RenderFact(Fact fact, IRouteResolver routes)
     {
@@ -101,4 +118,26 @@ public static class RichTextResolver
     }
 
     private static string Enc(string value) => HtmlEncoder.Default.Encode(value);
+
+    private static string ExtractText(IReadOnlyList<IRichTextBlock> blocks)
+    {
+        var sb = new StringBuilder();
+        Collect(blocks, sb);
+        return sb.ToString();
+
+        static void Collect(IReadOnlyList<IRichTextBlock> nodes, StringBuilder sb)
+        {
+            foreach (var n in nodes)
+            {
+                if (n is ITextNode t) sb.Append(t.Text);
+                else if (n is IHtmlNode h) Collect(h.Children, sb);
+            }
+        }
+    }
+
+    private static string Slugify(string text)
+    {
+        var slug = Regex.Replace(text.ToLowerInvariant(), @"[^a-z0-9]+", "-").Trim('-');
+        return slug.Length == 0 ? "heading" : slug;
+    }
 }

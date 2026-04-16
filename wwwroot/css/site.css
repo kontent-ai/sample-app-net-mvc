@@ -337,6 +337,41 @@ a:hover {
   margin-bottom: 0;
 }
 
+/* Rich text heading — vertical line accent + clickable anchor */
+.rt-heading {
+  position: relative;
+  padding: 0.5rem 0 0.5rem 2rem;
+  margin-left: -2rem;
+  margin-top: 2rem;
+}
+h1.rt-heading { font-size: 2.875rem; }
+h2.rt-heading { font-size: 2.3rem;   }
+h3.rt-heading { font-size: 2rem;     }
+h4.rt-heading { font-size: 1.725rem; }
+h5.rt-heading { font-size: 1.4rem;   }
+h6.rt-heading { font-size: 1.15rem;  }
+.rt-heading::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.15em;
+  bottom: 0.15em;
+  width: 4px;
+  background-color: var(--mainButtonColor);
+  border-radius: 2px;
+}
+.rt-heading > a {
+  color: inherit;
+  text-decoration: none;
+  cursor: pointer;
+  scroll-margin-top: 6rem;
+}
+.rt-heading > a:hover,
+.rt-heading > a:focus {
+  color: inherit;
+  text-decoration: none;
+}
+
 /* Content Chunk */
 .content-chunk {
   margin-bottom: 2rem;
