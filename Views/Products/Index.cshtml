@@ -11,28 +11,12 @@
 
 <div class="container py-4">
     <div class="row">
-        @foreach (var product in Model.Products)
-        {
-            <div class="col-md-4 mb-4">
-                <div class="card h-100">
-                    @if (product.MainImage != null)
-                    {
-                        <img src="@product.MainImage.Url" class="card-img-top" alt="@(product.MainImage.Description ?? product.Name)">
-                    }
-                    <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">@product.Name</h5>
-                        @if (!string.IsNullOrEmpty(product.Description))
-                        {
-                            <p class="card-text flex-grow-1">@product.Description</p>
-                        }
-                        @if (product.Price.HasValue)
-                        {
-                            <p class="card-text"><strong>@product.Price.Value.ToString("C")</strong></p>
-                        }
-                        <a asp-action="Details" asp-route-slug="@product.Slug" class="btn btn-primary mt-auto">View Details</a>
-                    </div>
-                </div>
-            </div>
-        }
+        <aside class="col-lg-3 mb-4">
+            @await Component.InvokeAsync("ProductFilters",
+                new { categories = Model.Categories, selected = Model.SelectedCategories })
+        </aside>
+        <section id="product-results" class="col-lg-9">
+            @await Html.PartialAsync("_ProductResults", Model)
+        </section>
     </div>
 </div>

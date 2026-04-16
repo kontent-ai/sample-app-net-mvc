@@ -396,3 +396,108 @@ h6.rt-heading { font-size: 1.15rem;  }
     display: none;
   }
 }
+
+/* Product listing filter sidebar */
+.product-filter {
+  border-color: var(--mainBorderColor);
+  position: sticky;
+  top: 5.5rem; /* clears the fixed-top navbar + breathing room */
+}
+
+.product-filter .card-title {
+  color: var(--mainTextColor);
+}
+
+.product-filter .form-check-input:checked {
+  background-color: var(--mainButtonColor);
+  border-color: var(--mainBorderColor);
+}
+
+.product-filter .form-check-input:focus {
+  border-color: var(--mainHoverColor);
+  box-shadow: 0 0 0 0.15rem rgba(13, 110, 253, 0.15);
+}
+
+.product-filter__list {
+  margin-bottom: 0;
+}
+
+.product-filter__item {
+  margin-bottom: 0.25rem;
+}
+
+.product-filter__children {
+  padding-left: 1.25rem;
+  margin-top: 0.25rem;
+  border-left: 2px solid rgba(0, 0, 0, 0.08);
+  margin-left: 0.4rem;
+}
+
+/* Category pill shown on the product detail page */
+.category-badge {
+  background-color: var(--mainButtonColor);
+  color: #fff;
+  font-weight: 500;
+  padding: 0.4rem 0.75rem;
+  text-transform: capitalize;
+}
+
+/* Product detail hero — full-viewport themed section breaking out of .container */
+.product-hero {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  min-height: 100vh;
+  padding-top: 10vh;
+  padding-bottom: 4rem;
+  background: linear-gradient(135deg, var(--mainBackgroundColor) 0%, var(--mainAfterColor) 100%);
+  color: #fff;
+  display: flex;
+  align-items: center;
+}
+
+.product-hero h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  margin: 1rem 0;
+}
+
+.product-hero .lead {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.product-hero__back {
+  display: inline-block;
+  color: rgba(255, 255, 255, 0.7);
+  text-decoration: none;
+  font-size: 0.9rem;
+  margin-bottom: 1.5rem;
+  transition: color 150ms ease;
+}
+
+.product-hero__back:hover {
+  color: #fff;
+}
+
+.product-hero__price {
+  font-size: 1.75rem;
+  font-weight: 600;
+  margin: 1rem 0;
+}
+
+.product-hero__image {
+  max-height: 60vh;
+  max-width: 100%;
+  filter: drop-shadow(0 20px 40px rgba(0, 0, 0, 0.35));
+}
+
+.related-products h2 {
+  color: var(--mainTextColor);
+}
+
+/* Uniform aspect ratio for product listing / related cards */
+.product-card__image {
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  width: 100%;
+  background-color: #f8f9fa;
+}

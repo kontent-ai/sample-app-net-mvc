@@ -26,4 +26,35 @@ document.addEventListener('DOMContentLoaded', function () {
             interval: false
         });
     });
+
+    // Filter form: on checkbox change, cascade parent → descendants, then AJAX-swap
+    // the product grid without a full page reload. The URL is updated via pushState
+    // so the filtered view stays shareable and the back/forward buttons keep working.
+    document.querySelectorAll('[data-filter-form]').forEach(function (form) {
+        var results = document.getElementById('product-results');
+        if (!results) return;
+
+        form.addEventListener('change', async function (e) {
+            var changed = e.target.closest('input[type="checkbox"][name="category"]');
+            if (changed) {
+                var item = changed.closest('.product-filter__item');
+                var childList = item ? item.querySelector('.product-filter__children') : null;
+                if (childList) {
+                    childList.querySelectorAll('input[type="checkbox"]').forEach(function (c) {
+                        c.checked = changed.checked;
+                    });
+                }
+            }
+
+            var params = new URLSearchParams(new FormData(form));
+            var query = params.toString();
+            var url = form.action + (query ? '?' + query : '');
+
+            var response = await fetch(url, {
+                headers: { 'X-Requested-With': 'XMLHttpRequest' }
+            });
+            results.innerHTML = await response.text();
+            history.pushState({}, '', url);
+        });
+    });
 });

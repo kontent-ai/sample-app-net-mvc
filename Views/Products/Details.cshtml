@@ -1,28 +1,77 @@
-@model Ficto.Models.ProductViewModel
+@model Ficto.Models.ProductDetailViewModel
 
 @{
-    ViewData["Title"] = Model.Name;
+    ViewData["Title"] = Model.Product.Name;
+    var product = Model.Product;
 }
 
-<h1>@Model.Name</h1>
+<section class="product-hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-md-6 product-hero__text">
+                <a asp-action="Index" class="product-hero__back">&larr; Back to products</a>
+                @if (!string.IsNullOrEmpty(product.Category))
+                {
+                    <div>
+                        <span class="badge rounded-pill category-badge">@product.Category</span>
+                    </div>
+                }
+                <h1>@product.Name</h1>
+                @if (product.Price.HasValue)
+                {
+                    <p class="product-hero__price">@product.Price.Value.ToString("C")</p>
+                }
+                @if (!string.IsNullOrEmpty(product.Description))
+                {
+                    <p class="lead">@product.Description</p>
+                }
+            </div>
+            <div class="col-md-6 text-center">
+                @if (product.MainImage != null)
+                {
+                    <img src="@product.MainImage.Url"
+                         alt="@(product.MainImage.Description ?? product.Name)"
+                         class="product-hero__image" />
+                }
+            </div>
+        </div>
+    </div>
+</section>
 
+<section class="related-products py-5">
+    <h2 class="mb-4">Related products</h2>
 
-@if (Model.MainImage != null)
-{
-    <img src="@Model.MainImage.Url" alt="@Model.Name" style="max-width: 400px;" />
-}
-
-@if (Model.Price.HasValue)
-{
-    <p><strong>Price:</strong> $@Model.Price.Value.ToString("F2")</p>
-}
-
-@if (!string.IsNullOrEmpty(Model.Description))
-{
-    <p>@Model.Description</p>
-}
-
-@if (!string.IsNullOrEmpty(Model.Category))
-{
-    <p>@Model.Category</p>
-}
+    @if (Model.Related.Count == 0)
+    {
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <p class="mb-3 text-muted">No related products in this category yet.</p>
+                <a asp-action="Index" class="btn btn-primary">Browse all products</a>
+            </div>
+        </div>
+    }
+    else
+    {
+        <div class="row g-4">
+            @foreach (var related in Model.Related)
+            {
+                <div class="col-md-6 col-xl-3">
+                    <div class="card h-100">
+                        @if (related.MainImage != null)
+                        {
+                            <img src="@related.MainImage.Url" class="card-img-top product-card__image" alt="@(related.MainImage.Description ?? related.Name)">
+                        }
+                        <div class="card-body d-flex flex-column">
+                            <h5 class="card-title">@related.Name</h5>
+                            @if (related.Price.HasValue)
+                            {
+                                <p class="card-text"><strong>@related.Price.Value.ToString("C")</strong></p>
+                            }
+                            <a asp-action="Details" asp-route-slug="@related.Slug" class="btn btn-primary mt-auto">View Details</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        </div>
+    }
+</section>
