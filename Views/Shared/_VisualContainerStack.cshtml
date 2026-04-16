@@ -41,7 +41,7 @@
                                         {
                                             <p class="stack-message">@fact.Message</p>
                                         }
-                                        @if (fact.LinkUrl != null)
+                                        @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
                                         {
                                             @await Html.PartialAsync("_FactReference", fact)
                                         }
@@ -92,7 +92,7 @@
                         {
                             <p class="stack-message">@fact.Message</p>
                         }
-                        @if (fact.LinkUrl != null)
+                        @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
                         {
                             @await Html.PartialAsync("_FactReference", fact)
                         }

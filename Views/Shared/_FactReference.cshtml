@@ -1,10 +1,10 @@
 @model FactViewModel
 
-@if (Model.LinkUrl is not null)
+@if (!string.IsNullOrWhiteSpace(Model.LinkLabel))
 {
     <a href="@Model.LinkUrl"
        class="btn btn-primary"
        @(Model.LinkIsExternal ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
-        @(Model.LinkLabel ?? "Learn more")
+        @Model.LinkLabel
     </a>
 }

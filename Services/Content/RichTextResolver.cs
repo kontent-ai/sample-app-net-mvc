@@ -50,9 +50,9 @@ public static class RichTextResolver
     private static string RenderFact(Fact fact, IRouteResolver routes)
     {
         var reference = BuildReference(fact.ReferenceLabel, fact.ReferenceCaption, fact.ReferenceExternalUri, fact.ReferenceContentItemLink);
-        var linkHtml = reference is null
+        var linkHtml = string.IsNullOrWhiteSpace(fact.ReferenceLabel)
             ? string.Empty
-            : $"<a class=\"rt-fact__link\" href=\"{Enc(routes.ResolveUrl(reference))}\">{Enc(reference.Label ?? string.Empty)}</a>";
+            : $"<a class=\"rt-fact__link\" href=\"{Enc(routes.ResolveUrl(reference))}\">{Enc(fact.ReferenceLabel)}</a>";
 
         return $"""
             <figure class="rt-fact">
@@ -65,11 +65,10 @@ public static class RichTextResolver
 
     private static string RenderAction(ActionModel action, IRouteResolver routes)
     {
-        var reference = BuildReference(action.ReferenceLabel, action.ReferenceCaption, action.ReferenceExternalUri, action.ReferenceContentItemLink);
-        if (reference is null) return string.Empty;
+        if (string.IsNullOrWhiteSpace(action.ReferenceLabel)) return string.Empty;
 
-        var label = reference.Label ?? string.Empty;
-        return $"""<a class="rt-action" href="{Enc(routes.ResolveUrl(reference))}">{Enc(label)}</a>""";
+        var reference = BuildReference(action.ReferenceLabel, action.ReferenceCaption, action.ReferenceExternalUri, action.ReferenceContentItemLink);
+        return $"""<a class="rt-action" href="{Enc(routes.ResolveUrl(reference))}">{Enc(action.ReferenceLabel)}</a>""";
     }
 
     private static async Task<string> RenderCalloutAsync(Callout callout)
