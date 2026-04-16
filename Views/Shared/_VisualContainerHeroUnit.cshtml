@@ -35,7 +35,7 @@
                                 {
                                     <p class="hero-message">@fact.Message</p>
                                 }
-                                @if (fact.LinkUrl != null)
+                                @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
                                 {
                                     @await Html.PartialAsync("_FactReference", fact)
                                 }
@@ -67,7 +67,7 @@
                 {
                     <p class="hero-message">@fact.Message</p>
                 }
-                @if (fact.LinkUrl != null)
+                @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
                 {
                     @await Html.PartialAsync("_FactReference", fact)
                 }

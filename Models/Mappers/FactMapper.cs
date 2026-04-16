@@ -26,7 +26,7 @@ public class FactMapper(ReferenceMapper referenceMapper, PersonMapper personMapp
         {
             Title = source.Title,
             Message = source.Message,
-            LinkLabel = reference?.Label,
+            LinkLabel = string.IsNullOrWhiteSpace(source.ReferenceLabel) ? null : source.ReferenceLabel,
             LinkUrl = routeResolver.ResolveUrl(reference),
             LinkIsExternal = reference is UrlReference,
             Image = AssetViewModel.From(source.Image.FirstOrDefault()),
