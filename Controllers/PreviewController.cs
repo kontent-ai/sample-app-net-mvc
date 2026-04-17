@@ -17,6 +17,21 @@ public class PreviewController(
 {
     public const string CookieName = "ficto_preview";
 
+    /// <summary>
+    /// Cookie options for the preview cookie. <c>SameSite=None</c> + <c>Secure</c> is required
+    /// for the cookie to be sent on cross-site iframe requests — e.g. when Kontent.ai Studio
+    /// embeds the app as a live preview. Browsers reject <c>SameSite=None</c> without <c>Secure</c>,
+    /// and they reject <c>Secure</c> cookies on plain HTTP; the app runs HTTPS in dev and prod.
+    /// </summary>
+    public static CookieOptions BuildPreviewCookieOptions() => new()
+    {
+        HttpOnly = true,
+        Secure = true,
+        SameSite = SameSiteMode.None,
+        Expires = DateTimeOffset.UtcNow.AddDays(1),
+        IsEssential = true,
+    };
+
     [HttpGet("enable")]
     public async Task<IActionResult> Enable(string? returnUrl, CancellationToken cancellationToken)
     {
@@ -26,14 +41,7 @@ public class PreviewController(
             return Forbid();
         }
 
-        Response.Cookies.Append(CookieName, protector.Issue(), new CookieOptions
-        {
-            HttpOnly = true,
-            Secure = Request.IsHttps,
-            SameSite = SameSiteMode.Lax,
-            Expires = DateTimeOffset.UtcNow.AddDays(1),
-            IsEssential = true,
-        });
+        Response.Cookies.Append(CookieName, protector.Issue(), BuildPreviewCookieOptions());
 
         logger.LogInformation("Preview mode enabled.");
         return LocalOrHome(returnUrl);
