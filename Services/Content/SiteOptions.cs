@@ -9,7 +9,7 @@ public record SiteOptions
 {
     /// <summary>
     /// Ordered list of collection/space codenames available in this Kontent.ai environment.
-    /// The "common" collection is always included in queries but is not listed as a selectable space.
+    /// The "default" collection is always included in queries but is not listed as a selectable space.
     /// </summary>
     public string[] Spaces { get; set; } = ["ficto_imaging", "ficto_healthtech", "ficto_surgical"];
 
