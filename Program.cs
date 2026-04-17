@@ -37,14 +37,11 @@ services.AddScoped<ISpaceContext>(sp => sp.GetRequiredService<SpaceContext>());
 services.AddScoped<PreviewContext>();
 services.AddScoped<IPreviewContext>(sp => sp.GetRequiredService<PreviewContext>());
 
-// Preview mode wiring:
-//   - IPreviewTokenProtector: signs/validates the ficto_preview cookie.
-//   - IPreviewAccessGate: pluggable authorization seam. SecretPreviewAccessGate is the sample default:
-//     it checks a shared secret from PreviewOptions (user-secrets). Set PreviewOptions:Secret empty
-//     for zero-config local dev (the gate then logs a warning and allows anyone).
-//     Real deployments should swap in an auth-aware implementation (OIDC / custom policy / etc.).
+// Preview mode wiring: IPreviewTokenProtector signs/validates the ficto_preview cookie so a
+// visitor can't flip preview on by typing a value into devtools. SpaceContextMiddleware issues
+// the cookie when a request carries a matching ?secret=. Real deployments gate preview via
+// standard ASP.NET authentication middleware or an edge proxy — see README.
 services.AddSingleton<IPreviewTokenProtector, PreviewTokenProtector>();
-services.AddSingleton<IPreviewAccessGate, SecretPreviewAccessGate>();
 
 // Content service
 services.AddScoped<IContentService, ContentService>();

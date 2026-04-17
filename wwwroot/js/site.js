@@ -1,5 +1,28 @@
 // Carousel accessibility enhancements
 document.addEventListener('DOMContentLoaded', function () {
+    // Preview-mode popup: collapsed state persists across navigation via localStorage
+    // so editors who collapse it once don't have to dismiss it on every page.
+    var previewBanner = document.querySelector('[data-preview-banner]');
+    if (previewBanner) {
+        var previewToggle = previewBanner.querySelector('[data-preview-toggle]');
+        var storageKey = 'ficto_preview_banner_collapsed';
+        var applyCollapsed = function (collapsed) {
+            previewBanner.setAttribute('data-collapsed', collapsed ? 'true' : 'false');
+            if (previewToggle) {
+                previewToggle.setAttribute('aria-expanded', collapsed ? 'false' : 'true');
+            }
+        };
+        applyCollapsed(localStorage.getItem(storageKey) === 'true');
+        if (previewToggle) {
+            previewToggle.addEventListener('click', function () {
+                var next = previewBanner.getAttribute('data-collapsed') !== 'true';
+                applyCollapsed(next);
+                localStorage.setItem(storageKey, next ? 'true' : 'false');
+            });
+        }
+    }
+
+
     // Pause carousel on focus for accessibility
     document.querySelectorAll('.carousel').forEach(function (carousel) {
         var bsCarousel = bootstrap.Carousel.getOrCreateInstance(carousel);
