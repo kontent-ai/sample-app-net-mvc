@@ -501,3 +501,80 @@ h6.rt-heading { font-size: 1.15rem;  }
   width: 100%;
   background-color: #f8f9fa;
 }
+
+/* Preview-mode popup: floating dark-purple panel, collapses to an icon button. */
+.preview-banner {
+  position: fixed;
+  right: 1.25rem;
+  bottom: 1.25rem;
+  z-index: 1080;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.5rem 0.4rem 0.4rem;
+  background-color: #4c2a85;
+  color: #ffffff;
+  border-radius: 999px;
+  box-shadow: 0 10px 28px rgba(41, 16, 76, 0.45);
+  font-size: 0.9375rem;
+  transition: padding 180ms ease, gap 180ms ease;
+}
+
+.preview-banner__toggle {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #ffffff;
+  background-color: rgba(255, 255, 255, 0.12);
+  cursor: pointer;
+  transition: background-color 150ms ease;
+}
+.preview-banner__toggle:hover,
+.preview-banner__toggle:focus-visible {
+  background-color: rgba(255, 255, 255, 0.22);
+  outline: none;
+}
+
+.preview-banner__body {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-right: 0.5rem;
+  white-space: nowrap;
+  overflow: hidden;
+  max-width: 22rem;
+  opacity: 1;
+  transition: max-width 220ms ease, opacity 160ms ease, padding-right 180ms ease;
+}
+
+.preview-banner__label {
+  font-weight: 600;
+  letter-spacing: 0.01em;
+}
+
+.preview-banner__action {
+  color: #ffffff;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.preview-banner__action:hover,
+.preview-banner__action:focus-visible {
+  color: #f3e7ff;
+}
+
+.preview-banner[data-collapsed="true"] {
+  padding: 0.25rem;
+  gap: 0;
+}
+.preview-banner[data-collapsed="true"] .preview-banner__body {
+  max-width: 0;
+  padding-right: 0;
+  opacity: 0;
+  pointer-events: none;
+}
+

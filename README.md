@@ -61,7 +61,7 @@ dotnet user-secrets set "WebhookOptions:Secret"              "<webhook-signing-s
 | `DeliveryOptions:EnvironmentId` | Any content read | The only hard requirement. |
 | `DeliveryOptions:PreviewApiKey` | Preview mode | Without it, preview requests silently fall back to production with a warning. |
 | `DeliveryOptions:SecureAccessApiKey` | Secure Access | Only needed if the environment has Secure Access enabled. |
-| `PreviewOptions:Secret` | Preview auto-enable + `/preview/enable` gate | Without a secret, the gate logs a warning and admits every request — fine for offline dev, not for anything reachable. |
+| `PreviewOptions:Secret` | Preview auto-enable | Ships as `mySecret` so preview URLs work out-of-the-box; override for anything reachable. An empty value logs a warning and admits any non-empty `?secret=`. |
 | `WebhookOptions:Secret` | Webhook-driven cache invalidation | Required HMAC secret; webhook calls with mismatching `X-KC-Signature` are rejected. |
 
 user-secrets values are merged into configuration at runtime and are scoped to your local user profile.
@@ -88,14 +88,14 @@ The app is served at `https://localhost:7108` (HTTP on `:5107` redirects to HTTP
 
 #### Switching between spaces in dev
 
-The Ficto sample is a multisite setup with three spaces (`ficto_imaging`, `ficto_healthtech`, `ficto_surgical`). In production each space is reached via its own subdomain; in local dev, use the `?space=` query parameter instead — it's recognised by `SpaceContextMiddleware` and persisted in the `ficto_space` cookie for subsequent navigation:
+The Ficto sample is a multisite setup with three spaces (`ficto_imaging`, `ficto_healthtech`, `ficto_surgical`). In production each space is reached via its own subdomain; in local dev, use the `?collection=` query parameter instead — it's recognised by `SpaceContextMiddleware` and persisted in the `ficto_space` cookie for subsequent navigation:
 
 ```
-https://localhost:7108/?space=ficto_imaging
-https://localhost:7108/?space=ficto_surgical
+https://localhost:7108/?collection=ficto_imaging
+https://localhost:7108/?collection=ficto_surgical
 ```
 
-See [Configuring the Kontent.ai preview URL](#configuring-the-kontentai-preview-url) for how the same `?space=` parameter is used to target preview iframes at a specific subsite.
+See [Configuring the Kontent.ai preview URL](#configuring-the-kontentai-preview-url) for how the same `?collection=` parameter is used to target preview iframes at a specific subsite.
 
 
 
@@ -109,7 +109,7 @@ The app is a content-rendered website for the fictional "Ficto" brand — three 
 `SpaceContextMiddleware` resolves the active space for each request in this priority order:
 
 1. **Subdomain** — `ficto-imaging.example.com` → `ficto_imaging` (hyphens become underscores; the `preview.` prefix is stripped before resolution).
-2. **Query string** — `?space=ficto_imaging`, which also persists to the `ficto_space` cookie.
+2. **Query string** — `?collection=ficto_imaging`, which also persists to the `ficto_space` cookie.
 3. **Cookie** — `ficto_space` from a prior selection.
 4. **Default** — the first entry in `SiteOptions:Spaces`.
 
@@ -150,54 +150,56 @@ The header menu is driven from a `WebsiteRoot` item in the active space. `Naviga
 
 ## Preview mode
 
-Preview mode switches the active `IDeliveryClient` to the preview-keyed instance so editors see unpublished drafts. Access is gated by `IPreviewAccessGate` — the sample ships `SecretPreviewAccessGate`, which validates a `?secret=` URL parameter against `PreviewOptions:Secret` via a fixed-time comparison. The gate is pluggable; swap in your own authz (OIDC, claims, IP allow-list) before exposing the app publicly.
+Preview mode switches the active `IDeliveryClient` to the preview-keyed instance so editors see unpublished drafts. A single query parameter &mdash; `?secret=<PreviewOptions:Secret>` &mdash; is what flips it on. The sample ships with `PreviewOptions:Secret = "mySecret"` so everything works out-of-the-box; override it in user-secrets for anything reachable.
 
-### Turning preview on/off in the sample
+### How it works
 
-- **Enable** (manual): `GET /preview/enable?returnUrl=/Articles/<slug>` &mdash; sets a signed `ficto_preview` cookie (HttpOnly, SameSite=None, Secure, 1-day expiry), 302-redirects to `returnUrl` (local URLs only; external hosts fall back to `/`).
-- **Enable** (auto, for Kontent.ai Studio): any request carrying `?secret=<PreviewOptions:Secret>` flips preview on for that browser if the gate approves. `SpaceContextMiddleware` issues the cookie and 302-redirects to the same URL with `?secret=` stripped, so the token doesn't leak into rendered HTML or the editor's URL bar. This is what lets Studio embed a target URL directly in its cross-origin preview iframe — there is no manual button to click inside the iframe.
-- **Disable**: `GET /preview/disable?returnUrl=<path>` &mdash; clears the cookie. The banner rendered in `_Layout.cshtml` links to this endpoint.
+`SpaceContextMiddleware` runs on every request. If the request carries `?secret=` and the value matches `PreviewOptions:Secret` (compared with `CryptographicOperations.FixedTimeEquals`), the middleware:
 
-When the cookie is present and valid, `SpaceContextMiddleware` flips `IPreviewContext.IsPreview` on, `ContentService` routes reads through the `"preview"` named Delivery client (from `DeliveryOptions:PreviewApiKey`), and the green banner shows at the top of every page. If the preview client isn't configured, the app logs a warning and silently serves production content — drafts just won't appear, no hard failure.
+1. Issues a signed `ficto_preview` cookie via `IPreviewTokenProtector` (HttpOnly, SameSite=None, Secure, 1-day expiry &mdash; required for cross-site iframe use from Kontent.ai Studio).
+2. 302-redirects to the same URL with `?secret=` stripped, so the token never leaks into rendered HTML or the editor's URL bar.
+
+On subsequent requests the valid cookie alone keeps `IPreviewContext.IsPreview` on, `ContentService` routes reads through the `"preview"` named Delivery client (from `DeliveryOptions:PreviewApiKey`), and the green banner shows at the top of every page. If the preview client isn't configured, the app logs a warning and silently serves production content &mdash; drafts just won't appear, no hard failure.
+
+To exit preview, click the banner's **Disable** link (`GET /preview/disable`), which clears the cookie.
 
 ### Configuring the Kontent.ai preview URL
 
 Set the per-content-type preview URL in Kontent.ai Studio to:
 
 ```
-https://localhost:7108/Articles/{URL slug}?space=ficto_imaging&secret=<PreviewOptions:Secret>
+https://localhost:7108/Articles/{URL slug}?collection=ficto_imaging&secret=mySecret
 ```
 
-Adjust the path segment per content type (e.g. `/Products/{URL slug}`, `/Solutions/{URL slug}`, or `/{URL slug}` for plain Pages) and the `space` codename per space. The `?secret=` value must match `PreviewOptions:Secret` configured via user-secrets. Once the iframe loads, auto-enable sets the cookie, strips the secret from the URL, and subsequent clicks inside the iframe stay in preview mode via the `SameSite=None; Secure` cookie.
+Adjust the path segment per content type (e.g. `/Products/{URL slug}`, `/Solutions/{URL slug}`, or `/{URL slug}` for plain Pages) and the `space` codename per space. The `?secret=` value must match `PreviewOptions:Secret`. Once the iframe loads, the middleware sets the cookie, strips the secret from the URL, and subsequent clicks inside the iframe stay in preview mode via the `SameSite=None; Secure` cookie.
 
-### ⚠ The default gate is NOT a security boundary
+### ⚠ Gating preview in production
 
-`IPreviewAccessGate` is the authorization seam between an unauthenticated HTTP request and "you may turn preview on." The sample ships `SecretPreviewAccessGate`, which compares a URL-supplied `?secret=` against `PreviewOptions:Secret` via a fixed-time comparison. If `PreviewOptions:Secret` is left empty, the gate **logs a warning and returns `true` for every request** — meaning any visitor who hits `/preview/enable` *or* any request with a `?secret=` of any value sees drafts. This is fine for a local sample; it is **not** fine for anything publicly reachable. Always set a secret before exposing the app.
+A shared URL secret is fine for a sample app &mdash; it is **not** a substitute for real authorization. Anyone who learns the secret sees drafts. For any reachable deployment, put a real auth boundary in front of preview requests using one of these idiomatic ASP.NET patterns:
 
-Replace the registration in `Program.cs` with your own implementation before deploying:
+1. **Standard ASP.NET authentication middleware** &mdash; configure `AddAuthentication` / `AddAuthorization` with your IdP (OIDC, Entra ID, cookie auth, etc.) and short-circuit unauthenticated preview requests before `SpaceContextMiddleware` runs. For example:
 
-```csharp
-services.AddSingleton<IPreviewAccessGate, MyAuthBackedGate>();
-```
+   ```csharp
+   app.Use(async (ctx, next) =>
+   {
+       var entering = ctx.Request.Query.ContainsKey("secret");
+       var inPreview = ctx.Request.Cookies.ContainsKey(PreviewController.CookieName);
+       if ((entering || inPreview) && !(ctx.User.Identity?.IsAuthenticated ?? false))
+       {
+           await ctx.ChallengeAsync();
+           return;
+       }
+       await next();
+   });
+   ```
 
-A plausible shape for a real gate (not implemented here — your auth system, your code):
+2. **Edge rules** &mdash; Cloudflare Access, Azure Front Door rules, AWS Cognito, or plain HTTP basic auth at a reverse proxy can all gate preview requests before they ever hit the app. Works well when preview is exposed on a dedicated hostname (e.g. `preview.ficto.example.com`).
 
-```csharp
-public sealed class OidcPreviewAccessGate(IAuthorizationService authz) : IPreviewAccessGate
-{
-    public async ValueTask<bool> CanEnableAsync(HttpContext ctx, CancellationToken ct)
-    {
-        var result = await authz.AuthorizeAsync(ctx.User, resource: null, policy: "CanPreviewContent");
-        return result.Succeeded;
-    }
-}
-```
+Layer either approach on top of the `?secret=` mechanism. The secret then serves as the "turn preview display on" toggle; the auth boundary decides who's allowed to flip it.
 
-Evolutions on the same theme: require a claim (`ctx.User.HasClaim("role", "editor")`), check an IP allow-list, require MFA, etc. The interface is deliberately minimal so it composes with whatever authz model you already run.
+### Why the cookie is signed
 
-### Why the cookie is signed even without a secret
-
-The `ficto_preview` cookie's value is opaque ciphertext protected by `IDataProtectionProvider`. Without signing, a visitor could type `ficto_preview=1` in devtools and bypass the gate entirely; with signing, a forged value fails `Unprotect` and the middleware ignores it. The payload itself is a constant &mdash; the cookie says "this browser has been approved," and the gate is the thing that decides who gets approved.
+The `ficto_preview` cookie's value is opaque ciphertext protected by `IDataProtectionProvider`. Without signing, a visitor could type `ficto_preview=enabled` in devtools and bypass the secret check entirely; with signing, a forged value fails `Unprotect` and the middleware ignores it. The payload itself is a constant &mdash; the cookie says "this browser has presented a valid secret," nothing more.
 
 ## Smart Link (click-to-edit overlays)
 
