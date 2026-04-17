@@ -1,5 +1,6 @@
 using Ficto.Generated.Models;
-using Ficto.Models.Helpers;
+using Ficto.Models.References;
+using Ficto.Services.Routing;
 using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;

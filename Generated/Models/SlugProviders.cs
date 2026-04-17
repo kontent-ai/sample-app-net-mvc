@@ -1,5 +1,4 @@
-using Ficto.Generated.Models;
-using Ficto.Models.Helpers;
+using Ficto.Models.References;
 
 namespace Ficto.Generated.Models;
 

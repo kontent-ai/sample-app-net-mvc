@@ -1,4 +1,3 @@
-using Ficto.Models.Helpers;
 using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;

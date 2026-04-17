@@ -1,5 +1,3 @@
-using Ficto.Models.Helpers;
-
 namespace Ficto.Models;
 
 public record ProductListingViewModel

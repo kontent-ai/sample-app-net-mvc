@@ -2,7 +2,6 @@ using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Ficto.Generated.Models;
 using Ficto.Models;
-using Ficto.Services.Content.Interfaces;
 using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Services.Content;

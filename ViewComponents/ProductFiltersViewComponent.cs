@@ -17,9 +17,3 @@ public class ProductFiltersViewComponent : ViewComponent
         return View(viewModel);
     }
 }
-
-public record ProductFiltersViewModel
-{
-    public IReadOnlyList<CategoryTermViewModel> Categories { get; init; } = [];
-    public bool HasSelection { get; init; }
-}

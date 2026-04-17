@@ -1,8 +1,7 @@
 using Ficto.Generated.Models;
-using Ficto.Services.Content;
 using Kontent.Ai.Delivery.Abstractions;
 
-namespace Ficto.Services.Content.Interfaces;
+namespace Ficto.Services.Content;
 
 public partial interface IContentService
 {

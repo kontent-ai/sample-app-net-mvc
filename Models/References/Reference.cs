@@ -1,4 +1,4 @@
-namespace Ficto.Models.Helpers;
+namespace Ficto.Models.References;
 
 public abstract record Reference
 {

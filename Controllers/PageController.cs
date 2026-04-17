@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
 using Ficto.Models.Mappers;
-using Ficto.Services.Content.Interfaces;
+using Ficto.Services.Content;
 
 namespace Ficto.Controllers;
 
