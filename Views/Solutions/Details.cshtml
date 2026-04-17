@@ -14,7 +14,10 @@
 
     @if (Model.MainImage != null)
     {
-        <img src="@Model.MainImage.Url" alt="@(Model.MainImage.Description ?? Model.Name)" class="img-fluid mb-4" style="max-width: 600px;" />
+        <img src="@Model.MainImage.UrlWithTransform(width: 1200, format: ImageFormat.Webp, quality: 85)"
+             alt="@(Model.MainImage.AltText ?? Model.Name)"
+             class="img-fluid mb-4"
+             style="max-width: 600px;" />
     }
 
     @if (!string.IsNullOrEmpty(Model.Description))

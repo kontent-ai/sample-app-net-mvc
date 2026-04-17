@@ -11,35 +11,51 @@ public class ProductsController(
     ProductMapper productMapper,
     PageMapper pageMapper) : Controller
 {
-    public async Task<IActionResult> Index([FromQuery(Name = "category")] string[]? category)
+    private const int PageSize = 12;
+
+    public async Task<IActionResult> Index(
+        [FromQuery(Name = "category")] string[]? category,
+        [FromQuery] int page = 1)
     {
         var selected = new HashSet<string>(
-            category ?? Array.Empty<string>(),
+            category ?? [],
             StringComparer.OrdinalIgnoreCase);
+        var skip = Math.Max(0, (page - 1) * PageSize);
 
-        var taxonomy = await contentService.GetProductCategoryTaxonomyAsync();
-        var page = await contentService.GetPageBySlugAsync("products");
-        var products = await contentService.GetProductsAsync(
-            selected.Count > 0 ? selected : null);
+        var taxonomyTask = contentService.GetProductCategoryTaxonomyAsync();
+        var pageTask = contentService.GetPageBySlugAsync("products");
+        var productsTask = contentService.GetProductsAsync(
+            selected.Count > 0 ? selected : null,
+            skip,
+            PageSize);
+        await Task.WhenAll(taxonomyTask, pageTask, productsTask);
 
-        var pageViewModel = page != null ? await pageMapper.MapAsync(page.Elements) : null;
+        var taxonomy = await taxonomyTask;
+        var pageItem = await pageTask;
+        var products = await productsTask;
 
-        var productViewModels = new List<ProductViewModel>();
-        foreach (var product in products)
-        {
-            productViewModels.Add(await productMapper.MapAsync(product.Elements));
-        }
+        var pageViewModel = pageItem != null ? await pageMapper.MapAsync(pageItem.Elements) : null;
+
+        var productViewModels = await Task.WhenAll(
+            products.Items.Select(p => productMapper.MapAsync(p.Elements)));
 
         var categories = taxonomy != null
             ? BuildCategoryTree(taxonomy.Terms, selected)
             : [];
+
+        // Preserve the active-category filter across page links by emitting one query key
+        // per selected category (so ASP.NET's model binder rebuilds the array on the next request).
+        var extraQuery = selected
+            .Select(c => new KeyValuePair<string, string>("category", c))
+            .ToList();
 
         var viewModel = new ProductListingViewModel
         {
             HeaderContent = pageViewModel?.Content ?? [],
             Products = productViewModels,
             Categories = categories,
-            SelectedCategories = selected.ToList()
+            SelectedCategories = [.. selected],
+            Pager = PagerViewModel.From(products, extraQuery),
         };
 
         // AJAX requests from the filter form get just the product grid — the sidebar,
@@ -63,20 +79,15 @@ public class ProductsController(
             .Select(t => t.Codename)
             .ToArray() ?? [];
 
-        var relatedViewModels = new List<ProductViewModel>();
-        if (categoryCodenames.Length > 0)
-        {
-            var related = await contentService.GetProductsAsync(categoryCodenames);
-            foreach (var item in related.Where(p => p.Elements.Slug != slug).Take(4))
-            {
-                relatedViewModels.Add(await productMapper.MapAsync(item.Elements));
-            }
-        }
+        var related = await contentService.GetProductsByCategoryAsync(categoryCodenames, limit: 5);
+        var relatedViewModels = await Task.WhenAll(
+            related.Where(p => p.Elements.Slug != slug).Take(4)
+                   .Select(p => productMapper.MapAsync(p.Elements)));
 
         return View(new ProductDetailViewModel
         {
             Product = productViewModel,
-            Related = relatedViewModels
+            Related = relatedViewModels,
         });
     }
 
@@ -89,7 +100,7 @@ public class ProductsController(
             Codename = t.Codename,
             Name = t.Name,
             IsSelected = selected.Contains(t.Codename),
-            Children = BuildCategoryTree(t.Terms, selected)
+            Children = BuildCategoryTree(t.Terms, selected),
         }).ToList();
     }
 }

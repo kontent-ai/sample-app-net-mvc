@@ -16,9 +16,21 @@ services.AddControllersWithViews();
 services.AddHttpContextAccessor();
 services.AddDataProtection();
 
-// Options
-services.Configure<SiteOptions>(configuration.GetSection("SiteOptions"));
-services.Configure<WebhookOptions>(configuration.GetSection("WebhookOptions"));
+// Options — ValidateOnStart ensures the app fails fast with a clear message
+// if required configuration is missing, rather than surfacing opaque errors at request time.
+services.AddOptions<SiteOptions>()
+    .Bind(configuration.GetSection("SiteOptions"))
+    .Validate(o => o.Spaces is { Length: > 0 }, "SiteOptions:Spaces must contain at least one space codename.")
+    .Validate(o => o.RouteTemplates is { Count: > 0 }, "SiteOptions:RouteTemplates must define at least one route template.")
+    .ValidateOnStart();
+
+services.AddOptions<WebhookOptions>()
+    .Bind(configuration.GetSection("WebhookOptions"))
+    .ValidateOnStart();
+
+services.AddOptions<PreviewOptions>()
+    .Bind(configuration.GetSection("PreviewOptions"))
+    .ValidateOnStart();
 
 // Space and preview context — resolved once per request by SpaceContextMiddleware
 services.AddScoped<SpaceContext>();
@@ -28,10 +40,12 @@ services.AddScoped<IPreviewContext>(sp => sp.GetRequiredService<PreviewContext>(
 
 // Preview mode wiring:
 //   - IPreviewTokenProtector: signs/validates the ficto_preview cookie.
-//   - IPreviewAccessGate: pluggable authorization seam. The default AllowAnonymousPreviewAccessGate
-//     is sample-only; real deployments should register an implementation that checks their auth.
+//   - IPreviewAccessGate: pluggable authorization seam. SecretPreviewAccessGate is the sample default:
+//     it checks a shared secret from PreviewOptions (user-secrets). Set PreviewOptions:Secret empty
+//     for zero-config local dev (the gate then logs a warning and allows anyone).
+//     Real deployments should swap in an auth-aware implementation (OIDC / custom policy / etc.).
 services.AddSingleton<IPreviewTokenProtector, PreviewTokenProtector>();
-services.AddSingleton<IPreviewAccessGate, AllowAnonymousPreviewAccessGate>();
+services.AddSingleton<IPreviewAccessGate, SecretPreviewAccessGate>();
 
 // Content service
 services.AddScoped<IContentService, ContentService>();

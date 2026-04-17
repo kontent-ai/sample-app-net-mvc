@@ -3,7 +3,9 @@
 <div class="card h-100 fact-card">
     @if (Model.Image != null)
     {
-        <img src="@Model.Image.Url" class="card-img-top" alt="@(Model.Image.Description ?? Model.Title ?? "")">
+        <img src="@Model.Image.UrlWithTransform(width: 500, format: ImageFormat.Webp, quality: 80)"
+             class="card-img-top"
+             alt="@(Model.Image.AltText ?? Model.Title ?? "")">
     }
     <div class="card-body d-flex flex-column">
         @if (!string.IsNullOrEmpty(Model.Title))

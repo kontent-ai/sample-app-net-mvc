@@ -10,11 +10,8 @@ public class VisualContainerMapper(FactMapper factMapper) : IAsyncMapper<VisualC
 {
     public async Task<VisualContainerViewModel> MapAsync(VisualContainer source)
     {
-        var items = new List<FactViewModel>();
-        foreach (var embedded in source.Items.OfType<IEmbeddedContent<Fact>>())
-        {
-            items.Add(await factMapper.MapAsync(embedded.Elements));
-        }
+        var items = await Task.WhenAll(
+            source.Items.OfType<IEmbeddedContent<Fact>>().Select(e => factMapper.MapAsync(e.Elements)));
 
         var visualRepresentation = source.VisualRepresentation.FirstOrDefault()?.Codename switch
         {

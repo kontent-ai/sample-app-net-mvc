@@ -10,23 +10,29 @@ public class ArticlesController(
     ArticleMapper articleMapper,
     PageMapper pageMapper) : Controller
 {
-    public async Task<IActionResult> Index()
+    private const int PageSize = 12;
+
+    public async Task<IActionResult> Index([FromQuery] int page = 1)
     {
-        var page = await contentService.GetPageBySlugAsync("articles");
-        var articles = await contentService.GetArticlesAsync();
+        var skip = Math.Max(0, (page - 1) * PageSize);
 
-        var pageViewModel = page != null ? await pageMapper.MapAsync(page.Elements) : null;
+        var pageTask = contentService.GetPageBySlugAsync("articles");
+        var articlesTask = contentService.GetArticlesAsync(skip, PageSize);
+        await Task.WhenAll(pageTask, articlesTask);
 
-        var articleViewModels = new List<ArticleViewModel>();
-        foreach (var article in articles)
-        {
-            articleViewModels.Add(await articleMapper.MapAsync(article.Elements));
-        }
+        var pageItem = await pageTask;
+        var articles = await articlesTask;
+
+        var pageViewModel = pageItem != null ? await pageMapper.MapAsync(pageItem.Elements) : null;
+
+        var articleViewModels = await Task.WhenAll(
+            articles.Items.Select(a => articleMapper.MapAsync(a.Elements)));
 
         var viewModel = new ArticleListingViewModel
         {
             HeaderContent = pageViewModel?.Content ?? [],
-            Articles = articleViewModels
+            Articles = articleViewModels,
+            Pager = PagerViewModel.From(articles),
         };
 
         return View(viewModel);

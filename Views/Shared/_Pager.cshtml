@@ -1,0 +1,47 @@
+@model Ficto.Models.PagerViewModel
+
+@{
+    if (Model.PageCount <= 1 && !Model.HasNext && !Model.HasPrevious)
+    {
+        return;
+    }
+
+    string BuildUrl(int page)
+    {
+        var parts = new List<string>();
+        foreach (var kv in Model.ExtraQuery)
+        {
+            parts.Add($"{Uri.EscapeDataString(kv.Key)}={Uri.EscapeDataString(kv.Value)}");
+        }
+        parts.Add($"page={page}");
+        return "?" + string.Join("&", parts);
+    }
+
+    var windowStart = Math.Max(1, Model.PageNumber - 2);
+    var windowEnd = Math.Min(Model.PageCount, Model.PageNumber + 2);
+}
+
+<nav aria-label="Pagination" class="mt-4">
+    @if (Model.TotalCount is { } total)
+    {
+        <p class="text-muted small">Showing @Model.FirstItemNumber&ndash;@Model.LastItemNumber of @total</p>
+    }
+    <ul class="pagination">
+        <li class="page-item @(Model.HasPrevious ? "" : "disabled")">
+            <a class="page-link" href="@(Model.HasPrevious ? BuildUrl(Model.PageNumber - 1) : "#")" aria-label="Previous">
+                <span aria-hidden="true">&laquo;</span>
+            </a>
+        </li>
+        @for (var i = windowStart; i <= windowEnd; i++)
+        {
+            <li class="page-item @(i == Model.PageNumber ? "active" : "")">
+                <a class="page-link" href="@BuildUrl(i)">@i</a>
+            </li>
+        }
+        <li class="page-item @(Model.HasNext ? "" : "disabled")">
+            <a class="page-link" href="@(Model.HasNext ? BuildUrl(Model.PageNumber + 1) : "#")" aria-label="Next">
+                <span aria-hidden="true">&raquo;</span>
+            </a>
+        </li>
+    </ul>
+</nav>

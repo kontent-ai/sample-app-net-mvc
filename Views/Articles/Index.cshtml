@@ -17,7 +17,9 @@
                 <div class="card h-100">
                     @if (article.HeroImage != null)
                     {
-                        <img src="@article.HeroImage.Url" class="card-img-top" alt="@(article.HeroImage.Description ?? article.Title)">
+                        <img src="@article.HeroImage.UrlWithTransform(width: 600, format: ImageFormat.Webp, quality: 80)"
+                             class="card-img-top"
+                             alt="@(article.HeroImage.AltText ?? article.Title)">
                     }
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">@article.Title</h5>
@@ -35,4 +37,6 @@
             </div>
         }
     </div>
+
+    @await Html.PartialAsync("_Pager", Model.Pager)
 </div>
