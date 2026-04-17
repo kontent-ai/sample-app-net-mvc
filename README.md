@@ -156,7 +156,7 @@ Preview mode switches the active `IDeliveryClient` to the preview-keyed instance
 
 `SpaceContextMiddleware` runs on every request. If the request carries `?secret=` and the value matches `PreviewOptions:Secret` (compared with `CryptographicOperations.FixedTimeEquals`), the middleware:
 
-1. Issues a signed `ficto_preview` cookie via `IPreviewTokenProtector` (HttpOnly, SameSite=None, Secure, 1-day expiry &mdash; required for cross-site iframe use from Kontent.ai Studio).
+1. Issues a signed `ficto_preview` cookie via `IPreviewTokenProtector` (HttpOnly, SameSite=None, Secure, 1-day expiry &mdash; required for cross-site iframe use from Kontent.ai).
 2. 302-redirects to the same URL with `?secret=` stripped, so the token never leaks into rendered HTML or the editor's URL bar.
 
 On subsequent requests the valid cookie alone keeps `IPreviewContext.IsPreview` on, `ContentService` routes reads through the `"preview"` named Delivery client (from `DeliveryOptions:PreviewApiKey`), and the green banner shows at the top of every page. If the preview client isn't configured, the app logs a warning and silently serves production content &mdash; drafts just won't appear, no hard failure.
@@ -165,13 +165,40 @@ To exit preview, click the banner's **Disable** link (`GET /preview/disable`), w
 
 ### Configuring the Kontent.ai preview URL
 
-Set the per-content-type preview URL in Kontent.ai Studio to:
+Point Kontent.ai at your local app so its live-preview iframe loads the rendered pages.
 
-```
-https://localhost:7108/Articles/{URL slug}?collection=ficto_imaging&secret=mySecret
+1. In Kontent.ai, open **Environment Settings → Preview URLs**.
+2. On the **Space domains** tab, set the domain for every space (`ficto_imaging`, `ficto_healthtech`, `ficto_surgical`) to:
+
+   ```
+   localhost:7108
+   ```
+
+   (Adjust the port if you've customised `applicationUrl` — see [Port overrides](#port-overrides) below.)
+
+3. Switch to the **Preview URLs for content types** tab and configure the template for each content type the app renders:
+
+   | Content type | Preview URL template |
+   |---|---|
+   | `website_root` | `https://{Space}?collection={Collection}&secret=mySecret` |
+   | `page` | `https://{Space}/{URLslug}?collection={Collection}&secret=mySecret` |
+   | `article` | `https://{Space}/articles/{URLslug}?collection={Collection}&secret=mySecret` |
+   | `solution` | `https://{Space}/solutions/{URLslug}?collection={Collection}&secret=mySecret` |
+   | `product` | `https://{Space}/products/{URLslug}?collection={Collection}&secret=mySecret` |
+
+   `{Space}`, `{Collection}`, and `{URLslug}` are Kontent.ai macros &mdash; Kontent.ai expands them per item / collection at preview time. The `secret=mySecret` value must match `PreviewOptions:Secret`; override it in user-secrets and update the templates accordingly before using a shared environment.
+
+Once the iframe loads any of these URLs, the middleware sets the cookie, strips the secret from the URL, and subsequent clicks inside the iframe stay in preview mode via the `SameSite=None; Secure` cookie.
+
+#### Port overrides
+
+The `:7108` / `:5107` pair is just the default in `Properties/launchSettings.json`. Each URL in `applicationUrl` declares its own scheme explicitly &mdash; the port isn't bound to HTTP or HTTPS by position:
+
+```json
+"applicationUrl": "https://localhost:7108;http://localhost:5107"
 ```
 
-Adjust the path segment per content type (e.g. `/Products/{URL slug}`, `/Solutions/{URL slug}`, or `/{URL slug}` for plain Pages) and the `space` codename per space. The `?secret=` value must match `PreviewOptions:Secret`. Once the iframe loads, the middleware sets the cookie, strips the secret from the URL, and subsequent clicks inside the iframe stay in preview mode via the `SameSite=None; Secure` cookie.
+Change either port freely (or swap in different ones). The ASP.NET Core dev cert is bound to the hostname `localhost`, not to a specific port, so HTTPS keeps working on whatever port you pick. Update the **Space domains** in Kontent.ai to match whichever HTTPS port you've configured &mdash; the iframe must load over HTTPS because Kontent.ai itself is served over HTTPS.
 
 ### ⚠ Gating preview in production
 
@@ -203,7 +230,7 @@ The `ficto_preview` cookie's value is opaque ciphertext protected by `IDataProte
 
 ## Smart Link (click-to-edit overlays)
 
-The app integrates the [Kontent.ai Smart Link SDK](https://github.com/kontent-ai/smart-link) so editors previewing the site can click any decorated element to jump straight into Kontent.ai Studio with that field open for editing. It's wired up end-to-end in preview mode and silently absent in production.
+The app integrates the [Kontent.ai Smart Link SDK](https://github.com/kontent-ai/smart-link) so editors in preview mode can click on one of the decorated elements and jump straight to editing the content in question.
 
 ### How it's wired
 
@@ -228,7 +255,7 @@ Attribute hierarchy matches the SDK's contract:
 
 ### Activating the overlays
 
-- **Inside Kontent.ai Web Spotlight** — when the app is loaded in Studio's preview iframe, the SDK auto-activates via iframe messaging. Nothing to do beyond a correctly configured preview URL (see [Configuring the Kontent.ai preview URL](#configuring-the-kontentai-preview-url)).
+- **Inside Kontent.ai live preview** — when the app is loaded in Kontent.ai's preview iframe, the SDK auto-activates via iframe messaging. Nothing to do beyond a correctly configured preview URL (see [Configuring the Kontent.ai preview URL](#configuring-the-kontentai-preview-url)).
 - **Standalone browser tab** — after enabling preview, append `?ksl-enabled` to any URL to activate overlays outside the iframe. Useful for debugging since browser devtools are fully accessible.
 
 ### Extending the decoration

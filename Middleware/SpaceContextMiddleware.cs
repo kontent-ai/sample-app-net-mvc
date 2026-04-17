@@ -13,7 +13,7 @@ namespace Ficto.Middleware;
 ///
 /// Preview is driven by the signed <c>ficto_preview</c> cookie. Any request carrying
 /// <c>?secret=&lt;PreviewOptions.Secret&gt;</c> has the cookie issued automatically and is
-/// 302-redirected to strip the secret from the URL. This is what lets Kontent.ai Studio
+/// 302-redirected to strip the secret from the URL. This is what lets Kontent.ai
 /// load a target URL directly in its preview iframe — editors never click a manual
 /// enable button. The secret comparison uses <see cref="CryptographicOperations.FixedTimeEquals"/>.
 ///

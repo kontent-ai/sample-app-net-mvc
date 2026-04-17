@@ -14,7 +14,7 @@ public class PreviewController(ILogger<PreviewController> logger) : Controller
 
     /// <summary>
     /// Cookie options for the preview cookie. <c>SameSite=None</c> + <c>Secure</c> is required
-    /// for the cookie to be sent on cross-site iframe requests — e.g. when Kontent.ai Studio
+    /// for the cookie to be sent on cross-site iframe requests — e.g. when Kontent.ai
     /// embeds the app as a live preview. Browsers reject <c>SameSite=None</c> without <c>Secure</c>,
     /// and they reject <c>Secure</c> cookies on plain HTTP; the app runs HTTPS in dev and prod.
     /// </summary>
