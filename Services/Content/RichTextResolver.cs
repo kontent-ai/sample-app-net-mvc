@@ -67,7 +67,7 @@ public static class RichTextResolver
 
     // Emitted as a presence-only attribute on inline components so Kontent.ai Smart Link can
     // open them for editing in preview. Harmless in production (the SDK activates only via
-    // query param or Web Spotlight iframe), which keeps the resolver free of preview state.
+    // query param or live-preview iframe), which keeps the resolver free of preview state.
     private static string KontentAttr(IContentItem item) =>
         $" data-kontent-component-id=\"{item.System.Id}\"";
 
