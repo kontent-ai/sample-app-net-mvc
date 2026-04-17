@@ -45,10 +45,10 @@ public class ContentService(
 
     /// <summary>
     /// Returns a filter that scopes queries to the active space's collection plus
-    /// the "common" collection, which holds content shared across all subsites.
+    /// the "default" collection, which holds content shared across all subsites.
     /// </summary>
     private IItemsFilterBuilder CollectionFilter(IItemsFilterBuilder b) =>
-        b.System("collection").IsIn(CollectionCodename, "common");
+        b.System("collection").IsIn(CollectionCodename, "default");
 
     public async Task<IContentItem<WebsiteRoot>?> GetHomepageAsync()
     {
