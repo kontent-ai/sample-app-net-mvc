@@ -1,6 +1,3 @@
-> [!WARNING]
-> This sample app is under active development. Details and documentation will evolve over time.
-
 [![Contributors][contributors-shield]][contributors-url]
 [![Forks][forks-shield]][forks-url]
 [![Stargazers][stars-shield]][stars-url]
@@ -11,9 +8,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-This is a Kontent.ai sample ASP.NET Core MVC application running on **.NET 8**.
+A Kontent.ai sample ASP.NET Core MVC application running on **.NET 8**, built on the v19 Delivery SDK. It supersedes the [legacy .NET sample app](https://github.com/kontent-ai/sample-app-net) and doubles as a reference for the patterns the new SDK was designed around — keyed client registration, webhook-driven cache invalidation, rich-text resolution, and iframe-ready preview.
 
-It is based on the **Kontent.ai Ficto multisite** project. Once finalized, it will supersede the existing, [legacy .NET sample app](https://github.com/kontent-ai/sample-app-net).
+It's based on the **Kontent.ai Ficto multisite** project — three brand subsites (Imaging, Healthtech, Surgical) served from a single deployment with shared navigation and a common content collection for cross-brand pages.
 
 <!-- GETTING STARTED -->
 ## Getting Started
@@ -23,10 +20,10 @@ Follow these steps to get the app running locally.
 ### Prerequisites
 
 - .NET SDK **8.0** or newer
-- A Kontent.ai Ficto multisite sample with:
-  - Environment ID
-  - (Optional) Preview API key
-  - (Optional) Secure Access API key
+- A Kontent.ai environment containing the Ficto multisite sample content
+- The environment's **Environment ID** (required)
+- A **Preview API key** (optional — needed to see unpublished drafts)
+- A **Secure Access API key** (optional — needed if Secure Access is enabled on the environment)
 
 ### Installation
 
@@ -45,58 +42,137 @@ dotnet restore
 
 ### Configuration & secrets
 
-1. Set your Kontent.ai environment ID in `appsettings.json`:
-   - `DeliveryOptions.EnvironmentId` = your environment ID.
+Set your environment ID in `appsettings.json`:
 
-2. Optionally set preview or secure access keys:
-> [!CAUTION]
-> While for sample app purposes, storing keys directly in `appsettings.json` doesn't present any major risk, even if accidentally committed, consider using local secrets as described below.
+- `DeliveryOptions:EnvironmentId` — the environment this app reads from.
+
+Everything else is optional, but recommended for the feature it enables. Store secrets via user-secrets rather than in `appsettings.json` so they never get committed:
 
 ```bash
 dotnet user-secrets init
-dotnet user-secrets set "DeliveryOptions:PreviewApiKey" "your-preview-api-key"
-dotnet user-secrets set "DeliveryOptions:SecureAccessApiKey" "your-secure-access-api-key"
+dotnet user-secrets set "DeliveryOptions:PreviewApiKey"      "<preview-api-key>"
+dotnet user-secrets set "DeliveryOptions:SecureAccessApiKey" "<secure-access-api-key>"
+dotnet user-secrets set "PreviewOptions:Secret"              "<preview-shared-secret>"
+dotnet user-secrets set "WebhookOptions:Secret"              "<webhook-signing-secret>"
 ```
 
-These values are kept in your local user profile and are not committed to the repository. They will become part of the corresponding `DeliveryOptions` section of `appSettings.json` during runtime.
+| Setting | Required for | Notes |
+|---|---|---|
+| `DeliveryOptions:EnvironmentId` | Any content read | The only hard requirement. |
+| `DeliveryOptions:PreviewApiKey` | Preview mode | Without it, preview requests silently fall back to production with a warning. |
+| `DeliveryOptions:SecureAccessApiKey` | Secure Access | Only needed if the environment has Secure Access enabled. |
+| `PreviewOptions:Secret` | Preview auto-enable + `/preview/enable` gate | Without a secret, the gate logs a warning and admits every request — fine for offline dev, not for anything reachable. |
+| `WebhookOptions:Secret` | Webhook-driven cache invalidation | Required HMAC secret; webhook calls with mismatching `X-KC-Signature` are rejected. |
+
+user-secrets values are merged into configuration at runtime and are scoped to your local user profile.
+
+> [!CAUTION]
+> Storing keys directly in `appsettings.json` is convenient but risks accidental commit. Prefer user-secrets (above) for local dev and environment variables / Key Vault / a secrets manager for deployed environments.
 
 ### Build and run
 
-Build the application:
+Trust the ASP.NET Core dev certificate (one-time, per machine) so HTTPS works without browser warnings:
+
+```bash
+dotnet dev-certs https --trust
+```
+
+Build and run:
 
 ```bash
 dotnet build
-```
-
-Run the application:
-
-```bash
 dotnet run
 ```
+
+The app is served at `https://localhost:7108` (HTTP on `:5107` redirects to HTTPS).
+
+#### Switching between spaces in dev
+
+The Ficto sample is a multisite setup with three spaces (`ficto_imaging`, `ficto_healthtech`, `ficto_surgical`). In production each space is reached via its own subdomain; in local dev, use the `?space=` query parameter instead — it's recognised by `SpaceContextMiddleware` and persisted in the `ficto_space` cookie for subsequent navigation:
+
+```
+https://localhost:7108/?space=ficto_imaging
+https://localhost:7108/?space=ficto_surgical
+```
+
+See [Configuring the Kontent.ai preview URL](#configuring-the-kontentai-preview-url) for how the same `?space=` parameter is used to target preview iframes at a specific subsite.
 
 
 
 <!-- USAGE EXAMPLES -->
 ## Usage
 
-TBD
+The app is a content-rendered website for the fictional "Ficto" brand — three subsites sharing a common backbone. It exists as a learning reference for integrating Kontent.ai with ASP.NET Core MVC.
+
+### Multisite routing
+
+`SpaceContextMiddleware` resolves the active space for each request in this priority order:
+
+1. **Subdomain** — `ficto-imaging.example.com` → `ficto_imaging` (hyphens become underscores; the `preview.` prefix is stripped before resolution).
+2. **Query string** — `?space=ficto_imaging`, which also persists to the `ficto_space` cookie.
+3. **Cookie** — `ficto_space` from a prior selection.
+4. **Default** — the first entry in `SiteOptions:Spaces`.
+
+Every content query is scoped to the active space's collection plus the shared `"default"` collection, so content that's intentionally cross-brand (e.g. the *About us* page) lives in one place but appears under every subsite.
+
+### Content queries
+
+All Delivery SDK access goes through `IContentService` (`Services/Content/ContentService.cs`). It:
+
+- selects the preview or production named `IDeliveryClient` based on `IPreviewContext.IsPreview`,
+- applies the active-space + `"default"` collection filter to every list and slug query,
+- returns `null` for 404s and maps other failures to a `ContentDeliveryException` so controllers can stay terse.
+
+URL resolution for content-item links (in navigation and rich text) is handled by `IRouteResolver` using the templates in `SiteOptions:RouteTemplates`:
+
+| Content type | URL pattern |
+|---|---|
+| `page` | `/{slug}` |
+| `article` | `/Articles/{slug}` |
+| `product` | `/Products/{slug}` |
+| `solution` | `/Solutions/{slug}` |
+
+Add a template if you introduce a new content type; anything not listed falls back to `/{type}/{slug}`.
+
+### Rich text
+
+`RichTextResolver` wires a single `IHtmlResolver` into the HTML pipeline. Inline linked items (Fact, Action, Callout) render through component-specific templates; links to other items resolve through `IRouteResolver` so `<a href>` values always match the routing table above. Custom anchor handling turns in-document references into deep-link `#slug` targets so table-of-contents links work.
+
+### Paging, filtering, and taxonomies
+
+Listing pages (Articles, Products) paginate through the SDK's `Skip` / `Limit` / `WithTotalCount` and return a `PagedResult<T>` so the view can render "Showing N–M of TOTAL" without a second count query. Products filter additionally by taxonomy — category codenames from the query string are passed into `.Where(i => i.Element("category").ContainsAny(...))` against the `product_category` taxonomy group.
+
+### Navigation
+
+The header menu is driven from a `WebsiteRoot` item in the active space. `NavigationViewComponent` fetches it via `IContentService.GetNavigationAsync()`, which uses `GetItem<WebsiteRoot>(spaceCodename)` with `Depth(3)` — enough to reach the top-level container, its nav items, and any dropdown subitems.
 
 
 
 ## Preview mode
 
-The app ships with a working preview-mode toggle but **no authentication** on who can enable it — that's the sample's explicit responsibility to delegate to the consuming deployment.
+Preview mode switches the active `IDeliveryClient` to the preview-keyed instance so editors see unpublished drafts. Access is gated by `IPreviewAccessGate` — the sample ships `SecretPreviewAccessGate`, which validates a `?secret=` URL parameter against `PreviewOptions:Secret` via a fixed-time comparison. The gate is pluggable; swap in your own authz (OIDC, claims, IP allow-list) before exposing the app publicly.
 
 ### Turning preview on/off in the sample
 
-- **Enable**: `GET /preview/enable?returnUrl=/Articles/<slug>` &mdash; sets a signed `ficto_preview` cookie (HttpOnly, SameSite=Lax, 1-day expiry), 302-redirects to `returnUrl` (local URLs only; external hosts fall back to `/`).
+- **Enable** (manual): `GET /preview/enable?returnUrl=/Articles/<slug>` &mdash; sets a signed `ficto_preview` cookie (HttpOnly, SameSite=None, Secure, 1-day expiry), 302-redirects to `returnUrl` (local URLs only; external hosts fall back to `/`).
+- **Enable** (auto, for Kontent.ai Studio): any request carrying `?secret=<PreviewOptions:Secret>` flips preview on for that browser if the gate approves. `SpaceContextMiddleware` issues the cookie and 302-redirects to the same URL with `?secret=` stripped, so the token doesn't leak into rendered HTML or the editor's URL bar. This is what lets Studio embed a target URL directly in its cross-origin preview iframe — there is no manual button to click inside the iframe.
 - **Disable**: `GET /preview/disable?returnUrl=<path>` &mdash; clears the cookie. The banner rendered in `_Layout.cshtml` links to this endpoint.
 
 When the cookie is present and valid, `SpaceContextMiddleware` flips `IPreviewContext.IsPreview` on, `ContentService` routes reads through the `"preview"` named Delivery client (from `DeliveryOptions:PreviewApiKey`), and the green banner shows at the top of every page. If the preview client isn't configured, the app logs a warning and silently serves production content — drafts just won't appear, no hard failure.
 
+### Configuring the Kontent.ai preview URL
+
+Set the per-content-type preview URL in Kontent.ai Studio to:
+
+```
+https://localhost:7108/Articles/{URL slug}?space=ficto_imaging&secret=<PreviewOptions:Secret>
+```
+
+Adjust the path segment per content type (e.g. `/Products/{URL slug}`, `/Solutions/{URL slug}`, or `/{URL slug}` for plain Pages) and the `space` codename per space. The `?secret=` value must match `PreviewOptions:Secret` configured via user-secrets. Once the iframe loads, auto-enable sets the cookie, strips the secret from the URL, and subsequent clicks inside the iframe stay in preview mode via the `SameSite=None; Secure` cookie.
+
 ### ⚠ The default gate is NOT a security boundary
 
-`IPreviewAccessGate` is the authorization seam between an unauthenticated HTTP request and "you may turn preview on." The sample ships `AllowAnonymousPreviewAccessGate`, which always returns `true` and logs a warning every time it does. That means any visitor who hits `/preview/enable` sees drafts. This is fine for a local sample and a non-public demo; it is **not** fine for anything publicly reachable.
+`IPreviewAccessGate` is the authorization seam between an unauthenticated HTTP request and "you may turn preview on." The sample ships `SecretPreviewAccessGate`, which compares a URL-supplied `?secret=` against `PreviewOptions:Secret` via a fixed-time comparison. If `PreviewOptions:Secret` is left empty, the gate **logs a warning and returns `true` for every request** — meaning any visitor who hits `/preview/enable` *or* any request with a `?secret=` of any value sees drafts. This is fine for a local sample; it is **not** fine for anything publicly reachable. Always set a secret before exposing the app.
 
 Replace the registration in `Program.cs` with your own implementation before deploying:
 

@@ -27,17 +27,43 @@ public class SpaceContextMiddleware(RequestDelegate next, IOptions<SiteOptions> 
     private const string CookieName = "ficto_space";
     private const string QueryParam = "space";
     private const string PreviewPrefix = "preview.";
+    private const string PreviewSecretParam = "secret";
 
     public async Task InvokeAsync(
         HttpContext context,
         SpaceContext spaceContext,
         PreviewContext previewContext,
-        IPreviewTokenProtector previewTokenProtector)
+        IPreviewTokenProtector previewTokenProtector,
+        IPreviewAccessGate previewGate)
     {
         var host = context.Request.Host.Host;
 
         var previewCookie = context.Request.Cookies[PreviewController.CookieName];
         previewContext.IsPreview = previewTokenProtector.IsValid(previewCookie);
+
+        // Auto-enable preview when the request carries ?secret=<token> and the gate approves.
+        // This is what lets Kontent.ai Studio load a target URL directly in its preview iframe
+        // — without this, editors would need a manual /preview/enable round-trip that can't fit
+        // into a per-content-type preview URL template. We redirect to strip the token so it
+        // doesn't leak into rendered HTML or the editor's URL bar.
+        if (!previewContext.IsPreview
+            && context.Request.Query.TryGetValue(PreviewSecretParam, out var secret)
+            && !string.IsNullOrEmpty(secret)
+            && await previewGate.CanEnableAsync(context, context.RequestAborted))
+        {
+            context.Response.Cookies.Append(
+                PreviewController.CookieName,
+                previewTokenProtector.Issue(),
+                PreviewController.BuildPreviewCookieOptions());
+
+            previewContext.IsPreview = true;
+
+            var cleanedQuery = QueryString.Create(
+                context.Request.Query.Where(kv => kv.Key != PreviewSecretParam)
+                    .SelectMany(kv => kv.Value.Select(v => KeyValuePair.Create<string, string?>(kv.Key, v))));
+            context.Response.Redirect(context.Request.PathBase + context.Request.Path + cleanedQuery);
+            return;
+        }
 
         // Strip the preview. prefix before resolving the space subdomain — the subdomain still
         // encodes which space the preview URL targets, independent of the preview flag above.
