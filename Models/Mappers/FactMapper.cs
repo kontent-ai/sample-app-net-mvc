@@ -5,28 +5,30 @@ using Kontent.Ai.Delivery.Abstractions;
 namespace Ficto.Models.Mappers;
 
 public class FactMapper(ReferenceMapper referenceMapper, PersonMapper personMapper, IRouteResolver routeResolver)
-    : IAsyncMapper<Fact, FactViewModel>
+    : IAsyncMapper<IContentItem<Fact>, FactViewModel>
 {
-    public async Task<FactViewModel> MapAsync(Fact source)
+    public async Task<FactViewModel> MapAsync(IContentItem<Fact> source)
     {
+        var e = source.Elements;
         var reference = referenceMapper.Map(new ReferenceInput(
-            source.ReferenceLabel,
-            source.ReferenceCaption,
-            source.ReferenceExternalUri,
-            source.ReferenceContentItemLink
+            e.ReferenceLabel,
+            e.ReferenceCaption,
+            e.ReferenceExternalUri,
+            e.ReferenceContentItemLink
         ));
 
         var authors = await Task.WhenAll(
-            source.Author.OfType<IContentItem<Person>>().Select(a => personMapper.MapAsync(a.Elements)));
+            e.Author.OfType<IContentItem<Person>>().Select(personMapper.MapAsync));
 
         return new FactViewModel
         {
-            Title = source.Title,
-            Message = source.Message,
-            LinkLabel = string.IsNullOrWhiteSpace(source.ReferenceLabel) ? null : source.ReferenceLabel,
+            ItemId = source.System.Id,
+            Title = e.Title,
+            Message = e.Message,
+            LinkLabel = string.IsNullOrWhiteSpace(e.ReferenceLabel) ? null : e.ReferenceLabel,
             LinkUrl = routeResolver.ResolveUrl(reference),
             LinkIsExternal = reference is UrlReference,
-            Image = AssetViewModel.From(source.Image.FirstOrDefault()),
+            Image = AssetViewModel.From(e.Image.FirstOrDefault()),
             Authors = authors
         };
     }

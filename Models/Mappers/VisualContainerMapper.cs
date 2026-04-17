@@ -1,19 +1,18 @@
 using Ficto.Generated.Models;
 using Ficto.Models;
-using Ficto.Models.Helpers;
 using Kontent.Ai.Delivery.Abstractions;
-using Kontent.Ai.Delivery.ContentItems;
 
 namespace Ficto.Models.Mappers;
 
-public class VisualContainerMapper(FactMapper factMapper) : IAsyncMapper<VisualContainer, VisualContainerViewModel>
+public class VisualContainerMapper(FactMapper factMapper) : IAsyncMapper<IContentItem<VisualContainer>, VisualContainerViewModel>
 {
-    public async Task<VisualContainerViewModel> MapAsync(VisualContainer source)
+    public async Task<VisualContainerViewModel> MapAsync(IContentItem<VisualContainer> source)
     {
+        var e = source.Elements;
         var items = await Task.WhenAll(
-            source.Items.OfType<IEmbeddedContent<Fact>>().Select(e => factMapper.MapAsync(e.Elements)));
+            e.Items.OfType<IContentItem<Fact>>().Select(factMapper.MapAsync));
 
-        var visualRepresentation = source.VisualRepresentation.FirstOrDefault()?.Codename switch
+        var visualRepresentation = e.VisualRepresentation.FirstOrDefault()?.Codename switch
         {
             "hero_unit" => VisualRepresentation.HeroUnit,
             "grid" => VisualRepresentation.Grid,
@@ -22,8 +21,9 @@ public class VisualContainerMapper(FactMapper factMapper) : IAsyncMapper<VisualC
 
         return new VisualContainerViewModel
         {
-            Title = source.Title,
-            Subtitle = source.Subtitle,
+            ItemId = source.System.Id,
+            Title = e.Title,
+            Subtitle = e.Subtitle,
             Items = items,
             VisualRepresentation = visualRepresentation
         };

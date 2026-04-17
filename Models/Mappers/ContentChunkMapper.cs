@@ -4,14 +4,15 @@ using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
-public class ContentChunkMapper(IHtmlResolver htmlResolver) : IAsyncMapper<ContentChunk, ContentChunkViewModel>
+public class ContentChunkMapper(IHtmlResolver htmlResolver) : IAsyncMapper<IContentItem<ContentChunk>, ContentChunkViewModel>
 {
-    public async Task<ContentChunkViewModel> MapAsync(ContentChunk source)
+    public async Task<ContentChunkViewModel> MapAsync(IContentItem<ContentChunk> source)
     {
-        var content = await source.Content.ToHtmlAsync(htmlResolver);
+        var content = await source.Elements.Content.ToHtmlAsync(htmlResolver);
 
         return new ContentChunkViewModel
         {
+            ItemId = source.System.Id,
             Content = content
         };
     }

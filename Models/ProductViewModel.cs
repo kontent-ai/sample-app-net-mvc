@@ -2,6 +2,7 @@ namespace Ficto.Models;
 
 public record ProductViewModel
 {
+    public Guid? ItemId { get; init; }
     public string Slug { get; init; } = string.Empty;
     public string Name { get; init; } = string.Empty;
     public string? Description { get; init; }

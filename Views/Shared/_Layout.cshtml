@@ -1,6 +1,8 @@
 ﻿@inject Ficto.Services.Content.IPreviewContext PreviewContext
 @inject Ficto.Services.Content.ISpaceContext SpaceContext
+@inject IConfiguration Configuration
 @{
+    var environmentId = Configuration["DeliveryOptions:EnvironmentId"] ?? string.Empty;
     var subsiteName = SpaceContext.SpaceCodename switch
     {
         "ficto_imaging" => "Imaging",
@@ -23,8 +25,14 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/Ficto.styles.css" asp-append-version="true" />
+    @if (PreviewContext.IsPreview)
+    {
+        await Html.RenderPartialAsync("_SmartLinkScript");
+    }
 </head>
-<body class="d-flex flex-column min-vh-100">
+<body class="d-flex flex-column min-vh-100"
+      data-kontent-environment-id="@environmentId"
+      data-kontent-language-codename="default">
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-dark fixed-top">
             <div class="container">

@@ -1,7 +1,6 @@
 using Ficto.Generated.Models;
 using Ficto.Models.Helpers;
 using Kontent.Ai.Delivery.Abstractions;
-using Kontent.Ai.Delivery.ContentItems;
 
 namespace Ficto.Models.Mappers;
 
@@ -11,13 +10,12 @@ public class PageBlockMapperFactory(
 {
     public async Task<PageBlockViewModel?> MapAsync(IEmbeddedContent content)
     {
+        // IEmbeddedContent<T> : IContentItem<T>, so mappers can take the full wrapper
+        // directly and read both System metadata (for Smart Link) and Elements.
         return content switch
         {
-            // SDK wraps linked items as IEmbeddedContent<T>; raw T is fallback for edge cases.
-            IEmbeddedContent<ContentChunk> embeddedChunk => await contentChunkMapper.MapAsync(embeddedChunk.Elements),
-            IEmbeddedContent<VisualContainer> embeddedContainer => await visualContainerMapper.MapAsync(embeddedContainer.Elements),
-            ContentChunk chunk => await contentChunkMapper.MapAsync(chunk),
-            VisualContainer container => await visualContainerMapper.MapAsync(container),
+            IContentItem<ContentChunk> chunk => await contentChunkMapper.MapAsync(chunk),
+            IContentItem<VisualContainer> container => await visualContainerMapper.MapAsync(container),
             _ => null
         };
     }

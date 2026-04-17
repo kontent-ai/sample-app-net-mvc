@@ -23,10 +23,10 @@ public class ArticlesController(
         var pageItem = await pageTask;
         var articles = await articlesTask;
 
-        var pageViewModel = pageItem != null ? await pageMapper.MapAsync(pageItem.Elements) : null;
+        var pageViewModel = pageItem != null ? await pageMapper.MapAsync(pageItem) : null;
 
         var articleViewModels = await Task.WhenAll(
-            articles.Items.Select(a => articleMapper.MapAsync(a.Elements)));
+            articles.Items.Select(articleMapper.MapAsync));
 
         var viewModel = new ArticleListingViewModel
         {
@@ -45,7 +45,7 @@ public class ArticlesController(
         if (article == null)
             return NotFound();
 
-        var viewModel = await articleMapper.MapAsync(article.Elements);
+        var viewModel = await articleMapper.MapAsync(article);
         return View(viewModel);
     }
 }

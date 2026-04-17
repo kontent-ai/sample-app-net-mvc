@@ -1,0 +1,15 @@
+@*
+    Smart Link SDK — renders click-to-edit overlays on elements decorated with
+    data-kontent-item-id / data-kontent-element-codename / data-kontent-component-id.
+
+    The SDK reads data-kontent-environment-id and data-kontent-language-codename from an ancestor
+    (_Layout.cshtml sets them on <body>), so no further configuration is needed here.
+
+    Version is pinned: v4 used data-kontent-project-id; v5 renamed it to data-kontent-environment-id.
+    Activation: auto-activates inside the Kontent.ai Studio Web Spotlight iframe; outside the iframe,
+    append ?ksl-enabled to the URL.
+*@
+<script src="https://cdn.jsdelivr.net/npm/@@kontent-ai/smart-link@@5/dist/bundles/kontent-smart-link.min.js"></script>
+<script>
+    kontentSmartLink.KontentSmartLink.initializeOnLoad();
+</script>

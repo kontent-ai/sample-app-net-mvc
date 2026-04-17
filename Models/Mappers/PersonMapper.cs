@@ -4,18 +4,20 @@ using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
-public class PersonMapper(IHtmlResolver htmlResolver) : IAsyncMapper<Person, PersonViewModel>
+public class PersonMapper(IHtmlResolver htmlResolver) : IAsyncMapper<IContentItem<Person>, PersonViewModel>
 {
-    public async Task<PersonViewModel> MapAsync(Person source)
+    public async Task<PersonViewModel> MapAsync(IContentItem<Person> source)
     {
-        var bio = await source.Bio.ToHtmlAsync(htmlResolver);
+        var e = source.Elements;
+        var bio = await e.Bio.ToHtmlAsync(htmlResolver);
 
         return new PersonViewModel
         {
-            Name = source.FirstName,
-            LastName = source.LastName,
-            Occupation = source.Occupation,
-            Photograph = AssetViewModel.From(source.Photograph.FirstOrDefault()),
+            ItemId = source.System.Id,
+            Name = e.FirstName,
+            LastName = e.LastName,
+            Occupation = e.Occupation,
+            Photograph = AssetViewModel.From(e.Photograph.FirstOrDefault()),
             Bio = bio
         };
     }

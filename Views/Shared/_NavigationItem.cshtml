@@ -7,37 +7,37 @@
 
 @if (hasSubitems)
 {
-    <li class="nav-item dropdown">
-        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false">
+    <li class="nav-item dropdown" data-kontent-item-id="@Model.ItemId">
+        <a class="nav-link dropdown-toggle" href="#" role="button"
+           data-bs-toggle="dropdown" data-bs-display="static" aria-expanded="false"
+           data-kontent-element-codename="reference__label">
             @label
         </a>
         <div class="dropdown-menu">
             <div class="container dropdown-menu-inner">
                 @foreach (var subitem in Model.Subitems)
                 {
-                    var subLabel = subitem.Label ?? "Link";
                     <a class="dropdown-item"
                        href="@subitem.Url"
-                       @(subitem.IsExternal ? "target=\"_blank\" rel=\"noopener noreferrer\"" : "")>
-                        @subLabel
+                       target="@(subitem.IsExternal ? "_blank" : null)"
+                       rel="@(subitem.IsExternal ? "noopener noreferrer" : null)"
+                       data-kontent-item-id="@subitem.ItemId"
+                       data-kontent-element-codename="reference__label">
+                        @(subitem.Label ?? "Link")
                     </a>
                 }
             </div>
         </div>
     </li>
 }
-else if (Model.IsExternal)
-{
-    <li class="nav-item">
-        <a class="nav-link" href="@Model.Url" target="_blank" rel="noopener noreferrer">
-            @label
-        </a>
-    </li>
-}
 else
 {
-    <li class="nav-item">
-        <a class="nav-link" href="@Model.Url">
+    <li class="nav-item" data-kontent-item-id="@Model.ItemId">
+        <a class="nav-link"
+           href="@Model.Url"
+           target="@(Model.IsExternal ? "_blank" : null)"
+           rel="@(Model.IsExternal ? "noopener noreferrer" : null)"
+           data-kontent-element-codename="reference__label">
             @label
         </a>
     </li>

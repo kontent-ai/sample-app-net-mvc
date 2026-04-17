@@ -4,6 +4,7 @@ namespace Ficto.Models;
 
 public record VisualContainerViewModel : PageBlockViewModel
 {
+    public Guid? ItemId { get; init; }
     public string? Title { get; init; }
     public string? Subtitle { get; init; }
     public IReadOnlyList<FactViewModel> Items { get; init; } = [];

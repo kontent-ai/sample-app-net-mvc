@@ -16,7 +16,7 @@ public class HomeController(
         if (homepage == null)
             return NotFound();
 
-        var viewModel = await websiteRootMapper.MapAsync(homepage.Elements);
+        var viewModel = await websiteRootMapper.MapAsync(homepage);
         return View(viewModel);
     }
 

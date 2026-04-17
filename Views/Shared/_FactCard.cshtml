@@ -1,20 +1,21 @@
 @model FactViewModel
 
-<div class="card h-100 fact-card">
+<div class="card h-100 fact-card" data-kontent-item-id="@Model.ItemId">
     @if (Model.Image != null)
     {
         <img src="@Model.Image.UrlWithTransform(width: 500, format: ImageFormat.Webp, quality: 80)"
              class="card-img-top"
-             alt="@(Model.Image.AltText ?? Model.Title ?? "")">
+             alt="@(Model.Image.AltText ?? Model.Title ?? "")"
+             data-kontent-element-codename="image" />
     }
     <div class="card-body d-flex flex-column">
         @if (!string.IsNullOrEmpty(Model.Title))
         {
-            <h5 class="card-title">@Model.Title</h5>
+            <h5 class="card-title" data-kontent-element-codename="title">@Model.Title</h5>
         }
         @if (!string.IsNullOrEmpty(Model.Message))
         {
-            <p class="card-text flex-grow-1">@Model.Message</p>
+            <p class="card-text flex-grow-1" data-kontent-element-codename="message">@Model.Message</p>
         }
         @if (!string.IsNullOrWhiteSpace(Model.LinkLabel))
         {

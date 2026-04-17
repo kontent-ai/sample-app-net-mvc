@@ -1,16 +1,16 @@
 @model VisualContainerViewModel
 
-<section class="visual-container visual-container--grid py-5">
+<section class="visual-container visual-container--grid py-5" data-kontent-item-id="@Model.ItemId">
     <div class="container">
         @if (!string.IsNullOrEmpty(Model.Title))
         {
-            <h2 class="mb-3">@Model.Title</h2>
+            <h2 class="mb-3" data-kontent-element-codename="title">@Model.Title</h2>
         }
         @if (!string.IsNullOrEmpty(Model.Subtitle))
         {
-            <p class="text-muted mb-4">@Model.Subtitle</p>
+            <p class="text-muted mb-4" data-kontent-element-codename="subtitle">@Model.Subtitle</p>
         }
-        <div class="row g-4">
+        <div class="row g-4" data-kontent-element-codename="items">
             @foreach (var fact in Model.Items)
             {
                 <div class="col-md-6 col-lg-4">

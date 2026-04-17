@@ -4,28 +4,30 @@ using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
-public class ArticleMapper(PersonMapper personMapper, IHtmlResolver htmlResolver) : IAsyncMapper<Article, ArticleViewModel>
+public class ArticleMapper(PersonMapper personMapper, IHtmlResolver htmlResolver) : IAsyncMapper<IContentItem<Article>, ArticleViewModel>
 {
-    public async Task<ArticleViewModel> MapAsync(Article source)
+    public async Task<ArticleViewModel> MapAsync(IContentItem<Article> source)
     {
-        var content = await source.Content.ToHtmlAsync(htmlResolver);
+        var e = source.Elements;
+        var content = await e.Content.ToHtmlAsync(htmlResolver);
 
-        var author = source.Author.OfType<IContentItem<Person>>().FirstOrDefault();
-        var authorViewModel = author != null ? await personMapper.MapAsync(author.Elements) : null;
+        var author = e.Author.OfType<IContentItem<Person>>().FirstOrDefault();
+        var authorViewModel = author != null ? await personMapper.MapAsync(author) : null;
 
         return new ArticleViewModel
         {
-            Title = source.Title,
-            Slug = source.Slug,
-            ArticleType = source.Type.FirstOrDefault()?.Codename ?? string.Empty,
-            Abstract = source.Abstract,
+            ItemId = source.System.Id,
+            Title = e.Title,
+            Slug = e.Slug,
+            ArticleType = e.Type.FirstOrDefault()?.Codename ?? string.Empty,
+            Abstract = e.Abstract,
             Content = content,
-            HeroImage = AssetViewModel.From(source.HeroImage.FirstOrDefault()),
+            HeroImage = AssetViewModel.From(e.HeroImage.FirstOrDefault()),
             Author = authorViewModel,
-            MetadataTitle = source.MetadataTitle,
-            MetadataDescription = source.MetadataDescription,
-            MetadataKeywords = source.MetadataKeywords,
-            PublishingDate = source.PublishingDate.Value
+            MetadataTitle = e.MetadataTitle,
+            MetadataDescription = e.MetadataDescription,
+            MetadataKeywords = e.MetadataKeywords,
+            PublishingDate = e.PublishingDate.Value
         };
     }
 }

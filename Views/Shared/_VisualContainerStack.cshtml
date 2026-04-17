@@ -5,41 +5,41 @@
     var hasMultipleItems = Model.Items.Count > 1;
 }
 
-<section class="visual-container visual-container--stack py-5">
+<section class="visual-container visual-container--stack py-5" data-kontent-item-id="@Model.ItemId">
     <div class="container">
         @if (!string.IsNullOrEmpty(Model.Title))
         {
-            <h2 class="mb-3">@Model.Title</h2>
+            <h2 class="mb-3" data-kontent-element-codename="title">@Model.Title</h2>
         }
         @if (!string.IsNullOrEmpty(Model.Subtitle))
         {
-            <p class="text-muted mb-4">@Model.Subtitle</p>
+            <p class="text-muted mb-4" data-kontent-element-codename="subtitle">@Model.Subtitle</p>
         }
 
         @if (hasMultipleItems)
         {
-            <div id="@carouselId" class="carousel slide stack-carousel" data-bs-ride="false">
+            <div id="@carouselId" class="carousel slide stack-carousel" data-bs-ride="false" data-kontent-element-codename="items">
                 <div class="carousel-inner">
                     @for (var i = 0; i < Model.Items.Count; i++)
                     {
                         var fact = Model.Items[i];
-                        <div class="carousel-item @(i == 0 ? "active" : "")">
+                        <div class="carousel-item @(i == 0 ? "active" : "")" data-kontent-item-id="@fact.ItemId">
                             <div class="row align-items-center">
                                 <div class="col-md-6">
                                     @if (fact.Image != null)
                                     {
-                                        <img src="@fact.Image.UrlWithTransform(width: 800, format: ImageFormat.Webp, quality: 80)" class="img-fluid rounded" alt="@(fact.Image.AltText ?? fact.Title ?? "")">
+                                        <img src="@fact.Image.UrlWithTransform(width: 800, format: ImageFormat.Webp, quality: 80)" class="img-fluid rounded" alt="@(fact.Image.AltText ?? fact.Title ?? "")" data-kontent-element-codename="image" />
                                     }
                                 </div>
                                 <div class="col-md-6">
                                     <div class="stack-content p-4">
                                         @if (!string.IsNullOrEmpty(fact.Title))
                                         {
-                                            <h3 class="stack-title">@fact.Title</h3>
+                                            <h3 class="stack-title" data-kontent-element-codename="title">@fact.Title</h3>
                                         }
                                         @if (!string.IsNullOrEmpty(fact.Message))
                                         {
-                                            <p class="stack-message">@fact.Message</p>
+                                            <p class="stack-message" data-kontent-element-codename="message">@fact.Message</p>
                                         }
                                         @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
                                         {
@@ -75,22 +75,22 @@
         else if (Model.Items.Count == 1)
         {
             var fact = Model.Items[0];
-            <div class="row align-items-center">
+            <div class="row align-items-center" data-kontent-item-id="@fact.ItemId">
                 <div class="col-md-6">
                     @if (fact.Image != null)
                     {
-                        <img src="@fact.Image.UrlWithTransform(width: 800, format: ImageFormat.Webp, quality: 80)" class="img-fluid rounded" alt="@(fact.Image.AltText ?? fact.Title ?? "")">
+                        <img src="@fact.Image.UrlWithTransform(width: 800, format: ImageFormat.Webp, quality: 80)" class="img-fluid rounded" alt="@(fact.Image.AltText ?? fact.Title ?? "")" data-kontent-element-codename="image" />
                     }
                 </div>
                 <div class="col-md-6">
                     <div class="stack-content p-4">
                         @if (!string.IsNullOrEmpty(fact.Title))
                         {
-                            <h3 class="stack-title">@fact.Title</h3>
+                            <h3 class="stack-title" data-kontent-element-codename="title">@fact.Title</h3>
                         }
                         @if (!string.IsNullOrEmpty(fact.Message))
                         {
-                            <p class="stack-message">@fact.Message</p>
+                            <p class="stack-message" data-kontent-element-codename="message">@fact.Message</p>
                         }
                         @if (!string.IsNullOrWhiteSpace(fact.LinkLabel))
                         {

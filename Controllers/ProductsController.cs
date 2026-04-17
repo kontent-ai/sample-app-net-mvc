@@ -34,10 +34,10 @@ public class ProductsController(
         var pageItem = await pageTask;
         var products = await productsTask;
 
-        var pageViewModel = pageItem != null ? await pageMapper.MapAsync(pageItem.Elements) : null;
+        var pageViewModel = pageItem != null ? await pageMapper.MapAsync(pageItem) : null;
 
         var productViewModels = await Task.WhenAll(
-            products.Items.Select(p => productMapper.MapAsync(p.Elements)));
+            products.Items.Select(productMapper.MapAsync));
 
         var categories = taxonomy != null
             ? BuildCategoryTree(taxonomy.Terms, selected)
@@ -73,7 +73,7 @@ public class ProductsController(
         if (product == null)
             return NotFound();
 
-        var productViewModel = await productMapper.MapAsync(product.Elements);
+        var productViewModel = await productMapper.MapAsync(product);
 
         var categoryCodenames = product.Elements.Category?
             .Select(t => t.Codename)
@@ -82,7 +82,7 @@ public class ProductsController(
         var related = await contentService.GetProductsByCategoryAsync(categoryCodenames, limit: 5);
         var relatedViewModels = await Task.WhenAll(
             related.Where(p => p.Elements.Slug != slug).Take(4)
-                   .Select(p => productMapper.MapAsync(p.Elements)));
+                   .Select(productMapper.MapAsync));
 
         return View(new ProductDetailViewModel
         {

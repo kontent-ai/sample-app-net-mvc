@@ -8,7 +8,7 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-A Kontent.ai sample ASP.NET Core MVC application running on **.NET 8**, built on the v19 Delivery SDK. It supersedes the [legacy .NET sample app](https://github.com/kontent-ai/sample-app-net) and doubles as a reference for the patterns the new SDK was designed around — keyed client registration, webhook-driven cache invalidation, rich-text resolution, and iframe-ready preview.
+A Kontent.ai sample ASP.NET Core MVC application running on **.NET 8**, built on the v19 Delivery SDK. It supersedes the [legacy .NET sample app](https://github.com/kontent-ai/sample-app-net) and doubles as a reference for the patterns the new SDK was designed around — keyed client registration, webhook-driven cache invalidation, rich-text resolution, iframe-ready preview, and [Smart Link](https://github.com/kontent-ai/smart-link) click-to-edit overlays.
 
 It's based on the **Kontent.ai Ficto multisite** project — three brand subsites (Imaging, Healthtech, Surgical) served from a single deployment with shared navigation and a common content collection for cross-brand pages.
 
@@ -198,6 +198,45 @@ Evolutions on the same theme: require a claim (`ctx.User.HasClaim("role", "edito
 ### Why the cookie is signed even without a secret
 
 The `ficto_preview` cookie's value is opaque ciphertext protected by `IDataProtectionProvider`. Without signing, a visitor could type `ficto_preview=1` in devtools and bypass the gate entirely; with signing, a forged value fails `Unprotect` and the middleware ignores it. The payload itself is a constant &mdash; the cookie says "this browser has been approved," and the gate is the thing that decides who gets approved.
+
+## Smart Link (click-to-edit overlays)
+
+The app integrates the [Kontent.ai Smart Link SDK](https://github.com/kontent-ai/smart-link) so editors previewing the site can click any decorated element to jump straight into Kontent.ai Studio with that field open for editing. It's wired up end-to-end in preview mode and silently absent in production.
+
+### How it's wired
+
+- **Script include** — `_Layout.cshtml` renders `Views/Shared/_SmartLinkScript.cshtml` inside `<head>` when `IPreviewContext.IsPreview` is true, pulling `kontent-smart-link@5` from the jsDelivr CDN and calling `initializeOnLoad()`. Production pages never load the SDK.
+- **Environment + language attributes** — `_Layout.cshtml` puts `data-kontent-environment-id` and `data-kontent-language-codename` on `<body>` so the SDK can read them from any descendant. The environment ID comes from `DeliveryOptions:EnvironmentId`; language is hard-coded to `default` (the Ficto sample is single-language).
+- **Item ID in view models** — every view model that maps a content item exposes a `Guid? ItemId` property populated from the Delivery SDK's `IContentItem<T>.System.Id`. Views emit it as `data-kontent-item-id="@Model.ItemId"`; Razor's conditional-attribute rendering omits the attribute entirely when `ItemId` is `null`.
+- **Element codenames in views** — views decorate field-rendering tags with `data-kontent-element-codename="<codename>"` using the element codenames from the generated models (`Generated/Models/*.cs`, e.g. `product_base__name`, `title`, `reference__label`).
+- **Rich-text inline components** — `RichTextResolver` emits `data-kontent-component-id` on the root of each inline Fact / Action / Callout template so editors can click into components embedded inside a rich-text field. These attributes are harmless in production (the SDK never loads) so the resolver stays a pure singleton with no preview-state dependency.
+
+Attribute hierarchy matches the SDK's contract:
+
+```
+<body data-kontent-environment-id="…" data-kontent-language-codename="default">
+  …
+  <section data-kontent-item-id="…">
+    <h1 data-kontent-element-codename="title">…</h1>
+    <img data-kontent-element-codename="main_image" … />
+  </section>
+  …
+</body>
+```
+
+### Activating the overlays
+
+- **Inside Kontent.ai Web Spotlight** — when the app is loaded in Studio's preview iframe, the SDK auto-activates via iframe messaging. Nothing to do beyond a correctly configured preview URL (see [Configuring the Kontent.ai preview URL](#configuring-the-kontentai-preview-url)).
+- **Standalone browser tab** — after enabling preview, append `?ksl-enabled` to any URL to activate overlays outside the iframe. Useful for debugging since browser devtools are fully accessible.
+
+### Extending the decoration
+
+To add Smart Link support to a new content type:
+
+1. Add a `Guid? ItemId { get; init; }` property to the view model.
+2. Change the mapper's `TSource` from `T` (bare elements) to `IContentItem<T>` (wrapper), read data via `source.Elements`, and set `ItemId = source.System.Id`.
+3. Update call sites to pass the wrapper instead of `.Elements`.
+4. In the view, wrap the item's outer container with `data-kontent-item-id="@Model.ItemId"` and decorate each field-rendering tag with `data-kontent-element-codename="<element codename>"` (copy codenames from `Generated/Models/<Type>.cs`'s `[JsonPropertyName]` attributes).
 
 ## Webhook-driven cache invalidation
 

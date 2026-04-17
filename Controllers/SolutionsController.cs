@@ -15,10 +15,10 @@ public class SolutionsController(
         var page = await contentService.GetPageBySlugAsync("solutions");
         var solutions = await contentService.GetSolutionsAsync();
 
-        var pageViewModel = page != null ? await pageMapper.MapAsync(page.Elements) : null;
+        var pageViewModel = page != null ? await pageMapper.MapAsync(page) : null;
 
         var solutionViewModels = await Task.WhenAll(
-            solutions.Select(s => solutionMapper.MapAsync(s.Elements)));
+            solutions.Select(solutionMapper.MapAsync));
 
         var viewModel = new SolutionListingViewModel
         {
@@ -37,7 +37,7 @@ public class SolutionsController(
         {
             return NotFound();
         }
-        var viewModel = await solutionMapper.MapAsync(solution.Elements);
+        var viewModel = await solutionMapper.MapAsync(solution);
         return View(viewModel);
     }
 }
