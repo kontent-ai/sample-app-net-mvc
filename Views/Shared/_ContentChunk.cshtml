@@ -1,5 +1,5 @@
 @model ContentChunkViewModel
 
-<div class="content-chunk">
+<div class="content-chunk" data-kontent-item-id="@Model.ItemId" data-kontent-element-codename="content">
     @Html.Raw(Model.Content)
 </div>

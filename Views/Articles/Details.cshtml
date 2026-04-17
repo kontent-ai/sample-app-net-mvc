@@ -4,48 +4,50 @@
     ViewData["Title"] = Model.Title;
 }
 
-<div class="container py-4">
-    <h1>@Model.Title</h1>
+<div class="container py-4" data-kontent-item-id="@Model.ItemId">
+    <h1 data-kontent-element-codename="title">@Model.Title</h1>
 
     @if (Model.PublishingDate.HasValue)
     {
-        <p class="text-muted">@Model.PublishingDate.Value.ToString("d MMM yyyy")</p>
+        <p class="text-muted" data-kontent-element-codename="publishing_date">@Model.PublishingDate.Value.ToString("d MMM yyyy")</p>
     }
 
     @if (Model.HeroImage != null)
     {
         <img src="@Model.HeroImage.UrlWithTransform(width: 1200, format: ImageFormat.Webp, quality: 85)"
              alt="@(Model.HeroImage.AltText ?? Model.Title)"
-             class="img-fluid mb-4" />
+             class="img-fluid mb-4"
+             data-kontent-element-codename="hero_image" />
     }
 
     @if (!string.IsNullOrEmpty(Model.Abstract))
     {
-        <p class="lead">@Model.Abstract</p>
+        <p class="lead" data-kontent-element-codename="abstract">@Model.Abstract</p>
     }
 
     @if (!string.IsNullOrEmpty(Model.Content))
     {
-        <div class="article-body mt-4">
+        <div class="article-body mt-4" data-kontent-element-codename="content">
             @Html.Raw(Model.Content)
         </div>
     }
 
     @if (Model.Author != null)
     {
-        <div class="author mt-5 d-flex align-items-center gap-3">
+        <div class="author mt-5 d-flex align-items-center gap-3" data-kontent-item-id="@Model.Author.ItemId">
             @if (Model.Author.Photograph != null)
             {
                 <img src="@Model.Author.Photograph.UrlWithTransform(width: 128, height: 128, format: ImageFormat.Webp)"
                      alt="@(Model.Author.Photograph.AltText ?? Model.Author.Name)"
                      class="rounded-circle"
-                     style="width:64px;height:64px;object-fit:cover;" />
+                     style="width:64px;height:64px;object-fit:cover;"
+                     data-kontent-element-codename="photograph" />
             }
             <div>
-                <strong>@Model.Author.Name @Model.Author.LastName</strong>
+                <strong><span data-kontent-element-codename="first_name">@Model.Author.Name</span> <span data-kontent-element-codename="last_name">@Model.Author.LastName</span></strong>
                 @if (!string.IsNullOrEmpty(Model.Author.Occupation))
                 {
-                    <p class="text-muted mb-0">@Model.Author.Occupation</p>
+                    <p class="text-muted mb-0" data-kontent-element-codename="occupation">@Model.Author.Occupation</p>
                 }
             </div>
         </div>

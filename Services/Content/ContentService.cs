@@ -240,7 +240,7 @@ public class ContentService(
         return result.Value;
     }
 
-    public async Task<IReadOnlyList<NavigationItem>> GetNavigationAsync()
+    public async Task<IReadOnlyList<IContentItem<NavigationItem>>> GetNavigationAsync()
     {
         // Depth(3) reaches WebsiteRoot → container → top-level nav items → dropdown subitems.
         var result = await Client.GetItem<WebsiteRoot>(CollectionCodename)
@@ -261,7 +261,6 @@ public class ContentService(
 
         return rootItem?.Elements.Subitems
             .OfType<IContentItem<NavigationItem>>()
-            .Select(x => x.Elements)
             .ToList() ?? [];
     }
 

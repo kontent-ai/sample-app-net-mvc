@@ -4,6 +4,7 @@ namespace Ficto.Models;
 
 public record PageViewModel
 {
+    public Guid? ItemId { get; init; }
     public string? Title { get; init; }
     public string Slug { get; init; } = string.Empty;
     public IReadOnlyList<PageBlockViewModel> Content { get; init; } = [];

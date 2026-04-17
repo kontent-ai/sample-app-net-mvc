@@ -4,23 +4,25 @@ using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
-public class SolutionMapper(IHtmlResolver htmlResolver) : IAsyncMapper<Solution, SolutionViewModel>
+public class SolutionMapper(IHtmlResolver htmlResolver) : IAsyncMapper<IContentItem<Solution>, SolutionViewModel>
 {
-    public async Task<SolutionViewModel> MapAsync(Solution source)
+    public async Task<SolutionViewModel> MapAsync(IContentItem<Solution> source)
     {
-        var showcase = await source.Showcase.ToHtmlAsync(htmlResolver);
+        var e = source.Elements;
+        var showcase = await e.Showcase.ToHtmlAsync(htmlResolver);
 
         return new SolutionViewModel
         {
-            Slug = source.Slug,
-            Name = source.ProductBaseName,
-            Description = source.ProductBaseDescription,
-            MainImage = AssetViewModel.From(source.ProductBaseMainImage.FirstOrDefault()),
+            ItemId = source.System.Id,
+            Slug = e.Slug,
+            Name = e.ProductBaseName,
+            Description = e.ProductBaseDescription,
+            MainImage = AssetViewModel.From(e.ProductBaseMainImage.FirstOrDefault()),
             Showcase = showcase,
-            ImagingTechnology = source.ImagingTechnology.FirstOrDefault()?.Codename,
-            MetadataTitle = source.MetadataTitle,
-            MetadataDescription = source.MetadataDescription,
-            MetadataKeywords = source.MetadataKeywords
+            ImagingTechnology = e.ImagingTechnology.FirstOrDefault()?.Codename,
+            MetadataTitle = e.MetadataTitle,
+            MetadataDescription = e.MetadataDescription,
+            MetadataKeywords = e.MetadataKeywords
         };
     }
 }

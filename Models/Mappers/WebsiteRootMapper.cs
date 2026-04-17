@@ -1,21 +1,24 @@
 using Ficto.Generated.Models;
+using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
 public class WebsiteRootMapper(IPageBlockMapperFactory pageBlockMapperFactory)
-    : IAsyncMapper<WebsiteRoot, WebsiteRootViewModel>
+    : IAsyncMapper<IContentItem<WebsiteRoot>, WebsiteRootViewModel>
 {
-    public async Task<WebsiteRootViewModel> MapAsync(WebsiteRoot source)
+    public async Task<WebsiteRootViewModel> MapAsync(IContentItem<WebsiteRoot> source)
     {
-        var content = await pageBlockMapperFactory.MapManyAsync(source.Content);
+        var e = source.Elements;
+        var content = await pageBlockMapperFactory.MapManyAsync(e.Content);
 
         return new WebsiteRootViewModel
         {
-            Title = source.Title,
+            ItemId = source.System.Id,
+            Title = e.Title,
             Content = content,
-            MetadataTitle = source.MetadataTitle,
-            MetadataDescription = source.MetadataDescription,
-            MetadataKeywords = source.MetadataKeywords
+            MetadataTitle = e.MetadataTitle,
+            MetadataDescription = e.MetadataDescription,
+            MetadataKeywords = e.MetadataKeywords
         };
     }
 }

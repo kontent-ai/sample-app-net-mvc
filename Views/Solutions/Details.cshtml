@@ -4,12 +4,12 @@
     ViewData["Title"] = Model.Name;
 }
 
-<div class="container py-4">
-    <h1>@Model.Name</h1>
+<div class="container py-4" data-kontent-item-id="@Model.ItemId">
+    <h1 data-kontent-element-codename="product_base__name">@Model.Name</h1>
 
     @if (!string.IsNullOrEmpty(Model.ImagingTechnology))
     {
-        <p class="text-muted">@Model.ImagingTechnology</p>
+        <p class="text-muted" data-kontent-element-codename="imaging_technology">@Model.ImagingTechnology</p>
     }
 
     @if (Model.MainImage != null)
@@ -17,17 +17,18 @@
         <img src="@Model.MainImage.UrlWithTransform(width: 1200, format: ImageFormat.Webp, quality: 85)"
              alt="@(Model.MainImage.AltText ?? Model.Name)"
              class="img-fluid mb-4"
-             style="max-width: 600px;" />
+             style="max-width: 600px;"
+             data-kontent-element-codename="product_base__main_image" />
     }
 
     @if (!string.IsNullOrEmpty(Model.Description))
     {
-        <p class="lead">@Model.Description</p>
+        <p class="lead" data-kontent-element-codename="product_base__description">@Model.Description</p>
     }
 
     @if (!string.IsNullOrEmpty(Model.Showcase))
     {
-        <div class="showcase mt-4">
+        <div class="showcase mt-4" data-kontent-element-codename="showcase">
             @Html.Raw(Model.Showcase)
         </div>
     }

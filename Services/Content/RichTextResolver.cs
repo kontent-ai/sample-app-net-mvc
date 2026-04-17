@@ -58,21 +58,28 @@ public static class RichTextResolver
         }
 
         return builder
-            .WithContentResolver<Fact>(content => new ValueTask<string>(RenderFact(content.Elements, routes)))
-            .WithContentResolver<ActionModel>(content => new ValueTask<string>(RenderAction(content.Elements, routes)))
-            .WithContentResolver<Callout>(async content => await RenderCalloutAsync(content.Elements))
+            .WithContentResolver<Fact>(content => new ValueTask<string>(RenderFact(content, routes)))
+            .WithContentResolver<ActionModel>(content => new ValueTask<string>(RenderAction(content, routes)))
+            .WithContentResolver<Callout>(async content => await RenderCalloutAsync(content))
             .Build();
     }
 
-    private static string RenderFact(Fact fact, IRouteResolver routes)
+    // Emitted as a presence-only attribute on inline components so Kontent.ai Smart Link can
+    // open them for editing in preview. Harmless in production (the SDK activates only via
+    // query param or Web Spotlight iframe), which keeps the resolver free of preview state.
+    private static string KontentAttr(IContentItem item) =>
+        $" data-kontent-component-id=\"{item.System.Id}\"";
+
+    private static string RenderFact(IContentItem<Fact> source, IRouteResolver routes)
     {
+        var fact = source.Elements;
         var reference = BuildReference(fact.ReferenceLabel, fact.ReferenceCaption, fact.ReferenceExternalUri, fact.ReferenceContentItemLink);
         var linkHtml = string.IsNullOrWhiteSpace(fact.ReferenceLabel)
             ? string.Empty
             : $"<a class=\"rt-fact__link\" href=\"{Enc(routes.ResolveUrl(reference))}\">{Enc(fact.ReferenceLabel)}</a>";
 
         return $"""
-            <figure class="rt-fact">
+            <figure class="rt-fact"{KontentAttr(source)}>
                 {(string.IsNullOrWhiteSpace(fact.Title) ? string.Empty : $"<figcaption class=\"rt-fact__title\">{Enc(fact.Title)}</figcaption>")}
                 <blockquote class="rt-fact__message">{Enc(fact.Message)}</blockquote>
                 {linkHtml}
@@ -80,21 +87,23 @@ public static class RichTextResolver
             """;
     }
 
-    private static string RenderAction(ActionModel action, IRouteResolver routes)
+    private static string RenderAction(IContentItem<ActionModel> source, IRouteResolver routes)
     {
+        var action = source.Elements;
         if (string.IsNullOrWhiteSpace(action.ReferenceLabel)) return string.Empty;
 
         var reference = BuildReference(action.ReferenceLabel, action.ReferenceCaption, action.ReferenceExternalUri, action.ReferenceContentItemLink);
-        return $"""<a class="rt-action" href="{Enc(routes.ResolveUrl(reference))}">{Enc(action.ReferenceLabel)}</a>""";
+        return $"""<a class="rt-action" href="{Enc(routes.ResolveUrl(reference))}"{KontentAttr(source)}>{Enc(action.ReferenceLabel)}</a>""";
     }
 
-    private static async Task<string> RenderCalloutAsync(Callout callout)
+    private static async Task<string> RenderCalloutAsync(IContentItem<Callout> source)
     {
+        var callout = source.Elements;
         var type = callout.Type.FirstOrDefault()?.Codename ?? "info";
         // Callout.Content is a RichTextContent element rendered with the SDK's default resolver
         // chain — callouts hold plain rich text, not further embedded items.
         var body = await callout.Content.ToHtmlAsync();
-        return $"""<aside class="rt-callout rt-callout--{Enc(type)}">{body}</aside>""";
+        return $"""<aside class="rt-callout rt-callout--{Enc(type)}"{KontentAttr(source)}>{body}</aside>""";
     }
 
     private static Reference? BuildReference(

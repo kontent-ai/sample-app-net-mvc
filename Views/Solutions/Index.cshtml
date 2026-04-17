@@ -14,22 +14,23 @@
         @foreach (var solution in Model.Solutions)
         {
             <div class="col-md-6 mb-4">
-                <div class="card h-100">
+                <div class="card h-100" data-kontent-item-id="@solution.ItemId">
                     @if (solution.MainImage != null)
                     {
                         <img src="@solution.MainImage.UrlWithTransform(width: 800, format: ImageFormat.Webp, quality: 80)"
                              class="card-img-top"
-                             alt="@(solution.MainImage.AltText ?? solution.Name)">
+                             alt="@(solution.MainImage.AltText ?? solution.Name)"
+                             data-kontent-element-codename="product_base__main_image" />
                     }
                     <div class="card-body d-flex flex-column">
-                        <h5 class="card-title">@solution.Name</h5>
+                        <h5 class="card-title" data-kontent-element-codename="product_base__name">@solution.Name</h5>
                         @if (!string.IsNullOrEmpty(solution.ImagingTechnology))
                         {
-                            <p class="text-muted small mb-2">@solution.ImagingTechnology</p>
+                            <p class="text-muted small mb-2" data-kontent-element-codename="imaging_technology">@solution.ImagingTechnology</p>
                         }
                         @if (!string.IsNullOrEmpty(solution.Description))
                         {
-                            <p class="card-text flex-grow-1">@solution.Description</p>
+                            <p class="card-text flex-grow-1" data-kontent-element-codename="product_base__description">@solution.Description</p>
                         }
                         <a asp-action="Details" asp-route-slug="@solution.Slug" class="btn btn-primary mt-auto">Learn more</a>
                     </div>

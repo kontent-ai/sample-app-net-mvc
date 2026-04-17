@@ -1,19 +1,25 @@
 using Ficto.Generated.Models;
+using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
 
-public class ProductMapper : IAsyncMapper<Product, ProductViewModel>
+public class ProductMapper : IAsyncMapper<IContentItem<Product>, ProductViewModel>
 {
-    public Task<ProductViewModel> MapAsync(Product source) => Task.FromResult(new ProductViewModel
+    public Task<ProductViewModel> MapAsync(IContentItem<Product> source)
     {
-        Slug = source.Slug,
-        Name = source.ProductBaseName,
-        Description = source.ProductBaseDescription,
-        MainImage = AssetViewModel.From(source.ProductBaseMainImage?.FirstOrDefault()),
-        Price = source.Price,
-        Category = source.Category?.FirstOrDefault()?.Codename,
-        MetadataTitle = source.MetadataTitle,
-        MetadataDescription = source.MetadataDescription,
-        MetadataKeywords = source.MetadataKeywords
-    });
+        var e = source.Elements;
+        return Task.FromResult(new ProductViewModel
+        {
+            ItemId = source.System.Id,
+            Slug = e.Slug,
+            Name = e.ProductBaseName,
+            Description = e.ProductBaseDescription,
+            MainImage = AssetViewModel.From(e.ProductBaseMainImage?.FirstOrDefault()),
+            Price = e.Price,
+            Category = e.Category?.FirstOrDefault()?.Codename,
+            MetadataTitle = e.MetadataTitle,
+            MetadataDescription = e.MetadataDescription,
+            MetadataKeywords = e.MetadataKeywords
+        });
+    }
 }

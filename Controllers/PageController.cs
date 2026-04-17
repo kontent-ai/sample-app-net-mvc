@@ -12,7 +12,7 @@ public class PageController(IContentService contentService, PageMapper pageMappe
         if (page == null)
             return NotFound();
 
-        var viewModel = await pageMapper.MapAsync(page.Elements);
+        var viewModel = await pageMapper.MapAsync(page);
         return View(viewModel);
     }
 }

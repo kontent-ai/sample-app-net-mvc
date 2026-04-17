@@ -5,25 +5,25 @@
     var product = Model.Product;
 }
 
-<section class="product-hero">
+<section class="product-hero" data-kontent-item-id="@product.ItemId">
     <div class="container">
         <div class="row align-items-center g-5">
             <div class="col-md-6 product-hero__text">
                 <a asp-action="Index" class="product-hero__back">&larr; Back to products</a>
                 @if (!string.IsNullOrEmpty(product.Category))
                 {
-                    <div>
+                    <div data-kontent-element-codename="category">
                         <span class="badge rounded-pill category-badge">@product.Category</span>
                     </div>
                 }
-                <h1>@product.Name</h1>
+                <h1 data-kontent-element-codename="product_base__name">@product.Name</h1>
                 @if (product.Price.HasValue)
                 {
-                    <p class="product-hero__price">@product.Price.Value.ToString("C")</p>
+                    <p class="product-hero__price" data-kontent-element-codename="price">@product.Price.Value.ToString("C")</p>
                 }
                 @if (!string.IsNullOrEmpty(product.Description))
                 {
-                    <p class="lead">@product.Description</p>
+                    <p class="lead" data-kontent-element-codename="product_base__description">@product.Description</p>
                 }
             </div>
             <div class="col-md-6 text-center">
@@ -31,7 +31,8 @@
                 {
                     <img src="@product.MainImage.UrlWithTransform(width: 900, format: ImageFormat.Webp, quality: 85)"
                          alt="@(product.MainImage.AltText ?? product.Name)"
-                         class="product-hero__image" />
+                         class="product-hero__image"
+                         data-kontent-element-codename="product_base__main_image" />
                 }
             </div>
         </div>
@@ -56,18 +57,19 @@
             @foreach (var related in Model.Related)
             {
                 <div class="col-md-6 col-xl-3">
-                    <div class="card h-100">
+                    <div class="card h-100" data-kontent-item-id="@related.ItemId">
                         @if (related.MainImage != null)
                         {
                             <img src="@related.MainImage.UrlWithTransform(width: 400, format: ImageFormat.Webp, quality: 80)"
                                  class="card-img-top product-card__image"
-                                 alt="@(related.MainImage.AltText ?? related.Name)">
+                                 alt="@(related.MainImage.AltText ?? related.Name)"
+                                 data-kontent-element-codename="product_base__main_image" />
                         }
                         <div class="card-body d-flex flex-column">
-                            <h5 class="card-title">@related.Name</h5>
+                            <h5 class="card-title" data-kontent-element-codename="product_base__name">@related.Name</h5>
                             @if (related.Price.HasValue)
                             {
-                                <p class="card-text"><strong>@related.Price.Value.ToString("C")</strong></p>
+                                <p class="card-text" data-kontent-element-codename="price"><strong>@related.Price.Value.ToString("C")</strong></p>
                             }
                             <a asp-action="Details" asp-route-slug="@related.Slug" class="btn btn-primary mt-auto">View Details</a>
                         </div>
