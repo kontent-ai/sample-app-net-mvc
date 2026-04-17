@@ -1,7 +1,8 @@
+using Ficto.Models.References;
 using Ficto.Services.Content;
 using Microsoft.Extensions.Options;
 
-namespace Ficto.Models.Helpers;
+namespace Ficto.Services.Routing;
 
 public interface IRouteResolver
 {

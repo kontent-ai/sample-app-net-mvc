@@ -1,4 +1,4 @@
-namespace Ficto.Models.Helpers;
+namespace Ficto.Models;
 
 public abstract record PageBlockViewModel
 {

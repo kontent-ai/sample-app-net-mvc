@@ -1,6 +1,6 @@
 using Kontent.Ai.Delivery.Abstractions;
 
-namespace Ficto.Models.Helpers;
+namespace Ficto.Models.References;
 
 public record ReferenceInput(
     string? Label,
