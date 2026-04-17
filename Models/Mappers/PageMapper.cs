@@ -2,19 +2,16 @@ using Ficto.Generated.Models;
 using Kontent.Ai.Delivery.Abstractions;
 
 namespace Ficto.Models.Mappers;
-// TODO: consider removing this if subpages are only used internally for CMS purposes
 
+// TODO: confirm whether subpages are surfaced in any view. If unused, remove from view model + mapping.
 public class PageMapper(IPageBlockMapperFactory pageBlockMapperFactory) : IAsyncMapper<Page, PageViewModel>
 {
     public async Task<PageViewModel> MapAsync(Page source)
     {
         var content = await pageBlockMapperFactory.MapManyAsync(source.Content);
 
-        var subpages = new List<PageViewModel>();
-        foreach (var subpage in source.Subpages.OfType<IContentItem<Page>>())
-        {
-            subpages.Add(await MapAsync(subpage.Elements));
-        }
+        var subpages = await Task.WhenAll(
+            source.Subpages.OfType<IContentItem<Page>>().Select(sp => MapAsync(sp.Elements)));
 
         return new PageViewModel
         {

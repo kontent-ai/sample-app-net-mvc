@@ -1,6 +1,7 @@
 using System.Diagnostics.CodeAnalysis;
 using System.Net;
 using Ficto.Generated.Models;
+using Ficto.Models;
 using Ficto.Services.Content.Interfaces;
 using Kontent.Ai.Delivery.Abstractions;
 
@@ -83,20 +84,27 @@ public class ContentService(
         return result.Value.Items.Count > 0 ? result.Value.Items[0] : null;
     }
 
-    public async Task<IReadOnlyList<IContentItem<Article>>> GetArticlesAsync()
+    public async Task<PagedResult<IContentItem<Article>>> GetArticlesAsync(int skip = 0, int limit = 12)
     {
+        // Skip/Limit paginate at the API; WithTotalCount surfaces IPagination.TotalCount
+        // so the view can render "Showing N-M of TOTAL" without a separate count query.
         var result = await Client.GetItems<Article>()
             .Where(CollectionFilter)
+            .OrderBy("elements.publishing_date", OrderingMode.Descending)
+            .Skip(skip)
+            .Limit(limit)
+            .WithTotalCount()
             .ExecuteAsync();
 
         if (!result.IsSuccess)
         {
             if (result.StatusCode != HttpStatusCode.NotFound)
                 LogAndThrow(result, "articles");
-            return [];
+            return PagedResult<IContentItem<Article>>.Empty(skip, limit);
         }
 
-        return result.Value.Items;
+        return new PagedResult<IContentItem<Article>>(
+            result.Value.Items, result.Value.Pagination.TotalCount, skip, limit);
     }
 
     public async Task<IContentItem<Article>?> GetArticleBySlugAsync(string slug)
@@ -116,10 +124,16 @@ public class ContentService(
         return result.Value.Items.Count > 0 ? result.Value.Items[0] : null;
     }
 
-    public async Task<IReadOnlyList<IContentItem<Product>>> GetProductsAsync(
-        IReadOnlyCollection<string>? categoryCodenames = null)
+    public async Task<PagedResult<IContentItem<Product>>> GetProductsAsync(
+        IReadOnlyCollection<string>? categoryCodenames = null,
+        int skip = 0,
+        int limit = 12)
     {
-        var query = Client.GetItems<Product>().Where(CollectionFilter);
+        var query = Client.GetItems<Product>()
+            .Where(CollectionFilter)
+            .Skip(skip)
+            .Limit(limit)
+            .WithTotalCount();
 
         if (categoryCodenames is { Count: > 0 })
         {
@@ -133,6 +147,29 @@ public class ContentService(
         {
             if (result.StatusCode != HttpStatusCode.NotFound)
                 LogAndThrow(result, "products");
+            return PagedResult<IContentItem<Product>>.Empty(skip, limit);
+        }
+
+        return new PagedResult<IContentItem<Product>>(
+            result.Value.Items, result.Value.Pagination.TotalCount, skip, limit);
+    }
+
+    public async Task<IReadOnlyList<IContentItem<Product>>> GetProductsByCategoryAsync(
+        IReadOnlyCollection<string> categoryCodenames,
+        int limit = 4)
+    {
+        if (categoryCodenames.Count == 0) return [];
+
+        var result = await Client.GetItems<Product>()
+            .Where(CollectionFilter)
+            .Where(i => i.Element("category").ContainsAny(categoryCodenames.ToArray()))
+            .Limit(limit)
+            .ExecuteAsync();
+
+        if (!result.IsSuccess)
+        {
+            if (result.StatusCode != HttpStatusCode.NotFound)
+                LogAndThrow(result, "products-by-category");
             return [];
         }
 

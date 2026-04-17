@@ -17,7 +17,9 @@
                 <div class="card h-100">
                     @if (solution.MainImage != null)
                     {
-                        <img src="@solution.MainImage.Url" class="card-img-top" alt="@(solution.MainImage.Description ?? solution.Name)">
+                        <img src="@solution.MainImage.UrlWithTransform(width: 800, format: ImageFormat.Webp, quality: 80)"
+                             class="card-img-top"
+                             alt="@(solution.MainImage.AltText ?? solution.Name)">
                     }
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title">@solution.Name</h5>

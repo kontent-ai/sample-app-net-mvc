@@ -17,11 +17,8 @@ public class SolutionsController(
 
         var pageViewModel = page != null ? await pageMapper.MapAsync(page.Elements) : null;
 
-        var solutionViewModels = new List<SolutionViewModel>();
-        foreach (var solution in solutions)
-        {
-            solutionViewModels.Add(await solutionMapper.MapAsync(solution.Elements));
-        }
+        var solutionViewModels = await Task.WhenAll(
+            solutions.Select(s => solutionMapper.MapAsync(s.Elements)));
 
         var viewModel = new SolutionListingViewModel
         {

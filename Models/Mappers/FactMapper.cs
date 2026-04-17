@@ -16,11 +16,8 @@ public class FactMapper(ReferenceMapper referenceMapper, PersonMapper personMapp
             source.ReferenceContentItemLink
         ));
 
-        var authors = new List<PersonViewModel>();
-        foreach (var author in source.Author.OfType<IContentItem<Person>>())
-        {
-            authors.Add(await personMapper.MapAsync(author.Elements));
-        }
+        var authors = await Task.WhenAll(
+            source.Author.OfType<IContentItem<Person>>().Select(a => personMapper.MapAsync(a.Elements)));
 
         return new FactViewModel
         {
