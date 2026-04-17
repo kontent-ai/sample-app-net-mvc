@@ -1,10 +1,12 @@
 :root {
   --mainBackgroundColor: #ffffff;
+  --mainBackgroundColorRgb: 255, 255, 255;
   --mainHoverColor: #0d6efd;
   --mainButtonColor: #0d6efd;
   --mainBorderColor: #0d6efd;
   --mainTextColor: #212529;
   --mainAfterColor: #0b5ed7;
+  --mainAfterColorRgb: 11, 94, 215;
   --mainAnchorColor: #0d6efd;
 }
 
@@ -132,29 +134,35 @@
 }
 [data-theme="ficto_healthtech"] {
   --mainBackgroundColor: #022c22;
+  --mainBackgroundColorRgb: 2, 44, 34;
   --mainHoverColor: #10b981;
   --mainButtonColor: #065f46;
   --mainBorderColor: #065f46;
   --mainTextColor: #047857;
   --mainAfterColor: #064e3b;
+  --mainAfterColorRgb: 6, 78, 59;
   --mainAnchorColor: #065f46;
 }
 [data-theme="ficto_imaging"] {
   --mainBackgroundColor: #020617;
+  --mainBackgroundColorRgb: 2, 6, 23;
   --mainHoverColor: #6366f1;
   --mainButtonColor: #3730a3;
   --mainBorderColor: #3730a3;
   --mainTextColor: #4338ca;
   --mainAfterColor: #312e81;
+  --mainAfterColorRgb: 49, 46, 129;
   --mainAnchorColor: #3730a3;
 }
 [data-theme="ficto_surgical"] {
   --mainBackgroundColor: #4c0519;
+  --mainBackgroundColorRgb: 76, 5, 25;
   --mainHoverColor: #f43f5e;
   --mainButtonColor: #9f1239;
   --mainBorderColor: #9f1239;
   --mainTextColor: #be123c;
   --mainAfterColor: #881337;
+  --mainAfterColorRgb: 136, 19, 55;
   --mainAnchorColor: #9f1239;
 }
 a {
@@ -500,6 +508,55 @@ h6.rt-heading { font-size: 1.15rem;  }
   object-fit: cover;
   width: 100%;
   background-color: #f8f9fa;
+}
+
+/* Article detail hero: teaser image as background with site-color overlay;
+   falls back to pure site-color gradient when no image is set. */
+.article-hero {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  min-height: 70vh;
+  padding-top: 12vh;
+  padding-bottom: 4rem;
+  background: linear-gradient(
+    135deg,
+    var(--mainBackgroundColor) 0%,
+    var(--mainAfterColor) 100%
+  );
+  color: #fff;
+  display: flex;
+  align-items: flex-end;
+  position: relative;
+}
+
+.article-hero--has-image {
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(var(--mainBackgroundColorRgb, 0, 0, 0), 0.75) 0%,
+      rgba(var(--mainAfterColorRgb, 0, 0, 0), 0.55) 100%
+    ),
+    var(--article-hero-image);
+  background-size: cover;
+  background-position: center;
+}
+
+.article-hero__content {
+  position: relative;
+}
+
+.article-hero h1 {
+  font-size: clamp(2rem, 5vw, 3.5rem);
+  font-weight: 700;
+  margin: 0 0 0.75rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.article-hero__date {
+  color: rgba(255, 255, 255, 0.85);
+  margin: 0;
+  font-size: 1rem;
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
 }
 
 /* Preview-mode popup: floating dark-purple panel, collapses to an icon button. */

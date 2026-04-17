@@ -2,24 +2,22 @@
 
 @{
     ViewData["Title"] = Model.Title;
+    var heroImageUrl = Model.HeroImage?.UrlWithTransform(width: 1920, format: ImageFormat.Webp, quality: 80);
+    var heroClass = heroImageUrl != null ? "article-hero article-hero--has-image" : "article-hero";
+    var heroStyle = heroImageUrl != null ? $"--article-hero-image: url('{heroImageUrl}')" : null;
 }
 
+<section class="@heroClass" data-kontent-item-id="@Model.ItemId" style="@heroStyle">
+    <div class="container article-hero__content">
+        <h1 data-kontent-element-codename="title">@Model.Title</h1>
+        @if (Model.PublishingDate.HasValue)
+        {
+            <p class="article-hero__date" data-kontent-element-codename="publishing_date">@Model.PublishingDate.Value.ToString("d MMM yyyy")</p>
+        }
+    </div>
+</section>
+
 <div class="container py-4" data-kontent-item-id="@Model.ItemId">
-    <h1 data-kontent-element-codename="title">@Model.Title</h1>
-
-    @if (Model.PublishingDate.HasValue)
-    {
-        <p class="text-muted" data-kontent-element-codename="publishing_date">@Model.PublishingDate.Value.ToString("d MMM yyyy")</p>
-    }
-
-    @if (Model.HeroImage != null)
-    {
-        <img src="@Model.HeroImage.UrlWithTransform(width: 1200, format: ImageFormat.Webp, quality: 85)"
-             alt="@(Model.HeroImage.AltText ?? Model.Title)"
-             class="img-fluid mb-4"
-             data-kontent-element-codename="hero_image" />
-    }
-
     @if (!string.IsNullOrEmpty(Model.Abstract))
     {
         <p class="lead" data-kontent-element-codename="abstract">@Model.Abstract</p>
