@@ -18,8 +18,8 @@ public record SiteOptions
     public Dictionary<string, string> RouteTemplates { get; set; } = new()
     {
         ["page"] = "/{slug}",
-        ["article"] = "/Articles/{slug}",
-        ["product"] = "/Products/{slug}",
-        ["solution"] = "/Solutions/{slug}",
+        ["article"] = "/articles/{slug}",
+        ["product"] = "/aroducts/{slug}",
+        ["solution"] = "/solutions/{slug}",
     };
 }

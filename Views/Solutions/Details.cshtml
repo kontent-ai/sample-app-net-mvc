@@ -2,34 +2,36 @@
 
 @{
     ViewData["Title"] = Model.Name;
+    var heroImageUrl = Model.MainImage?.UrlWithTransform(width: 1920, format: ImageFormat.Webp, quality: 80);
+    var heroClass = heroImageUrl != null ? "solution-hero solution-hero--has-image" : "solution-hero";
+    var heroStyle = heroImageUrl != null ? $"--solution-hero-image: url('{heroImageUrl}')" : null;
 }
 
-<div class="container py-4" data-kontent-item-id="@Model.ItemId">
-    <h1 data-kontent-element-codename="product_base__name">@Model.Name</h1>
+<section class="@heroClass" data-kontent-item-id="@Model.ItemId" style="@heroStyle">
+    <div class="container">
+        <div class="solution-hero__content">
+            @if (!string.IsNullOrEmpty(Model.ImagingTechnology))
+            {
+                <span class="solution-hero__tech" data-kontent-element-codename="imaging_technology">@Model.ImagingTechnology</span>
+            }
+            <h1 data-kontent-element-codename="product_base__name">@Model.Name</h1>
+            @if (!string.IsNullOrEmpty(Model.Description))
+            {
+                <p class="lead" data-kontent-element-codename="product_base__description">@Model.Description</p>
+            }
+            @if (Model.MainImage != null)
+            {
+                <span class="visually-hidden" data-kontent-element-codename="product_base__main_image">@(Model.MainImage.AltText ?? Model.Name)</span>
+            }
+        </div>
+    </div>
+</section>
 
-    @if (!string.IsNullOrEmpty(Model.ImagingTechnology))
-    {
-        <p class="text-muted" data-kontent-element-codename="imaging_technology">@Model.ImagingTechnology</p>
-    }
-
-    @if (Model.MainImage != null)
-    {
-        <img src="@Model.MainImage.UrlWithTransform(width: 1200, format: ImageFormat.Webp, quality: 85)"
-             alt="@(Model.MainImage.AltText ?? Model.Name)"
-             class="img-fluid mb-4"
-             style="max-width: 600px;"
-             data-kontent-element-codename="product_base__main_image" />
-    }
-
-    @if (!string.IsNullOrEmpty(Model.Description))
-    {
-        <p class="lead" data-kontent-element-codename="product_base__description">@Model.Description</p>
-    }
-
-    @if (!string.IsNullOrEmpty(Model.Showcase))
-    {
-        <div class="showcase mt-4" data-kontent-element-codename="showcase">
+@if (!string.IsNullOrEmpty(Model.Showcase))
+{
+    <div class="container py-4" data-kontent-item-id="@Model.ItemId">
+        <div class="showcase" data-kontent-element-codename="showcase">
             @Html.Raw(Model.Showcase)
         </div>
-    }
-</div>
+    </div>
+}

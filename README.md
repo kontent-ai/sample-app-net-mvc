@@ -25,6 +25,10 @@ Follow these steps to get the app running locally.
 - A **Preview API key** (optional — needed to see unpublished drafts)
 - A **Secure Access API key** (optional — needed if Secure Access is enabled on the environment)
 
+### Set up the Ficto environment
+
+In Kontent.ai, create a new project and pick the **Ficto multisite** template from the sample project gallery. That populates the environment with the content types, taxonomy groups, and items this app expects (WebsiteRoot, Page, Article, Product, Solution, NavigationItem, etc.). Everything in the sample UI — the three subsites, navigation, articles, products — is driven from that content.
+
 ### Installation
 
 1. Clone this repository:
@@ -45,6 +49,15 @@ dotnet restore
 Set your environment ID in `appsettings.json`:
 
 - `DeliveryOptions:EnvironmentId` — the environment this app reads from.
+
+> [!NOTE]
+> You can find the environment ID under **Environment settings → General**.
+
+> [!NOTE]
+> You can manage preview and secure access API keys under **Project settings → API keys → Delivery API Keys**.
+
+> [!NOTE]
+> You can manage webhooks under **Environment settings → Webhooks**.
 
 Everything else is optional, but recommended for the feature it enables. Store secrets via user-secrets rather than in `appsettings.json` so they never get committed:
 
@@ -70,6 +83,26 @@ user-secrets values are merged into configuration at runtime and are scoped to y
 > Storing keys directly in `appsettings.json` is convenient but risks accidental commit. Prefer user-secrets (above) for local dev and environment variables / Key Vault / a secrets manager for deployed environments.
 
 If you'd rather keep local overrides in a file, drop them in `appsettings.Development.json` &mdash; it is gitignored and loaded automatically when `ASPNETCORE_ENVIRONMENT=Development` (the default for `dotnet run`). Values in it override `appsettings.json` without touching the committed file.
+
+### Site options
+
+The `SiteOptions` section (`appsettings.json`, ships empty) overrides the defaults defined on `Services/Content/SiteOptions.cs`. The section is bound once via `AddOptions<SiteOptions>()` in `Program.cs` and validated on startup. All keys are optional &mdash; omit them and the record's property initializers apply.
+
+| Key | Default | Override semantics |
+|---|---|---|
+| `CacheExpirationSeconds` | `60` | Replaces the scalar. Sets the production Delivery client's `DefaultExpiration`; raise it once webhooks are wired to avoid unnecessary re-fetches. |
+| `RouteTemplates` | `{ page: "/{slug}", article: "/articles/{slug}", product: "/products/{slug}", solution: "/solutions/{slug}" }` | **Merges** with the defaults. Specifying `"RouteTemplates": { "article": "/blog/{slug}" }` overrides just `article`; the other three keep their defaults. |
+
+Example &mdash; custom article URLs and a longer cache window:
+
+```jsonc
+"SiteOptions": {
+  "CacheExpirationSeconds": 300,
+  "RouteTemplates": {
+    "article": "/blog/{slug}"
+  }
+}
+```
 
 ### Build and run
 
@@ -101,6 +134,11 @@ https://localhost:7108/?collection=ficto_surgical
 ```
 
 See [Configuring the Kontent.ai preview URL](#configuring-the-kontentai-preview-url) for how the same `?collection=` parameter is used to target preview iframes at a specific subsite.
+
+> [!NOTE]
+> `SpaceContextMiddleware` also resolves the space from the request's subdomain, so the same subsites are reachable at `http://ficto-imaging.localhost:5107`, `http://ficto-healthtech.localhost:5107`, and `http://ficto-surgical.localhost:5107` (hyphens in the subdomain become underscores before matching the collection codename). Most modern operating systems resolve `*.localhost` to the loopback address automatically per RFC 6761; on older Windows setups you may need to add hosts-file entries.
+>
+> HTTPS is **not** available on these URLs — the ASP.NET Core dev cert is issued for `localhost` only, not `*.localhost`, so browsers reject HTTPS requests to the subdomain. For the same reason they can't be used as Kontent.ai preview URLs (the preview iframe requires HTTPS), which is why the `?collection=` query parameter is the recommended approach for local development and the only one Kontent.ai supports in preview URLs.
 
 
 
@@ -282,7 +320,20 @@ To add Smart Link support to a new content type:
 
 ## Webhook-driven cache invalidation
 
-The app caches Delivery API responses via `Kontent.Ai.Delivery.Caching` (FusionCache backend). The `/webhooks/kontent` endpoint receives Kontent.ai webhook notifications, validates the `X-KC-Signature` HMAC against `WebhookOptions:Secret`, and invalidates the corresponding cache dependency keys.
+The app caches Delivery API responses via `Kontent.Ai.Delivery.Caching` (FusionCache backend) on the **production** client only &mdash; the preview client is deliberately uncached so editors see changes immediately. Every cached entry also has a time-based expiry that acts as a safety net in case a webhook is missed or not configured. The default is **60 seconds**, controlled by `SiteOptions:CacheExpirationSeconds` in `appsettings.json`; raise it once webhooks are wired up to keep content fresh without re-fetching on every request.
+
+The `/webhooks/kontent` endpoint receives Kontent.ai webhook notifications, validates the `X-KC-Signature` HMAC against `WebhookOptions:Secret`, and invalidates the corresponding cache dependency keys for precise eviction on top of that time-based baseline.
+
+### Registering the webhook
+
+Kontent.ai dispatches webhooks from the public internet, so it can't POST directly to `localhost`. For local development, expose the app through a tunnel — [ngrok](https://ngrok.com/), [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/), or equivalent — and use the tunnel's public HTTPS URL when registering the webhook:
+
+```bash
+ngrok http https://localhost:7108
+# → forwarding https://<random>.ngrok-free.app → https://localhost:7108
+```
+
+Then, in Kontent.ai under **Environment settings → Webhooks**, create a webhook pointing at `https://<random>.ngrok-free.app/webhooks/kontent`. Copy the signing key Kontent.ai generates for the webhook into `WebhookOptions:Secret` (via user-secrets) so signature validation succeeds. For deployed environments, point the webhook at your public domain directly — no tunnel needed.
 
 ### How the cascade works
 
@@ -309,10 +360,6 @@ The endpoint only acts on notifications with `delivery_slot == "published"`. Pre
 | `language` | `created` / `changed` / `deleted` | **Full purge** via `IDeliveryCachePurger.PurgeAsync()` | No language-scope key exists; languages affect every variant of every cached entry. |
 
 Unknown `object_type` values are ignored and logged at `Debug`. Any notification processed in a webhook batch can opt into the full purge — if a single language event is present in the payload, the entire request is handled as a purge.
-
-### SDK version requirement
-
-`content_type.changed` and `content_type.deleted` rely on `type_<codename>` being attached to item and item-list caches by the SDK's `DependencyTrackingContext.TrackItemType` fan-out. The local `Kontent.Ai.Delivery` reference must include this change — without it, only the `GetType()` cache is invalidated and dependent item caches silently go stale.
 
 ### Webhook payload reference
 

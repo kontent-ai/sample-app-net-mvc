@@ -559,6 +559,70 @@ h6.rt-heading { font-size: 1.15rem;  }
   text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
 }
 
+/* Solution detail hero: main image as full-viewport background with site-color
+   overlay; falls back to pure site-color gradient when no image is set. */
+.solution-hero {
+  width: 100vw;
+  margin-left: calc(-50vw + 50%);
+  min-height: 100vh;
+  padding-top: 12vh;
+  padding-bottom: 4rem;
+  background: linear-gradient(
+    135deg,
+    var(--mainBackgroundColor) 0%,
+    var(--mainAfterColor) 100%
+  );
+  color: #fff;
+  display: flex;
+  align-items: center;
+  position: relative;
+}
+
+.solution-hero--has-image {
+  background-image:
+    linear-gradient(
+      135deg,
+      rgba(var(--mainBackgroundColorRgb, 0, 0, 0), 0.75) 0%,
+      rgba(var(--mainAfterColorRgb, 0, 0, 0), 0.55) 100%
+    ),
+    var(--solution-hero-image);
+  background-size: cover;
+  background-position: center;
+}
+
+.solution-hero__content {
+  position: relative;
+  max-width: 720px;
+  text-align: left;
+}
+
+.solution-hero h1 {
+  font-size: clamp(2.25rem, 5vw, 4rem);
+  font-weight: 700;
+  line-height: 1.05;
+  margin: 0 0 1rem;
+  text-shadow: 0 2px 12px rgba(0, 0, 0, 0.35);
+}
+
+.solution-hero .lead {
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow: 0 1px 8px rgba(0, 0, 0, 0.35);
+  margin: 0;
+}
+
+.solution-hero__tech {
+  display: inline-block;
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+  border-radius: 999px;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: 1rem;
+  backdrop-filter: blur(4px);
+}
+
 /* Preview-mode popup: floating dark-purple panel, collapses to an icon button. */
 .preview-banner {
   position: fixed;
