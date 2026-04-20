@@ -13,15 +13,17 @@ public partial interface IContentService
     /// </summary>
     /// <param name="skip">Number of items to skip (zero-based offset).</param>
     /// <param name="limit">Maximum number of items to return.</param>
+    /// <param name="ct">Cancellation token forwarded to the Delivery API call.</param>
     /// <returns>A <see cref="PagedResult{T}"/> of Article content items.</returns>
     /// <exception cref="ContentDeliveryException">Thrown when the Delivery API returns a server error (5xx).</exception>
-    Task<PagedResult<IContentItem<Article>>> GetArticlesAsync(int skip = 0, int limit = 12);
+    Task<PagedResult<IContentItem<Article>>> GetArticlesAsync(int skip = 0, int limit = 12, CancellationToken ct = default);
 
     /// <summary>
     /// Fetches an article by its URL slug.
     /// </summary>
     /// <param name="slug">The URL-friendly slug of the article.</param>
+    /// <param name="ct">Cancellation token forwarded to the Delivery API call.</param>
     /// <returns>The Article content item, or null if not found.</returns>
     /// <exception cref="ContentDeliveryException">Thrown when the Delivery API returns a server error (5xx).</exception>
-    Task<IContentItem<Article>?> GetArticleBySlugAsync(string slug);
+    Task<IContentItem<Article>?> GetArticleBySlugAsync(string slug, CancellationToken ct = default);
 }

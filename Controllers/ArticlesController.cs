@@ -12,12 +12,12 @@ public class ArticlesController(
 {
     private const int PageSize = 12;
 
-    public async Task<IActionResult> Index([FromQuery] int page = 1)
+    public async Task<IActionResult> Index([FromQuery] int page = 1, CancellationToken ct = default)
     {
         var skip = Math.Max(0, (page - 1) * PageSize);
 
-        var pageTask = contentService.GetPageBySlugAsync("articles");
-        var articlesTask = contentService.GetArticlesAsync(skip, PageSize);
+        var pageTask = contentService.GetPageBySlugAsync("articles", ct);
+        var articlesTask = contentService.GetArticlesAsync(skip, PageSize, ct);
         await Task.WhenAll(pageTask, articlesTask);
 
         var pageItem = await pageTask;
@@ -39,9 +39,9 @@ public class ArticlesController(
     }
 
     [Route("[controller]/{slug}")]
-    public async Task<IActionResult> Details(string slug)
+    public async Task<IActionResult> Details(string slug, CancellationToken ct)
     {
-        var article = await contentService.GetArticleBySlugAsync(slug);
+        var article = await contentService.GetArticleBySlugAsync(slug, ct);
         if (article == null)
             return NotFound();
 

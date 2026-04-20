@@ -69,6 +69,8 @@ user-secrets values are merged into configuration at runtime and are scoped to y
 > [!CAUTION]
 > Storing keys directly in `appsettings.json` is convenient but risks accidental commit. Prefer user-secrets (above) for local dev and environment variables / Key Vault / a secrets manager for deployed environments.
 
+If you'd rather keep local overrides in a file, drop them in `appsettings.Development.json` &mdash; it is gitignored and loaded automatically when `ASPNETCORE_ENVIRONMENT=Development` (the default for `dotnet run`). Values in it override `appsettings.json` without touching the committed file.
+
 ### Build and run
 
 Trust the ASP.NET Core dev certificate (one-time, per machine) so HTTPS works without browser warnings:
@@ -85,6 +87,9 @@ dotnet run
 ```
 
 The app is served at `https://localhost:7108` (HTTP on `:5107` redirects to HTTPS).
+
+> [!NOTE]
+> Before deploying anywhere reachable, constrain `AllowedHosts` in `appsettings.json` to your expected hostname(s). The shipped `"*"` default is intentionally permissive for local development only.
 
 #### Switching between spaces in dev
 
@@ -141,6 +146,14 @@ Add a template if you introduce a new content type; anything not listed falls ba
 ### Paging, filtering, and taxonomies
 
 Listing pages (Articles, Products) paginate through the SDK's `Skip` / `Limit` / `WithTotalCount` and return a `PagedResult<T>` so the view can render "Showing N–M of TOTAL" without a second count query. Products filter additionally by taxonomy — category codenames from the query string are passed into `.Where(i => i.Element("category").ContainsAny(...))` against the `product_category` taxonomy group.
+
+List queries also apply **element projection** via `.WithElements(...)` to trim the payload to just the fields the card needs. `GetArticlesAsync` drops the `content` rich-text body (the heaviest field) and `GetProductsAsync` drops the SEO metadata elements — the detail queries (`*BySlugAsync`) keep the full element set for the full-page view.
+
+### Asset renditions (v19)
+
+Kontent.ai's rendition presets let editors define image variants once in the environment, and the SDK applies them automatically. The sample uses a single SDK-level setting:
+
+- **`DeliveryOptions:DefaultRenditionPreset`** in `appsettings.json` (set to `"default"`) — every `IAsset.Url` emitted by the SDK already contains the rendition transformation query. Mappers call `AssetViewModel.From(asset)` directly and stay presentation-focused.
 
 ### Navigation
 

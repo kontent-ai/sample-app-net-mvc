@@ -21,15 +21,17 @@ public partial interface IContentService
     Task<PagedResult<IContentItem<Product>>> GetProductsAsync(
         IReadOnlyCollection<string>? categoryCodenames = null,
         int skip = 0,
-        int limit = 12);
+        int limit = 12,
+        CancellationToken ct = default);
 
     /// <summary>
     /// Fetches a product by its URL slug.
     /// </summary>
     /// <param name="slug">The URL-friendly slug of the product.</param>
+    /// <param name="ct">Cancellation token forwarded to the Delivery API call.</param>
     /// <returns>The Product content item, or null if not found.</returns>
     /// <exception cref="ContentDeliveryException">Thrown when the Delivery API returns a server error (5xx).</exception>
-    Task<IContentItem<Product>?> GetProductBySlugAsync(string slug);
+    Task<IContentItem<Product>?> GetProductBySlugAsync(string slug, CancellationToken ct = default);
 
     /// <summary>
     /// Fetches all products in a category (no paging). Used for small in-memory lookups
@@ -37,5 +39,6 @@ public partial interface IContentService
     /// </summary>
     Task<IReadOnlyList<IContentItem<Product>>> GetProductsByCategoryAsync(
         IReadOnlyCollection<string> categoryCodenames,
-        int limit = 4);
+        int limit = 4,
+        CancellationToken ct = default);
 }

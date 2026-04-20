@@ -24,10 +24,13 @@ public class WebhooksController(
 
     [HttpPost("/webhooks/kontent")]
     public async Task<IActionResult> Receive(
-        [FromKeyedServices("production")] IDeliveryCacheManager? cacheManager)
+        [FromKeyedServices("production")] IDeliveryCacheManager? cacheManager,
+        CancellationToken ct)
     {
         Request.EnableBuffering();
-        var body = await new StreamReader(Request.Body).ReadToEndAsync();
+        // leaveOpen: true — the request body stream is owned by the framework.
+        using var reader = new StreamReader(Request.Body, leaveOpen: true);
+        var body = await reader.ReadToEndAsync(ct);
 
         if (!ValidateSignature(body))
         {
@@ -60,7 +63,7 @@ public class WebhooksController(
         {
             if (cacheManager is IDeliveryCachePurger purger)
             {
-                await purger.PurgeAsync();
+                await purger.PurgeAsync(cancellationToken: ct);
                 logger.LogInformation("Webhook triggered full cache purge (language event).");
             }
             else
@@ -75,7 +78,7 @@ public class WebhooksController(
 
         if (keys.Length > 0)
         {
-            await cacheManager.InvalidateAsync(keys);
+            await cacheManager.InvalidateAsync(keys, ct);
             logger.LogInformation(
                 "Webhook invalidated {Count} cache dependency key(s): {Keys}",
                 keys.Length, string.Join(", ", keys));

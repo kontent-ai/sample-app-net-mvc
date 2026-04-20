@@ -9,7 +9,11 @@ public class ArticleMapper(PersonMapper personMapper, IHtmlResolver htmlResolver
     public async Task<ArticleViewModel> MapAsync(IContentItem<Article> source)
     {
         var e = source.Elements;
-        var content = await e.Content.ToHtmlAsync(htmlResolver);
+        // Listing queries project the `content` element out (see ContentService.GetArticlesAsync);
+        // this mapper is shared with the detail page, so guard against the null element.
+        var content = e.Content is null
+            ? string.Empty
+            : await e.Content.ToHtmlAsync(htmlResolver);
 
         var author = e.Author.OfType<IContentItem<Person>>().FirstOrDefault();
         var authorViewModel = author != null ? await personMapper.MapAsync(author) : null;
@@ -22,6 +26,7 @@ public class ArticleMapper(PersonMapper personMapper, IHtmlResolver htmlResolver
             ArticleType = e.Type.FirstOrDefault()?.Codename ?? string.Empty,
             Abstract = e.Abstract,
             Content = content,
+            // Rendition is applied by the SDK via DeliveryOptions:DefaultRenditionPreset.
             HeroImage = AssetViewModel.From(e.HeroImage.FirstOrDefault()),
             Author = authorViewModel,
             MetadataTitle = e.MetadataTitle,

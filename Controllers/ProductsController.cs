@@ -15,19 +15,21 @@ public class ProductsController(
 
     public async Task<IActionResult> Index(
         [FromQuery(Name = "category")] string[]? category,
-        [FromQuery] int page = 1)
+        [FromQuery] int page = 1,
+        CancellationToken ct = default)
     {
         var selected = new HashSet<string>(
             category ?? [],
             StringComparer.OrdinalIgnoreCase);
         var skip = Math.Max(0, (page - 1) * PageSize);
 
-        var taxonomyTask = contentService.GetProductCategoryTaxonomyAsync();
-        var pageTask = contentService.GetPageBySlugAsync("products");
+        var taxonomyTask = contentService.GetProductCategoryTaxonomyAsync(ct);
+        var pageTask = contentService.GetPageBySlugAsync("products", ct);
         var productsTask = contentService.GetProductsAsync(
             selected.Count > 0 ? selected : null,
             skip,
-            PageSize);
+            PageSize,
+            ct);
         await Task.WhenAll(taxonomyTask, pageTask, productsTask);
 
         var taxonomy = await taxonomyTask;
@@ -67,9 +69,9 @@ public class ProductsController(
     }
 
     [Route("[controller]/{slug}")]
-    public async Task<IActionResult> Details(string slug)
+    public async Task<IActionResult> Details(string slug, CancellationToken ct)
     {
-        var product = await contentService.GetProductBySlugAsync(slug);
+        var product = await contentService.GetProductBySlugAsync(slug, ct);
         if (product == null)
             return NotFound();
 
@@ -79,7 +81,7 @@ public class ProductsController(
             .Select(t => t.Codename)
             .ToArray() ?? [];
 
-        var related = await contentService.GetProductsByCategoryAsync(categoryCodenames, limit: 5);
+        var related = await contentService.GetProductsByCategoryAsync(categoryCodenames, limit: 5, ct);
         var relatedViewModels = await Task.WhenAll(
             related.Where(p => p.Elements.Slug != slug).Take(4)
                    .Select(productMapper.MapAsync));

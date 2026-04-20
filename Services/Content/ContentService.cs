@@ -49,11 +49,11 @@ public class ContentService(
     private IItemsFilterBuilder CollectionFilter(IItemsFilterBuilder b) =>
         b.System("collection").IsIn(CollectionCodename, "default");
 
-    public async Task<IContentItem<WebsiteRoot>?> GetHomepageAsync()
+    public async Task<IContentItem<WebsiteRoot>?> GetHomepageAsync(CancellationToken ct = default)
     {
         var result = await Client.GetItem<WebsiteRoot>(CollectionCodename)
             .Depth(3)
-            .ExecuteAsync();
+            .ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -65,13 +65,13 @@ public class ContentService(
         return result.Value;
     }
 
-    public async Task<IContentItem<Page>?> GetPageBySlugAsync(string slug)
+    public async Task<IContentItem<Page>?> GetPageBySlugAsync(string slug, CancellationToken ct = default)
     {
         var result = await Client.GetItems<Page>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
             .Where(CollectionFilter)
             .Depth(3)
-            .ExecuteAsync();
+            .ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -83,17 +83,22 @@ public class ContentService(
         return result.Value.Items.Count > 0 ? result.Value.Items[0] : null;
     }
 
-    public async Task<PagedResult<IContentItem<Article>>> GetArticlesAsync(int skip = 0, int limit = 12)
+    public async Task<PagedResult<IContentItem<Article>>> GetArticlesAsync(int skip = 0, int limit = 12, CancellationToken ct = default)
     {
         // Skip/Limit paginate at the API; WithTotalCount surfaces IPagination.TotalCount
         // so the view can render "Showing N-M of TOTAL" without a separate count query.
+        // WithElements projects only the fields the listing cards need — the rich-text `content`
+        // body is the heaviest field and is never rendered on a card, so we exclude it here.
         var result = await Client.GetItems<Article>()
             .Where(CollectionFilter)
             .OrderBy("elements.publishing_date", OrderingMode.Descending)
             .Skip(skip)
             .Limit(limit)
             .WithTotalCount()
-            .ExecuteAsync();
+            .WithElements(
+                "title", "slug", "type", "abstract", "hero_image", "author", "publishing_date",
+                "metadata__title", "metadata__description", "metadata__keywords")
+            .ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -106,12 +111,12 @@ public class ContentService(
             result.Value.Items, result.Value.Pagination.TotalCount, skip, limit);
     }
 
-    public async Task<IContentItem<Article>?> GetArticleBySlugAsync(string slug)
+    public async Task<IContentItem<Article>?> GetArticleBySlugAsync(string slug, CancellationToken ct = default)
     {
         var result = await Client.GetItems<Article>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
             .Where(CollectionFilter)
-            .ExecuteAsync();
+            .ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -126,13 +131,19 @@ public class ContentService(
     public async Task<PagedResult<IContentItem<Product>>> GetProductsAsync(
         IReadOnlyCollection<string>? categoryCodenames = null,
         int skip = 0,
-        int limit = 12)
+        int limit = 12,
+        CancellationToken ct = default)
     {
+        // WithElements projects only the fields the product card renders — SEO metadata is
+        // only used on the detail page, so it's excluded from this listing query.
         var query = Client.GetItems<Product>()
             .Where(CollectionFilter)
             .Skip(skip)
             .Limit(limit)
-            .WithTotalCount();
+            .WithTotalCount()
+            .WithElements(
+                "product_base__name", "slug", "product_base__description",
+                "product_base__main_image", "category", "price");
 
         if (categoryCodenames is { Count: > 0 })
         {
@@ -140,7 +151,7 @@ public class ContentService(
             query = query.Where(i => i.Element("category").ContainsAny(codenames));
         }
 
-        var result = await query.ExecuteAsync();
+        var result = await query.ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -155,15 +166,20 @@ public class ContentService(
 
     public async Task<IReadOnlyList<IContentItem<Product>>> GetProductsByCategoryAsync(
         IReadOnlyCollection<string> categoryCodenames,
-        int limit = 4)
+        int limit = 4,
+        CancellationToken ct = default)
     {
         if (categoryCodenames.Count == 0) return [];
 
+        // Related-products strip renders cards — same projection as the main listing.
         var result = await Client.GetItems<Product>()
             .Where(CollectionFilter)
             .Where(i => i.Element("category").ContainsAny(categoryCodenames.ToArray()))
             .Limit(limit)
-            .ExecuteAsync();
+            .WithElements(
+                "product_base__name", "slug", "product_base__description",
+                "product_base__main_image", "category", "price")
+            .ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -175,12 +191,12 @@ public class ContentService(
         return result.Value.Items;
     }
 
-    public async Task<IContentItem<Product>?> GetProductBySlugAsync(string slug)
+    public async Task<IContentItem<Product>?> GetProductBySlugAsync(string slug, CancellationToken ct = default)
     {
         var result = await Client.GetItems<Product>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
             .Where(CollectionFilter)
-            .ExecuteAsync();
+            .ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -192,11 +208,11 @@ public class ContentService(
         return result.Value.Items.Count > 0 ? result.Value.Items[0] : null;
     }
 
-    public async Task<IReadOnlyList<IContentItem<Solution>>> GetSolutionsAsync()
+    public async Task<IReadOnlyList<IContentItem<Solution>>> GetSolutionsAsync(CancellationToken ct = default)
     {
         var result = await Client.GetItems<Solution>()
             .Where(CollectionFilter)
-            .ExecuteAsync();
+            .ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -208,12 +224,12 @@ public class ContentService(
         return result.Value.Items;
     }
 
-    public async Task<IContentItem<Solution>?> GetSolutionBySlugAsync(string slug)
+    public async Task<IContentItem<Solution>?> GetSolutionBySlugAsync(string slug, CancellationToken ct = default)
     {
         var result = await Client.GetItems<Solution>()
             .Where(i => i.Element("slug").IsEqualTo(slug))
             .Where(CollectionFilter)
-            .ExecuteAsync();
+            .ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -225,9 +241,9 @@ public class ContentService(
         return result.Value.Items.Count > 0 ? result.Value.Items[0] : null;
     }
 
-    public async Task<ITaxonomyGroup?> GetProductCategoryTaxonomyAsync()
+    public async Task<ITaxonomyGroup?> GetProductCategoryTaxonomyAsync(CancellationToken ct = default)
     {
-        var result = await Client.GetTaxonomy("product_category").ExecuteAsync();
+        var result = await Client.GetTaxonomy("product_category").ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
@@ -239,12 +255,12 @@ public class ContentService(
         return result.Value;
     }
 
-    public async Task<IReadOnlyList<IContentItem<NavigationItem>>> GetNavigationAsync()
+    public async Task<IReadOnlyList<IContentItem<NavigationItem>>> GetNavigationAsync(CancellationToken ct = default)
     {
         // Depth(3) reaches WebsiteRoot → container → top-level nav items → dropdown subitems.
         var result = await Client.GetItem<WebsiteRoot>(CollectionCodename)
             .Depth(3)
-            .ExecuteAsync();
+            .ExecuteAsync(ct);
 
         if (!result.IsSuccess)
         {
