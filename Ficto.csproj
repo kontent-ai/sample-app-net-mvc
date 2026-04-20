@@ -8,11 +8,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery\Kontent.Ai.Delivery.csproj" />
-    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery.Abstractions\Kontent.Ai.Delivery.Abstractions.csproj" />
-    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery.Caching\Kontent.Ai.Delivery.Caching.csproj" />
-    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Urls\Kontent.Ai.Urls.csproj" />
-    <ProjectReference Include="..\delivery-sdk-net\Kontent.Ai.Delivery.SourceGeneration\Kontent.Ai.Delivery.SourceGeneration.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="Kontent.Ai.Delivery" Version="19.0.0" />
+    <PackageReference Include="Kontent.Ai.Delivery.Abstractions" Version="19.0.0" />
+    <PackageReference Include="Kontent.Ai.Delivery.Caching" Version="19.0.0" />
+    <PackageReference Include="Kontent.Ai.Urls" Version="19.0.0" />
+    <PackageReference Include="Kontent.Ai.Delivery.SourceGeneration" Version="19.0.0" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
 </Project>
