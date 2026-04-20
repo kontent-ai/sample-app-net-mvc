@@ -9,5 +9,5 @@ public partial interface IContentService
     /// </summary>
     /// <returns>The taxonomy group, or null if not found.</returns>
     /// <exception cref="ContentDeliveryException">Thrown when the Delivery API returns a server error (5xx).</exception>
-    Task<ITaxonomyGroup?> GetProductCategoryTaxonomyAsync();
+    Task<ITaxonomyGroup?> GetProductCategoryTaxonomyAsync(CancellationToken ct = default);
 }

@@ -10,9 +10,9 @@ public class HomeController(
     IContentService contentService,
     WebsiteRootMapper websiteRootMapper) : Controller
 {
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(CancellationToken ct)
     {
-        var homepage = await contentService.GetHomepageAsync();
+        var homepage = await contentService.GetHomepageAsync(ct);
         if (homepage == null)
             return NotFound();
 

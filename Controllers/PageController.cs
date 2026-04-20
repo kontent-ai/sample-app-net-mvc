@@ -6,9 +6,9 @@ namespace Ficto.Controllers;
 
 public class PageController(IContentService contentService, PageMapper pageMapper) : Controller
 {
-    public async Task<IActionResult> Index(string slug)
+    public async Task<IActionResult> Index(string slug, CancellationToken ct)
     {
-        var page = await contentService.GetPageBySlugAsync(slug);
+        var page = await contentService.GetPageBySlugAsync(slug, ct);
         if (page == null)
             return NotFound();
 

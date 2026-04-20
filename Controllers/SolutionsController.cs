@@ -10,10 +10,10 @@ public class SolutionsController(
     SolutionMapper solutionMapper,
     PageMapper pageMapper) : Controller
 {
-    public async Task<IActionResult> Index()
+    public async Task<IActionResult> Index(CancellationToken ct)
     {
-        var page = await contentService.GetPageBySlugAsync("solutions");
-        var solutions = await contentService.GetSolutionsAsync();
+        var page = await contentService.GetPageBySlugAsync("solutions", ct);
+        var solutions = await contentService.GetSolutionsAsync(ct);
 
         var pageViewModel = page != null ? await pageMapper.MapAsync(page) : null;
 
@@ -30,9 +30,9 @@ public class SolutionsController(
     }
 
     [Route("[controller]/{slug}")]
-    public async Task<IActionResult> Details(string slug)
+    public async Task<IActionResult> Details(string slug, CancellationToken ct)
     {
-        var solution = await contentService.GetSolutionBySlugAsync(slug);
+        var solution = await contentService.GetSolutionBySlugAsync(slug, ct);
         if (solution == null)
         {
             return NotFound();

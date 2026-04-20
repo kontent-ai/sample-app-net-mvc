@@ -6,6 +6,10 @@
 # dotenv files
 .env
 
+# ASP.NET Core local dev overrides — keep secrets out of version control.
+# Values here override appsettings.json when the app runs with ASPNETCORE_ENVIRONMENT=Development.
+appsettings.Development.json
+
 # User-specific files
 *.rsuser
 *.suo

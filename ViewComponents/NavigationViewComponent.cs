@@ -11,7 +11,7 @@ public class NavigationViewComponent(
 {
     public async Task<IViewComponentResult> InvokeAsync()
     {
-        var items = await contentService.GetNavigationAsync();
+        var items = await contentService.GetNavigationAsync(HttpContext.RequestAborted);
         var viewModels = new List<NavigationViewModel>();
 
         foreach (var item in items)
