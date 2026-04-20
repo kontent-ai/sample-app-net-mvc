@@ -171,9 +171,9 @@ URL resolution for content-item links (in navigation and rich text) is handled b
 | Content type | URL pattern |
 |---|---|
 | `page` | `/{slug}` |
-| `article` | `/Articles/{slug}` |
-| `product` | `/Products/{slug}` |
-| `solution` | `/Solutions/{slug}` |
+| `article` | `/articles/{slug}` |
+| `product` | `/products/{slug}` |
+| `solution` | `/solutions/{slug}` |
 
 Add a template if you introduce a new content type; anything not listed falls back to `/{type}/{slug}`.
 

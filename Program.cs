@@ -17,11 +17,18 @@ services.AddDataProtection();
 
 // Options — ValidateOnStart ensures the app fails fast with a clear message
 // if required configuration is missing, rather than surfacing opaque errors at request time.
+var siteOptionsSection = configuration.GetSection("SiteOptions");
 services.AddOptions<SiteOptions>()
-    .Bind(configuration.GetSection("SiteOptions"))
+    .Bind(siteOptionsSection)
     .Validate(o => o.Spaces is { Length: > 0 }, "SiteOptions:Spaces must contain at least one space codename.")
     .Validate(o => o.RouteTemplates is { Count: > 0 }, "SiteOptions:RouteTemplates must define at least one route template.")
     .ValidateOnStart();
+
+// Eager-bind a local copy so startup-time consumers (see AddDeliveryMemoryCache below)
+// can read the same values without re-hardcoding defaults. The Kontent caching extensions
+// only expose an Action<TOptions> overload, so there's no service-provider hook to resolve
+// IOptions<SiteOptions> from at cache-configuration time.
+var siteOptions = siteOptionsSection.Get<SiteOptions>() ?? new SiteOptions();
 
 services.AddOptions<WebhookOptions>()
     .Bind(configuration.GetSection("WebhookOptions"))
@@ -49,9 +56,6 @@ services.AddSingleton<IRouteResolver, RouteResolver>();
 
 // Kontent.ai Delivery clients — production uses published content, preview uses draft content.
 // Both share the same environment ID and endpoint config from DeliveryOptions.
-var cacheExpiration = TimeSpan.FromSeconds(
-    configuration.GetValue("SiteOptions:CacheExpirationSeconds", 60));
-
 services.AddDeliveryClient("production", options =>
 {
     configuration.GetSection("DeliveryOptions").Bind(options);
@@ -59,7 +63,7 @@ services.AddDeliveryClient("production", options =>
 });
 services.AddDeliveryMemoryCache("production", opts =>
 {
-    opts.DefaultExpiration = cacheExpiration;
+    opts.DefaultExpiration = TimeSpan.FromSeconds(siteOptions.CacheExpirationSeconds);
     opts.IsFailSafeEnabled = true;
 });
 
