@@ -19,7 +19,7 @@ public record SiteOptions
     {
         ["page"] = "/{slug}",
         ["article"] = "/articles/{slug}",
-        ["product"] = "/aroducts/{slug}",
+        ["product"] = "/products/{slug}",
         ["solution"] = "/solutions/{slug}",
     };
 }
