@@ -15,4 +15,13 @@
     <PackageReference Include="Kontent.Ai.Delivery.SourceGeneration" Version="19.0.0" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
+  <!-- Emits X-KC-SOURCE: sample-app-net-mvc;<assembly-version> on every Delivery API request
+       so Kontent.ai analytics can attribute traffic to this sample app. The SDK's TrackingHandler
+       reads this assembly attribute via reflection; version is pulled from AssemblyInformationalVersion. -->
+  <ItemGroup>
+    <AssemblyAttribute Include="Kontent.Ai.Delivery.DeliverySourceTrackingHeaderAttribute">
+      <_Parameter1>sample-app-net-mvc</_Parameter1>
+    </AssemblyAttribute>
+  </ItemGroup>
+
 </Project>
