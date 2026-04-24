@@ -12,16 +12,14 @@ using ActionModel = Ficto.Generated.Models.Action;
 namespace Ficto.Services.Content;
 
 /// <summary>
-/// Builds the single <see cref="IHtmlResolver"/> instance used by every rich-text <c>.ToHtmlAsync</c>
-/// call in the app. Registered as a singleton in Program.cs; the delegates below are pure functions
-/// over their inputs plus the (singleton) <see cref="IRouteResolver"/>, so there's no per-request
-/// state and no dependency on scoped services.
+/// Builds the single <see cref="IHtmlResolver"/> instance used by the <c>&lt;rich-text&gt;</c>
+/// tag helper (resolved from DI). Registered as a singleton in Program.cs; the delegates below
+/// are pure functions over their inputs plus the (singleton) <see cref="IRouteResolver"/>, so
+/// there's no per-request state and no dependency on scoped services.
 ///
 /// The three embedded-content resolvers (Fact, ActionModel, Callout) render inline HTML directly —
 /// inline appearances are a distinct, simpler presentation than the block/card layouts used by
-/// the <c>PageBlockMapperFactory</c> → partial pipeline elsewhere in the app. Keeping them as
-/// inline templates avoids pulling the mapper graph into rich-text resolution (which created a
-/// ContentChunkMapper ↔ IHtmlResolver cycle when it was attempted earlier).
+/// the <c>PageBlockMapperFactory</c> → partial pipeline elsewhere in the app.
 /// </summary>
 public static class RichTextResolver
 {

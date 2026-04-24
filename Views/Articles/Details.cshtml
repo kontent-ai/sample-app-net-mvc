@@ -23,10 +23,10 @@
         <p class="lead" data-kontent-element-codename="abstract">@Model.Abstract</p>
     }
 
-    @if (!string.IsNullOrEmpty(Model.Content))
+    @if (Model.Content is not null)
     {
         <div class="article-body mt-4" data-kontent-element-codename="content">
-            @Html.Raw(Model.Content)
+            <rich-text content="@Model.Content" />
         </div>
     }
 
