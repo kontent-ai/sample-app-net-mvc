@@ -10,6 +10,8 @@
 
 A Kontent.ai sample ASP.NET Core MVC application running on **.NET 8**, built on the v19 Delivery SDK. It supersedes the [legacy .NET sample app](https://github.com/kontent-ai/sample-app-net) and doubles as a reference for the patterns the new SDK was designed around — keyed client registration, webhook-driven cache invalidation, rich-text resolution, iframe-ready preview, and [Smart Link](https://github.com/kontent-ai/smart-link) click-to-edit overlays.
 
+The app also uses the companion [`Kontent.Ai.AspNetCore`](https://www.nuget.org/packages/Kontent.Ai.AspNetCore/) package for the ASP.NET Core–specific pieces: the `<rich-text>` tag helper for rendering structured rich-text content, the `<img-asset>` tag helper for responsive images with `srcset`/`sizes`, and `UseWebhookSignatureValidator` middleware for verifying webhook signatures.
+
 It's based on the **Kontent.ai Ficto multisite** project — three brand subsites (Imaging, Healthtech, Surgical) served from a single deployment with shared navigation and a common content collection for cross-brand pages.
 
 <!-- GETTING STARTED -->
@@ -75,7 +77,7 @@ dotnet user-secrets set "WebhookOptions:Secret"              "<webhook-signing-s
 | `DeliveryOptions:PreviewApiKey` | Preview mode | Without it, preview requests silently fall back to production with a warning. |
 | `DeliveryOptions:SecureAccessApiKey` | Secure Access | Only needed if the environment has Secure Access enabled. |
 | `PreviewOptions:Secret` | Preview auto-enable | Ships as `mySecret` so preview URLs work out-of-the-box; override for anything reachable. An empty value logs a warning and admits any non-empty `?secret=`. |
-| `WebhookOptions:Secret` | Webhook-driven cache invalidation | Required HMAC secret; webhook calls with mismatching `X-KC-Signature` are rejected. |
+| `WebhookOptions:Secret` | Webhook-driven cache invalidation | Required HMAC secret; requests with a missing or mismatching `X-Kontent-ai-Signature` (or legacy `X-KC-Signature`) are rejected by `UseWebhookSignatureValidator`. |
 
 user-secrets values are merged into configuration at runtime and are scoped to your local user profile.
 
@@ -179,7 +181,9 @@ Add a template if you introduce a new content type; anything not listed falls ba
 
 ### Rich text
 
-`RichTextResolver` wires a single `IHtmlResolver` into the HTML pipeline. Inline linked items (Fact, Action, Callout) render through component-specific templates; links to other items resolve through `IRouteResolver` so `<a href>` values always match the routing table above. Custom anchor handling turns in-document references into deep-link `#slug` targets so table-of-contents links work.
+Rich-text fields reach Razor as `IRichTextContent` on the view models and render via the `Kontent.Ai.AspNetCore` package's `<rich-text content="@Model.Content" />` tag helper — see `Views/Shared/_ContentChunk.cshtml` for a minimal example. The tag helper resolves its HTML through whatever `IHtmlResolver` is registered in DI.
+
+`RichTextResolver` (in `Services/Content/`) builds that single resolver. Inline linked items (Fact, Action, Callout) render through component-specific templates; links to other items resolve through `IRouteResolver` so `<a href>` values always match the routing table above. Custom anchor handling turns in-document references into deep-link `#slug` targets so table-of-contents links work.
 
 ### Paging, filtering, and taxonomies
 
@@ -187,11 +191,13 @@ Listing pages (Articles, Products) paginate through the SDK's `Skip` / `Limit` /
 
 List queries also apply **element projection** via `.WithElements(...)` to trim the payload to just the fields the card needs. `GetArticlesAsync` drops the `content` rich-text body (the heaviest field) and `GetProductsAsync` drops the SEO metadata elements — the detail queries (`*BySlugAsync`) keep the full element set for the full-page view.
 
-### Asset renditions (v19)
+### Images and asset renditions (v19)
+
+Asset-bearing view models expose `IAsset?` directly; mappers pass SDK values through without any intermediate projection. Views render them with the `Kontent.Ai.AspNetCore` package's `<img-asset>` tag helper, which emits `srcset`/`sizes` using the width ladder from `ImageTransformationOptions:ResponsiveWidths` in `appsettings.json`. The few CSS `background-image` sites that can't use a tag helper (hero slides in `_VisualContainerHeroUnit.cshtml`, the article/solution detail hero styles) build URLs directly via `new ImageUrlBuilder(asset.Url).WithWidth(...).Url`.
 
 Kontent.ai's rendition presets let editors define image variants once in the environment, and the SDK applies them automatically. The sample uses a single SDK-level setting:
 
-- **`DeliveryOptions:DefaultRenditionPreset`** in `appsettings.json` (set to `"default"`) — every `IAsset.Url` emitted by the SDK already contains the rendition transformation query. Mappers call `AssetViewModel.From(asset)` directly and stay presentation-focused.
+- **`DeliveryOptions:DefaultRenditionPreset`** in `appsettings.json` (set to `"default"`) — every `IAsset.Url` emitted by the SDK already contains the rendition transformation query, so the `<img-asset>` tag helper's generated URLs inherit the rendition crop for free.
 
 ### Navigation
 
@@ -322,7 +328,7 @@ To add Smart Link support to a new content type:
 
 The app caches Delivery API responses via `Kontent.Ai.Delivery.Caching` (FusionCache backend) on the **production** client only &mdash; the preview client is deliberately uncached so editors see changes immediately. Every cached entry also has a time-based expiry that acts as a safety net in case a webhook is missed or not configured. The default is **60 seconds**, controlled by `SiteOptions:CacheExpirationSeconds` in `appsettings.json`; raise it once webhooks are wired up to keep content fresh without re-fetching on every request.
 
-The `/webhooks/kontent` endpoint receives Kontent.ai webhook notifications, validates the `X-KC-Signature` HMAC against `WebhookOptions:Secret`, and invalidates the corresponding cache dependency keys for precise eviction on top of that time-based baseline.
+The `/webhooks/kontent` endpoint receives Kontent.ai webhook notifications and invalidates the corresponding cache dependency keys for precise eviction on top of that time-based baseline. Signature validation happens upstream in `UseWebhookSignatureValidator` (from `Kontent.Ai.AspNetCore`), which verifies the `X-Kontent-ai-Signature` (and legacy `X-KC-Signature`) HMAC against `WebhookOptions:Secret` before the controller ever sees the request.
 
 ### Registering the webhook
 
