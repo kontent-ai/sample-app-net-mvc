@@ -3,6 +3,7 @@ using Ficto.Middleware;
 using Ficto.Models.Mappers;
 using Ficto.Services.Content;
 using Ficto.Services.Routing;
+using Kontent.Ai.AspNetCore.Webhooks;
 using Kontent.Ai.Delivery;
 using Kontent.Ai.Delivery.Abstractions;
 
@@ -119,6 +120,13 @@ app.UseRouting();
 
 // Resolve active space and preview flag from host, query string, and cookie.
 app.UseMiddleware<SpaceContextMiddleware>();
+
+// Verifies the X-Kontent-ai-Signature (and legacy X-KC-Signature) HMAC header on webhook
+// requests before they reach the controller. 401 on mismatch; the controller never sees
+// an unauthenticated request and no longer needs to handle validation or body buffering.
+app.UseWebhookSignatureValidator(
+    ctx => ctx.Request.Path.StartsWithSegments("/webhooks", StringComparison.OrdinalIgnoreCase),
+    configuration.GetSection("WebhookOptions"));
 
 app.UseAuthorization();
 

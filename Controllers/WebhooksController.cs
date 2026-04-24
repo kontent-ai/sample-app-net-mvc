@@ -1,57 +1,29 @@
-using System.Security.Cryptography;
-using System.Text;
-using System.Text.Json;
 using System.Text.Json.Serialization;
-using Ficto.Configuration;
 using Kontent.Ai.Delivery.Abstractions;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Options;
 
 namespace Ficto.Controllers;
 
 /// <summary>
 /// Receives Kontent.ai webhook notifications and invalidates relevant production cache entries.
-/// Always returns 200 OK after signature validation — parse/invalidation errors are logged, not surfaced,
-/// so Kontent.ai does not retry on transient issues.
+/// Signature validation happens upstream in <c>UseWebhookSignatureValidator</c>. Always returns
+/// 200 OK after a valid request — parse/invalidation errors are logged, not surfaced, so
+/// Kontent.ai does not retry on transient issues.
 /// </summary>
 [ApiController]
-public class WebhooksController(
-    IOptions<WebhookOptions> webhookOptions,
-    ILogger<WebhooksController> logger) : ControllerBase
+public class WebhooksController(ILogger<WebhooksController> logger) : ControllerBase
 {
-    private const string SignatureHeader = "X-KC-Signature";
     private const string PublishedDeliverySlot = "published";
 
     [HttpPost("/webhooks/kontent")]
     public async Task<IActionResult> Receive(
+        [FromBody] WebhookPayload? payload,
         [FromKeyedServices("production")] IDeliveryCacheManager? cacheManager,
         CancellationToken ct)
     {
-        Request.EnableBuffering();
-        // leaveOpen: true — the request body stream is owned by the framework.
-        using var reader = new StreamReader(Request.Body, leaveOpen: true);
-        var body = await reader.ReadToEndAsync(ct);
-
-        if (!ValidateSignature(body))
-        {
-            logger.LogWarning("Webhook request rejected — invalid or missing {Header} signature.", SignatureHeader);
-            return Unauthorized();
-        }
-
         if (cacheManager is null)
         {
             logger.LogWarning("Webhook received but no cache manager is registered for the production client.");
-            return Ok();
-        }
-
-        WebhookPayload? payload;
-        try
-        {
-            payload = JsonSerializer.Deserialize<WebhookPayload>(body);
-        }
-        catch (JsonException ex)
-        {
-            logger.LogWarning(ex, "Webhook payload could not be parsed — skipping cache invalidation.");
             return Ok();
         }
 
@@ -85,37 +57,6 @@ public class WebhooksController(
         }
 
         return Ok();
-    }
-
-    private bool ValidateSignature(string body)
-    {
-        var secret = webhookOptions.Value.Secret;
-
-        if (string.IsNullOrWhiteSpace(secret))
-        {
-            logger.LogWarning("WebhookOptions:Secret is not configured — webhook signature cannot be validated.");
-            return false;
-        }
-
-        if (!Request.Headers.TryGetValue(SignatureHeader, out var headerValue)
-            || string.IsNullOrEmpty(headerValue))
-            return false;
-
-        var keyBytes = Encoding.UTF8.GetBytes(secret);
-        var bodyBytes = Encoding.UTF8.GetBytes(body);
-
-        using var hmac = new HMACSHA256(keyBytes);
-        var expectedBytes = hmac.ComputeHash(bodyBytes);
-
-        try
-        {
-            var actualBytes = Convert.FromBase64String(headerValue!);
-            return CryptographicOperations.FixedTimeEquals(expectedBytes, actualBytes);
-        }
-        catch (FormatException)
-        {
-            return false;
-        }
     }
 
     // Maps each (object_type, action) notification to the canonical SDK dependency keys per the
@@ -250,22 +191,22 @@ public class WebhooksController(
         }
     }
 
-    private record WebhookPayload(
+    public record WebhookPayload(
         [property: JsonPropertyName("notifications")] IReadOnlyList<WebhookNotification> Notifications);
 
-    private record WebhookNotification(
+    public record WebhookNotification(
         [property: JsonPropertyName("data")] WebhookData Data,
         [property: JsonPropertyName("message")] WebhookMessage Message);
 
-    private record WebhookData(
+    public record WebhookData(
         [property: JsonPropertyName("system")] WebhookSystem System);
 
-    private record WebhookSystem(
+    public record WebhookSystem(
         [property: JsonPropertyName("id")] string? Id,
         [property: JsonPropertyName("codename")] string? Codename,
         [property: JsonPropertyName("taxonomy_group")] string? TaxonomyGroup);
 
-    private record WebhookMessage(
+    public record WebhookMessage(
         [property: JsonPropertyName("object_type")] string ObjectType,
         [property: JsonPropertyName("action")] string Action,
         [property: JsonPropertyName("delivery_slot")] string DeliverySlot);

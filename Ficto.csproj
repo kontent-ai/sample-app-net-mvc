@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Kontent.Ai.AspNetCore" Version="0.16.0" />
     <PackageReference Include="Kontent.Ai.Delivery" Version="19.0.0" />
     <PackageReference Include="Kontent.Ai.Delivery.Abstractions" Version="19.0.0" />
     <PackageReference Include="Kontent.Ai.Delivery.Caching" Version="19.0.0" />
