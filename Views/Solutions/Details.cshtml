@@ -2,7 +2,9 @@
 
 @{
     ViewData["Title"] = Model.Name;
-    var heroImageUrl = Model.MainImage?.UrlWithTransform(width: 1920, format: ImageFormat.Webp, quality: 80);
+    var heroImageUrl = Model.MainImage is { } heroAsset
+        ? new ImageUrlBuilder(heroAsset.Url).WithWidth(1920).WithFormat(ImageFormat.Webp).WithQuality(80).Url.ToString()
+        : null;
     var heroClass = heroImageUrl != null ? "solution-hero solution-hero--has-image" : "solution-hero";
     var heroStyle = heroImageUrl != null ? $"--solution-hero-image: url('{heroImageUrl}')" : null;
 }
@@ -21,7 +23,7 @@
             }
             @if (Model.MainImage != null)
             {
-                <span class="visually-hidden" data-kontent-element-codename="product_base__main_image">@(Model.MainImage.AltText ?? Model.Name)</span>
+                <span class="visually-hidden" data-kontent-element-codename="product_base__main_image">@(Model.MainImage.Description ?? Model.Name)</span>
             }
         </div>
     </div>

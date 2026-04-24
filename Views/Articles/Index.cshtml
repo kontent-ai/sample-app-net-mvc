@@ -17,10 +17,13 @@
                 <div class="card h-100" data-kontent-item-id="@article.ItemId">
                     @if (article.HeroImage != null)
                     {
-                        <img src="@article.HeroImage.UrlWithTransform(width: 600, format: ImageFormat.Webp, quality: 80)"
-                             class="card-img-top"
-                             alt="@(article.HeroImage.AltText ?? article.Title)"
-                             data-kontent-element-codename="hero_image" />
+                        <img-asset asset="article.HeroImage"
+                                   title="@(article.HeroImage.Description ?? article.Title)"
+                                   class="card-img-top"
+                                   default-width="600"
+                                   format="ImageFormat.Webp"
+                                   quality="80"
+                                   data-kontent-element-codename="hero_image" />
                     }
                     <div class="card-body d-flex flex-column">
                         <h5 class="card-title" data-kontent-element-codename="title">@article.Title</h5>

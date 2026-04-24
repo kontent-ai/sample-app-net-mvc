@@ -29,10 +29,13 @@
             <div class="col-md-6 text-center">
                 @if (product.MainImage != null)
                 {
-                    <img src="@product.MainImage.UrlWithTransform(width: 900, format: ImageFormat.Webp, quality: 85)"
-                         alt="@(product.MainImage.AltText ?? product.Name)"
-                         class="product-hero__image"
-                         data-kontent-element-codename="product_base__main_image" />
+                    <img-asset asset="product.MainImage"
+                               title="@(product.MainImage.Description ?? product.Name)"
+                               class="product-hero__image"
+                               default-width="900"
+                               format="ImageFormat.Webp"
+                               quality="85"
+                               data-kontent-element-codename="product_base__main_image" />
                 }
             </div>
         </div>
@@ -60,10 +63,13 @@
                     <div class="card h-100" data-kontent-item-id="@related.ItemId">
                         @if (related.MainImage != null)
                         {
-                            <img src="@related.MainImage.UrlWithTransform(width: 400, format: ImageFormat.Webp, quality: 80)"
-                                 class="card-img-top product-card__image"
-                                 alt="@(related.MainImage.AltText ?? related.Name)"
-                                 data-kontent-element-codename="product_base__main_image" />
+                            <img-asset asset="related.MainImage"
+                                       title="@(related.MainImage.Description ?? related.Name)"
+                                       class="card-img-top product-card__image"
+                                       default-width="400"
+                                       format="ImageFormat.Webp"
+                                       quality="80"
+                                       data-kontent-element-codename="product_base__main_image" />
                         }
                         <div class="card-body d-flex flex-column">
                             <h5 class="card-title" data-kontent-element-codename="product_base__name">@related.Name</h5>

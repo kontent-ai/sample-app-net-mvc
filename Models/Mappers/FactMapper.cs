@@ -29,7 +29,7 @@ public class FactMapper(ReferenceMapper referenceMapper, PersonMapper personMapp
             LinkLabel = string.IsNullOrWhiteSpace(e.ReferenceLabel) ? null : e.ReferenceLabel,
             LinkUrl = routeResolver.ResolveUrl(reference),
             LinkIsExternal = reference is UrlReference,
-            Image = AssetViewModel.From(e.Image.FirstOrDefault()),
+            Image = e.Image.FirstOrDefault(),
             Authors = authors
         };
     }

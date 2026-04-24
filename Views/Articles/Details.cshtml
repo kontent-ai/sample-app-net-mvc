@@ -2,7 +2,9 @@
 
 @{
     ViewData["Title"] = Model.Title;
-    var heroImageUrl = Model.HeroImage?.UrlWithTransform(width: 1920, format: ImageFormat.Webp, quality: 80);
+    var heroImageUrl = Model.HeroImage is { } heroAsset
+        ? new ImageUrlBuilder(heroAsset.Url).WithWidth(1920).WithFormat(ImageFormat.Webp).WithQuality(80).Url.ToString()
+        : null;
     var heroClass = heroImageUrl != null ? "article-hero article-hero--has-image" : "article-hero";
     var heroStyle = heroImageUrl != null ? $"--article-hero-image: url('{heroImageUrl}')" : null;
 }
@@ -35,11 +37,14 @@
         <div class="author mt-5 d-flex align-items-center gap-3" data-kontent-item-id="@Model.Author.ItemId">
             @if (Model.Author.Photograph != null)
             {
-                <img src="@Model.Author.Photograph.UrlWithTransform(width: 128, height: 128, format: ImageFormat.Webp)"
-                     alt="@(Model.Author.Photograph.AltText ?? Model.Author.Name)"
-                     class="rounded-circle"
-                     style="width:64px;height:64px;object-fit:cover;"
-                     data-kontent-element-codename="photograph" />
+                <img-asset asset="Model.Author.Photograph"
+                           title="@(Model.Author.Photograph.Description ?? Model.Author.Name)"
+                           width="128"
+                           height="128"
+                           format="ImageFormat.Webp"
+                           class="rounded-circle"
+                           style="width:64px;height:64px;object-fit:cover;"
+                           data-kontent-element-codename="photograph" />
             }
             <div>
                 <strong><span data-kontent-element-codename="first_name">@Model.Author.Name</span> <span data-kontent-element-codename="last_name">@Model.Author.LastName</span></strong>

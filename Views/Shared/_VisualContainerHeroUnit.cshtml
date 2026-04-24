@@ -3,6 +3,12 @@
 @{
     var carouselId = $"hero-carousel-{Guid.NewGuid():N}";
     var hasMultipleItems = Model.Items.Count > 1;
+
+    // CSS background-image can't use the <img-asset> tag helper, so build the transformed
+    // URL directly via ImageUrlBuilder (matches the encoding the tag helper would emit).
+    string? HeroSlideUrl(IAsset? asset) => asset is null
+        ? null
+        : new ImageUrlBuilder(asset.Url).WithWidth(1600).WithFormat(ImageFormat.Webp).WithQuality(85).Url.ToString();
 }
 
 <section class="visual-container visual-container--hero" data-kontent-item-id="@Model.ItemId">
@@ -25,7 +31,7 @@
                 {
                     var fact = Model.Items[i];
                     <div class="carousel-item @(i == 0 ? "active" : "")" data-kontent-item-id="@fact.ItemId">
-                        <div class="hero-slide" style="background-image: url('@(fact.Image?.UrlWithTransform(width: 1600, format: ImageFormat.Webp, quality: 85) ?? "")');">
+                        <div class="hero-slide" style="background-image: url('@(HeroSlideUrl(fact.Image) ?? "")');">
                             <div class="container">
                                 <div class="hero-content">
                                     @if (!string.IsNullOrEmpty(fact.Title))
@@ -59,7 +65,7 @@
     else if (Model.Items.Count == 1)
     {
         var fact = Model.Items[0];
-        <div class="hero-slide" style="background-image: url('@(fact.Image?.UrlWithTransform(width: 1600, format: ImageFormat.Webp, quality: 85) ?? "")');" data-kontent-item-id="@fact.ItemId">
+        <div class="hero-slide" style="background-image: url('@(HeroSlideUrl(fact.Image) ?? "")');" data-kontent-item-id="@fact.ItemId">
             <div class="container">
                 <div class="hero-content">
                     @if (!string.IsNullOrEmpty(fact.Title))

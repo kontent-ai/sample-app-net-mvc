@@ -8,6 +8,6 @@ public record PersonViewModel
     public string Name { get; init; } = string.Empty;
     public string LastName { get; init; } = string.Empty;
     public string? Occupation { get; init; }
-    public AssetViewModel? Photograph { get; init; }
+    public IAsset? Photograph { get; init; }
     public IRichTextContent? Bio { get; init; }
 }

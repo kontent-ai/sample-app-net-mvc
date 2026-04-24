@@ -21,7 +21,7 @@ public class ArticleMapper(PersonMapper personMapper) : IAsyncMapper<IContentIte
             // Null when listing queries project `content` out via WithElements; guarded in views.
             Content = e.Content,
             // Rendition is applied by the SDK via DeliveryOptions:DefaultRenditionPreset.
-            HeroImage = AssetViewModel.From(e.HeroImage.FirstOrDefault()),
+            HeroImage = e.HeroImage.FirstOrDefault(),
             Author = authorViewModel,
             MetadataTitle = e.MetadataTitle,
             MetadataDescription = e.MetadataDescription,

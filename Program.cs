@@ -3,6 +3,7 @@ using Ficto.Middleware;
 using Ficto.Models.Mappers;
 using Ficto.Services.Content;
 using Ficto.Services.Routing;
+using Kontent.Ai.AspNetCore.ImageTransformation;
 using Kontent.Ai.AspNetCore.Webhooks;
 using Kontent.Ai.Delivery;
 using Kontent.Ai.Delivery.Abstractions;
@@ -38,6 +39,11 @@ services.AddOptions<WebhookOptions>()
 services.AddOptions<PreviewOptions>()
     .Bind(configuration.GetSection("PreviewOptions"))
     .ValidateOnStart();
+
+// Drives the ResponsiveWidths fallback used by the <img-asset> tag helper from the
+// Kontent.Ai.AspNetCore package. Per-tag override via the responsive-widths attribute.
+services.Configure<ImageTransformationOptions>(
+    configuration.GetSection(nameof(ImageTransformationOptions)));
 
 // Space and preview context — resolved once per request by SpaceContextMiddleware
 services.AddScoped<SpaceContext>();

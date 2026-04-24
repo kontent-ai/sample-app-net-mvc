@@ -15,7 +15,7 @@ public class PersonMapper : IAsyncMapper<IContentItem<Person>, PersonViewModel>
             Name = e.FirstName,
             LastName = e.LastName,
             Occupation = e.Occupation,
-            Photograph = AssetViewModel.From(e.Photograph.FirstOrDefault()),
+            Photograph = e.Photograph.FirstOrDefault(),
             Bio = e.Bio
         });
     }

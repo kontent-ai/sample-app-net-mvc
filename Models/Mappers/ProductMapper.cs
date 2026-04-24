@@ -15,7 +15,7 @@ public class ProductMapper : IAsyncMapper<IContentItem<Product>, ProductViewMode
             Name = e.ProductBaseName,
             Description = e.ProductBaseDescription,
             // Rendition is applied by the SDK via DeliveryOptions:DefaultRenditionPreset.
-            MainImage = AssetViewModel.From(e.ProductBaseMainImage?.FirstOrDefault()),
+            MainImage = e.ProductBaseMainImage?.FirstOrDefault(),
             Price = e.Price,
             Category = e.Category?.FirstOrDefault()?.Codename,
             MetadataTitle = e.MetadataTitle,

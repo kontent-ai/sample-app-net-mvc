@@ -10,7 +10,7 @@ public record ArticleViewModel
     public string ArticleType { get; init; } = string.Empty;
     public string? Abstract { get; init; }
     public IRichTextContent? Content { get; init; }
-    public AssetViewModel? HeroImage { get; init; }
+    public IAsset? HeroImage { get; init; }
     public PersonViewModel? Author { get; init; }
     public string? MetadataDescription { get; init; }
     public string? MetadataKeywords { get; init; }

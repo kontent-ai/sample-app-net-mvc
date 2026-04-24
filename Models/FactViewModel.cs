@@ -1,3 +1,5 @@
+using Kontent.Ai.Delivery.Abstractions;
+
 namespace Ficto.Models;
 
 public record FactViewModel
@@ -8,6 +10,6 @@ public record FactViewModel
     public string? LinkLabel { get; init; }
     public string? LinkUrl { get; init; }
     public bool LinkIsExternal { get; init; }
-    public AssetViewModel? Image { get; init; }
+    public IAsset? Image { get; init; }
     public IReadOnlyList<PersonViewModel> Authors { get; init; } = [];
 }

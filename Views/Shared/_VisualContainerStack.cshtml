@@ -28,7 +28,13 @@
                                 <div class="col-md-6">
                                     @if (fact.Image != null)
                                     {
-                                        <img src="@fact.Image.UrlWithTransform(width: 800, format: ImageFormat.Webp, quality: 80)" class="img-fluid rounded" alt="@(fact.Image.AltText ?? fact.Title ?? "")" data-kontent-element-codename="image" />
+                                        <img-asset asset="fact.Image"
+                                                   title="@(fact.Image.Description ?? fact.Title ?? "")"
+                                                   class="img-fluid rounded"
+                                                   default-width="800"
+                                                   format="ImageFormat.Webp"
+                                                   quality="80"
+                                                   data-kontent-element-codename="image" />
                                     }
                                 </div>
                                 <div class="col-md-6">
@@ -79,7 +85,13 @@
                 <div class="col-md-6">
                     @if (fact.Image != null)
                     {
-                        <img src="@fact.Image.UrlWithTransform(width: 800, format: ImageFormat.Webp, quality: 80)" class="img-fluid rounded" alt="@(fact.Image.AltText ?? fact.Title ?? "")" data-kontent-element-codename="image" />
+                        <img-asset asset="fact.Image"
+                                   title="@(fact.Image.Description ?? fact.Title ?? "")"
+                                   class="img-fluid rounded"
+                                   default-width="800"
+                                   format="ImageFormat.Webp"
+                                   quality="80"
+                                   data-kontent-element-codename="image" />
                     }
                 </div>
                 <div class="col-md-6">
