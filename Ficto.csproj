@@ -8,12 +8,12 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Kontent.Ai.AspNetCore" Version="0.16.0" />
-    <PackageReference Include="Kontent.Ai.Delivery" Version="19.0.0" />
-    <PackageReference Include="Kontent.Ai.Delivery.Abstractions" Version="19.0.0" />
-    <PackageReference Include="Kontent.Ai.Delivery.Caching" Version="19.0.0" />
-    <PackageReference Include="Kontent.Ai.Urls" Version="19.0.0" />
-    <PackageReference Include="Kontent.Ai.Delivery.SourceGeneration" Version="19.0.0" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <PackageReference Include="Kontent.Ai.AspNetCore" Version="0.16.1" />
+    <PackageReference Include="Kontent.Ai.Delivery" Version="19.1.0" />
+    <PackageReference Include="Kontent.Ai.Delivery.Abstractions" Version="19.1.0" />
+    <PackageReference Include="Kontent.Ai.Delivery.Caching" Version="19.1.0" />
+    <PackageReference Include="Kontent.Ai.Urls" Version="19.1.0" />
+    <PackageReference Include="Kontent.Ai.Delivery.SourceGeneration" Version="19.1.0" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
   </ItemGroup>
 
   <!-- Emits X-KC-SOURCE: sample-app-net-mvc;<assembly-version> on every Delivery API request

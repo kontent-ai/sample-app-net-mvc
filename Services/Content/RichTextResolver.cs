@@ -12,10 +12,10 @@ using ActionModel = Ficto.Generated.Models.Action;
 namespace Ficto.Services.Content;
 
 /// <summary>
-/// Builds the single <see cref="IHtmlResolver"/> instance used by the <c>&lt;rich-text&gt;</c>
-/// tag helper (resolved from DI). Registered as a singleton in Program.cs; the delegates below
-/// are pure functions over their inputs plus the (singleton) <see cref="IRouteResolver"/>, so
-/// there's no per-request state and no dependency on scoped services.
+/// Configures the shared <see cref="IHtmlResolverBuilder"/> used by the <c>&lt;rich-text&gt;</c>
+/// tag helper (resolved from DI via <c>AddKontentRichText</c>). The delegates below are pure
+/// functions over their inputs plus the (singleton) <see cref="IRouteResolver"/>, so there's no
+/// per-request state and no dependency on scoped services.
 ///
 /// The three embedded-content resolvers (Fact, ActionModel, Callout) render inline HTML directly —
 /// inline appearances are a distinct, simpler presentation than the block/card layouts used by
@@ -23,9 +23,9 @@ namespace Ficto.Services.Content;
 /// </summary>
 public static class RichTextResolver
 {
-    public static IHtmlResolver Build(IRouteResolver routes)
+    public static void Configure(IHtmlResolverBuilder builder, IRouteResolver routes)
     {
-        var builder = new HtmlResolverBuilder()
+        builder
             .WithContentItemLinkResolver(async (link, resolveChildren) =>
             {
                 var innerHtml = await resolveChildren(link.Children);
@@ -47,7 +47,7 @@ public static class RichTextResolver
 
         foreach (var tag in new[] { "h1", "h2", "h3", "h4", "h5", "h6" })
         {
-            builder = builder.WithHtmlNodeResolver(tag, async (node, resolveChildren) =>
+            builder.WithHtmlNodeResolver(tag, async (node, resolveChildren) =>
             {
                 var innerHtml = await resolveChildren(node.Children);
                 var id = Slugify(ExtractText(node.Children));
@@ -56,11 +56,10 @@ public static class RichTextResolver
             });
         }
 
-        return builder
+        builder
             .WithContentResolver<Fact>(content => new ValueTask<string>(RenderFact(content, routes)))
             .WithContentResolver<ActionModel>(content => new ValueTask<string>(RenderAction(content, routes)))
-            .WithContentResolver<Callout>(async content => await RenderCalloutAsync(content))
-            .Build();
+            .WithContentResolver<Callout>(async content => await RenderCalloutAsync(content));
     }
 
     // Emitted as a presence-only attribute on inline components so Kontent.ai Smart Link can

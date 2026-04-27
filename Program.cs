@@ -4,9 +4,11 @@ using Ficto.Models.Mappers;
 using Ficto.Services.Content;
 using Ficto.Services.Routing;
 using Kontent.Ai.AspNetCore.ImageTransformation;
+using Kontent.Ai.AspNetCore.RichText;
 using Kontent.Ai.AspNetCore.Webhooks;
 using Kontent.Ai.Delivery;
 using Kontent.Ai.Delivery.Abstractions;
+using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
 var configuration = builder.Configuration;
@@ -19,18 +21,11 @@ services.AddDataProtection();
 
 // Options — ValidateOnStart ensures the app fails fast with a clear message
 // if required configuration is missing, rather than surfacing opaque errors at request time.
-var siteOptionsSection = configuration.GetSection("SiteOptions");
 services.AddOptions<SiteOptions>()
-    .Bind(siteOptionsSection)
+    .Bind(configuration.GetSection("SiteOptions"))
     .Validate(o => o.Spaces is { Length: > 0 }, "SiteOptions:Spaces must contain at least one space codename.")
     .Validate(o => o.RouteTemplates is { Count: > 0 }, "SiteOptions:RouteTemplates must define at least one route template.")
     .ValidateOnStart();
-
-// Eager-bind a local copy so startup-time consumers (see AddDeliveryMemoryCache below)
-// can read the same values without re-hardcoding defaults. The Kontent caching extensions
-// only expose an Action<TOptions> overload, so there's no service-provider hook to resolve
-// IOptions<SiteOptions> from at cache-configuration time.
-var siteOptions = siteOptionsSection.Get<SiteOptions>() ?? new SiteOptions();
 
 services.AddOptions<WebhookOptions>()
     .Bind(configuration.GetSection("WebhookOptions"))
@@ -68,9 +63,10 @@ services.AddDeliveryClient("production", options =>
     configuration.GetSection("DeliveryOptions").Bind(options);
     options.UsePreviewApi = false;
 });
-services.AddDeliveryMemoryCache("production", opts =>
+services.AddDeliveryMemoryCache("production", (sp, opts) =>
 {
-    opts.DefaultExpiration = TimeSpan.FromSeconds(siteOptions.CacheExpirationSeconds);
+    var site = sp.GetRequiredService<IOptions<SiteOptions>>().Value;
+    opts.DefaultExpiration = TimeSpan.FromSeconds(site.CacheExpirationSeconds);
     opts.IsFailSafeEnabled = true;
 });
 
@@ -101,11 +97,11 @@ services.AddScoped<PageMapper>();
 services.AddScoped<ArticleMapper>();
 services.AddScoped<WebsiteRootMapper>();
 
-// Rich-text resolution: a single IHtmlResolver instance, injected into mappers that call
-// .ToHtmlAsync(). Content-item links go through IRouteResolver; Fact/Action/Callout
-// components get inline HTML templates (distinct from their block-level rendering).
-services.AddSingleton<IHtmlResolver>(sp =>
-    RichTextResolver.Build(sp.GetRequiredService<IRouteResolver>()));
+// Rich-text resolution: a single IHtmlResolver instance, used by the <rich-text> tag helper
+// and by mappers that call .ToHtmlAsync(). Content-item links go through IRouteResolver;
+// Fact/Action/Callout components get inline HTML templates (distinct from their block-level rendering).
+services.AddKontentRichText((sp, builder) =>
+    RichTextResolver.Configure(builder, sp.GetRequiredService<IRouteResolver>()));
 
 
 var app = builder.Build();
