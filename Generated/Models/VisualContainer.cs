@@ -6,25 +6,33 @@
 // To extend this record, create a separate partial record with the same name.
 // </auto-generated>
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.Delivery.Attributes;
 using Kontent.Ai.Delivery.ContentItems;
 using Kontent.Ai.Delivery.ContentItems.RichText;
 using Kontent.Ai.Delivery.SharedModels;
-using Kontent.Ai.Delivery.Attributes;
 
 namespace Ficto.Generated.Models;
 
 [ContentTypeCodename("visual_container")]
 public partial record VisualContainer
 {
+    public const string ItemsCodename = "items";
+    public const string SubtitleCodename = "subtitle";
+    public const string TitleCodename = "title";
+    public const string VisualRepresentationCodename = "visual_representation";
+    public const string ContentTypeCodename = "visual_container";
+
     [JsonPropertyName("items")]
-    public IEnumerable<IEmbeddedContent> Items { get; init; } = default!;
+    public IEnumerable<IEmbeddedContent> Items { get; init; } = [];
     [JsonPropertyName("subtitle")]
-    public string Subtitle { get; init; } = default!;
+    public string Subtitle { get; init; } = string.Empty;
     [JsonPropertyName("title")]
-    public string Title { get; init; } = default!;
+    public string Title { get; init; } = string.Empty;
     [JsonPropertyName("visual_representation")]
-    public IEnumerable<MultipleChoiceOption> VisualRepresentation { get; init; } = default!;
+    public IEnumerable<MultipleChoiceOption> VisualRepresentation { get; init; } = [];
 }

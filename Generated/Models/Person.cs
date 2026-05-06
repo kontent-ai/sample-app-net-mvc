@@ -6,27 +6,36 @@
 // To extend this record, create a separate partial record with the same name.
 // </auto-generated>
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.Delivery.Attributes;
 using Kontent.Ai.Delivery.ContentItems;
 using Kontent.Ai.Delivery.ContentItems.RichText;
 using Kontent.Ai.Delivery.SharedModels;
-using Kontent.Ai.Delivery.Attributes;
 
 namespace Ficto.Generated.Models;
 
 [ContentTypeCodename("person")]
 public partial record Person
 {
+    public const string BioCodename = "bio";
+    public const string FirstNameCodename = "first_name";
+    public const string LastNameCodename = "last_name";
+    public const string OccupationCodename = "occupation";
+    public const string PhotographCodename = "photograph";
+    public const string ContentTypeCodename = "person";
+
     [JsonPropertyName("bio")]
-    public RichTextContent Bio { get; init; } = default!;
+    public RichTextContent Bio { get; init; } = RichTextContent.Empty;
     [JsonPropertyName("first_name")]
-    public string FirstName { get; init; } = default!;
+    public string FirstName { get; init; } = string.Empty;
     [JsonPropertyName("last_name")]
-    public string LastName { get; init; } = default!;
+    public string LastName { get; init; } = string.Empty;
     [JsonPropertyName("occupation")]
-    public string Occupation { get; init; } = default!;
+    public string Occupation { get; init; } = string.Empty;
     [JsonPropertyName("photograph")]
-    public IEnumerable<Asset> Photograph { get; init; } = default!;
+    public IEnumerable<Asset> Photograph { get; init; } = [];
 }

@@ -6,35 +6,48 @@
 // To extend this record, create a separate partial record with the same name.
 // </auto-generated>
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.Delivery.Attributes;
 using Kontent.Ai.Delivery.ContentItems;
 using Kontent.Ai.Delivery.ContentItems.RichText;
 using Kontent.Ai.Delivery.SharedModels;
-using Kontent.Ai.Delivery.Attributes;
 
 namespace Ficto.Generated.Models;
 
 [ContentTypeCodename("product")]
 public partial record Product
 {
+    public const string CategoryCodename = "category";
+    public const string MetadataDescriptionCodename = "metadata__description";
+    public const string MetadataKeywordsCodename = "metadata__keywords";
+    public const string MetadataTitleCodename = "metadata__title";
+    public const string PriceCodename = "price";
+    public const string ProductBaseDescriptionCodename = "product_base__description";
+    public const string ProductBaseMainImageCodename = "product_base__main_image";
+    public const string ProductBaseNameCodename = "product_base__name";
+    public const string SlugCodename = "slug";
+    public const string ContentTypeCodename = "product";
+
     [JsonPropertyName("category")]
-    public IEnumerable<TaxonomyTerm> Category { get; init; } = default!;
+    public IEnumerable<TaxonomyTerm> Category { get; init; } = [];
     [JsonPropertyName("metadata__description")]
-    public string MetadataDescription { get; init; } = default!;
+    public string MetadataDescription { get; init; } = string.Empty;
     [JsonPropertyName("metadata__keywords")]
-    public string MetadataKeywords { get; init; } = default!;
+    public string MetadataKeywords { get; init; } = string.Empty;
     [JsonPropertyName("metadata__title")]
-    public string MetadataTitle { get; init; } = default!;
+    public string MetadataTitle { get; init; } = string.Empty;
     [JsonPropertyName("price")]
     public double? Price { get; init; }
     [JsonPropertyName("product_base__description")]
-    public string ProductBaseDescription { get; init; } = default!;
+    public string ProductBaseDescription { get; init; } = string.Empty;
     [JsonPropertyName("product_base__main_image")]
-    public IEnumerable<Asset> ProductBaseMainImage { get; init; } = default!;
+    public IEnumerable<Asset> ProductBaseMainImage { get; init; } = [];
     [JsonPropertyName("product_base__name")]
-    public string ProductBaseName { get; init; } = default!;
+    public string ProductBaseName { get; init; } = string.Empty;
     [JsonPropertyName("slug")]
-    public string Slug { get; init; } = default!;
+    public string Slug { get; init; } = string.Empty;
 }

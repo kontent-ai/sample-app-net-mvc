@@ -6,21 +6,27 @@
 // To extend this record, create a separate partial record with the same name.
 // </auto-generated>
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.Delivery.Attributes;
 using Kontent.Ai.Delivery.ContentItems;
 using Kontent.Ai.Delivery.ContentItems.RichText;
 using Kontent.Ai.Delivery.SharedModels;
-using Kontent.Ai.Delivery.Attributes;
 
 namespace Ficto.Generated.Models;
 
 [ContentTypeCodename("callout")]
 public partial record Callout
 {
+    public const string ContentCodename = "content";
+    public const string TypeCodename = "type";
+    public const string ContentTypeCodename = "callout";
+
     [JsonPropertyName("content")]
-    public RichTextContent Content { get; init; } = default!;
+    public RichTextContent Content { get; init; } = RichTextContent.Empty;
     [JsonPropertyName("type")]
-    public IEnumerable<MultipleChoiceOption> Type { get; init; } = default!;
+    public IEnumerable<MultipleChoiceOption> Type { get; init; } = [];
 }

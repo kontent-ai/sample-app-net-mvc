@@ -6,35 +6,48 @@
 // To extend this record, create a separate partial record with the same name.
 // </auto-generated>
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.Delivery.Attributes;
 using Kontent.Ai.Delivery.ContentItems;
 using Kontent.Ai.Delivery.ContentItems.RichText;
 using Kontent.Ai.Delivery.SharedModels;
-using Kontent.Ai.Delivery.Attributes;
 
 namespace Ficto.Generated.Models;
 
 [ContentTypeCodename("fact")]
 public partial record Fact
 {
+    public const string AuthorCodename = "author";
+    public const string FactTypeCodename = "fact_type";
+    public const string ImageCodename = "image";
+    public const string MessageCodename = "message";
+    public const string ReferenceCaptionCodename = "reference__caption";
+    public const string ReferenceContentItemLinkCodename = "reference__content__item_link";
+    public const string ReferenceExternalUriCodename = "reference__external_uri";
+    public const string ReferenceLabelCodename = "reference__label";
+    public const string TitleCodename = "title";
+    public const string ContentTypeCodename = "fact";
+
     [JsonPropertyName("author")]
-    public IEnumerable<IEmbeddedContent> Author { get; init; } = default!;
+    public IEnumerable<IEmbeddedContent> Author { get; init; } = [];
     [JsonPropertyName("fact_type")]
-    public IEnumerable<TaxonomyTerm> FactType { get; init; } = default!;
+    public IEnumerable<TaxonomyTerm> FactType { get; init; } = [];
     [JsonPropertyName("image")]
-    public IEnumerable<Asset> Image { get; init; } = default!;
+    public IEnumerable<Asset> Image { get; init; } = [];
     [JsonPropertyName("message")]
-    public string Message { get; init; } = default!;
+    public string Message { get; init; } = string.Empty;
     [JsonPropertyName("reference__caption")]
-    public string ReferenceCaption { get; init; } = default!;
+    public string ReferenceCaption { get; init; } = string.Empty;
     [JsonPropertyName("reference__content__item_link")]
-    public IEnumerable<IEmbeddedContent> ReferenceContentItemLink { get; init; } = default!;
+    public IEnumerable<IEmbeddedContent> ReferenceContentItemLink { get; init; } = [];
     [JsonPropertyName("reference__external_uri")]
-    public string ReferenceExternalUri { get; init; } = default!;
+    public string ReferenceExternalUri { get; init; } = string.Empty;
     [JsonPropertyName("reference__label")]
-    public string ReferenceLabel { get; init; } = default!;
+    public string ReferenceLabel { get; init; } = string.Empty;
     [JsonPropertyName("title")]
-    public string Title { get; init; } = default!;
+    public string Title { get; init; } = string.Empty;
 }

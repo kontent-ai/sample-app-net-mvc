@@ -6,31 +6,42 @@
 // To extend this record, create a separate partial record with the same name.
 // </auto-generated>
 
+#nullable enable
+
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 using Kontent.Ai.Delivery.Abstractions;
+using Kontent.Ai.Delivery.Attributes;
 using Kontent.Ai.Delivery.ContentItems;
 using Kontent.Ai.Delivery.ContentItems.RichText;
 using Kontent.Ai.Delivery.SharedModels;
-using Kontent.Ai.Delivery.Attributes;
 
 namespace Ficto.Generated.Models;
 
-[ContentTypeCodename("web_spotlight_root")]
+[ContentTypeCodename("website_root")]
 public partial record WebsiteRoot
 {
+    public const string ContentCodename = "content";
+    public const string MetadataDescriptionCodename = "metadata__description";
+    public const string MetadataKeywordsCodename = "metadata__keywords";
+    public const string MetadataTitleCodename = "metadata__title";
+    public const string NavigationCodename = "navigation";
+    public const string SubpagesCodename = "subpages";
+    public const string TitleCodename = "title";
+    public const string ContentTypeCodename = "website_root";
+
     [JsonPropertyName("content")]
-    public IEnumerable<IEmbeddedContent> Content { get; init; } = default!;
+    public IEnumerable<IEmbeddedContent> Content { get; init; } = [];
     [JsonPropertyName("metadata__description")]
-    public string MetadataDescription { get; init; } = default!;
+    public string MetadataDescription { get; init; } = string.Empty;
     [JsonPropertyName("metadata__keywords")]
-    public string MetadataKeywords { get; init; } = default!;
+    public string MetadataKeywords { get; init; } = string.Empty;
     [JsonPropertyName("metadata__title")]
-    public string MetadataTitle { get; init; } = default!;
+    public string MetadataTitle { get; init; } = string.Empty;
     [JsonPropertyName("navigation")]
-    public IEnumerable<IEmbeddedContent> Navigation { get; init; } = default!;
+    public IEnumerable<IEmbeddedContent> Navigation { get; init; } = [];
     [JsonPropertyName("subpages")]
-    public IEnumerable<IEmbeddedContent> Subpages { get; init; } = default!;
+    public IEnumerable<IEmbeddedContent> Subpages { get; init; } = [];
     [JsonPropertyName("title")]
-    public string Title { get; init; } = default!;
+    public string Title { get; init; } = string.Empty;
 }
