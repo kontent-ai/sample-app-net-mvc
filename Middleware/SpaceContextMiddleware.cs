@@ -59,9 +59,21 @@ public class SpaceContextMiddleware(
             previewContext.IsPreview = true;
 
             var cleanedQuery = QueryString.Create(
-                context.Request.Query.Where(kv => kv.Key != PreviewSecretParam)
+                context.Request.Query.Where(kv => !StringComparer.OrdinalIgnoreCase.Equals(kv.Key, PreviewSecretParam))
                     .SelectMany(kv => kv.Value.Select(v => KeyValuePair.Create<string, string?>(kv.Key, v))));
-            context.Response.Redirect(context.Request.PathBase + context.Request.Path + cleanedQuery);
+
+            // Strip the secret from the *current* URL and redirect back to it. Avoids open redirects.
+            var localPath = context.Request.PathBase + context.Request.Path;
+            if (!IsLocalPath(localPath.Value))
+            {
+                logger.LogWarning(
+                    "Refused to redirect to non-local path '{Path}' while stripping the preview secret.",
+                    localPath.Value);
+                context.Response.Redirect("/" + cleanedQuery);
+                return;
+            }
+
+            context.Response.Redirect(localPath + cleanedQuery);
             return;
         }
 
@@ -83,6 +95,24 @@ public class SpaceContextMiddleware(
         var expectedBytes = Encoding.UTF8.GetBytes(_previewOptions.Secret);
         var suppliedBytes = Encoding.UTF8.GetBytes(supplied);
         return CryptographicOperations.FixedTimeEquals(expectedBytes, suppliedBytes);
+    }
+
+    /// <summary>
+    /// Whether <paramref name="path"/> is a safe same-site redirect target — equivalent to
+    /// <c>IUrlHelper.IsLocalUrl</c>, which is unavailable in middleware. A <see cref="PathString"/>
+    /// is always empty or starts with <c>/</c>; this rejects the protocol-relative forms
+    /// (<c>//host</c>, <c>/\host</c>) and embedded control characters a browser would treat
+    /// as pointing to a different origin.
+    /// </summary>
+    private static bool IsLocalPath(string? path)
+    {
+        if (string.IsNullOrEmpty(path) || path[0] != '/')
+            return false;
+
+        if (path.Length == 1)
+            return true;
+
+        return path[1] != '/' && path[1] != '\\' && !path.Any(char.IsControl);
     }
 
     private static string ResolveSpace(HttpContext context, string host, string[] spaces)
