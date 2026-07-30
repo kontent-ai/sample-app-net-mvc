@@ -133,9 +133,10 @@ public class SpaceContextMiddleware(
             {
                 context.Response.Cookies.Append(CookieName, fromQuery, new CookieOptions
                 {
-                    HttpOnly = false,
+                    HttpOnly = true,
+                    Secure = true,
                     SameSite = SameSiteMode.Lax,
-                    Expires = DateTimeOffset.UtcNow.AddYears(1),
+                    Expires = DateTimeOffset.UtcNow.AddDays(30),
                     IsEssential = true,
                 });
                 return fromQuery;
