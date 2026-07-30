@@ -10,6 +10,8 @@ jobs: # Specifies the section where we describe our jobs.
     steps: # Specifies the section where we describe the job's steps.
       - name: Checkout repository
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
 
       - name: Setup .NET 8 SDK
         uses: actions/setup-dotnet@v4

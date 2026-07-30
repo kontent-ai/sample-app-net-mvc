@@ -8,6 +8,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <!-- Not used directly — pins the transitive dependency of Kontent.Ai.Delivery above the CVE-2026-54570 fix. -->
+    <PackageReference Include="AngleSharp" Version="1.5.0" />
     <PackageReference Include="Kontent.Ai.AspNetCore" Version="0.16.1" />
     <PackageReference Include="Kontent.Ai.Delivery" Version="19.2.0" />
     <PackageReference Include="Kontent.Ai.Delivery.Abstractions" Version="19.2.0" />
