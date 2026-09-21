@@ -6,7 +6,7 @@ The Ficto sample is three brand subsites (`ficto_imaging`, `ficto_healthtech`, `
 
 `SpaceContextMiddleware` resolves the space for each request in this priority order:
 
-1. **Subdomain** — `ficto-imaging.example.com` → `ficto_imaging` (hyphens become underscores; a `preview.` prefix is stripped first).
+1. **Subdomain** — the first host label: `ficto-imaging.example.com` → `ficto_imaging` (hyphens become underscores). A label that is not a known space falls through to the next step.
 2. **Query string** — `?collection=ficto_imaging`, which also persists to the `ficto_space` cookie.
 3. **Cookie** — `ficto_space` from a prior selection.
 4. **Default** — the first entry in `SiteOptions:Spaces`.
@@ -22,9 +22,7 @@ https://localhost:7108/?collection=ficto_imaging
 https://localhost:7108/?collection=ficto_surgical
 ```
 
-The subdomain route also works locally over **HTTP only**: `http://ficto-imaging.localhost:5107`, `http://ficto-healthtech.localhost:5107`, `http://ficto-surgical.localhost:5107`. Most operating systems resolve `*.localhost` to loopback per RFC 6761; older Windows setups may need hosts-file entries.
-
-HTTPS is not available on those hostnames — the ASP.NET Core dev certificate is issued for `localhost`, not `*.localhost`. Kontent.ai's preview iframe requires HTTPS, so `?collection=` is the only option for [preview URLs](preview.md#configuring-the-kontentai-preview-url).
+Subdomains are meant for deployed hosts. The app runs on HTTPS and redirects HTTP to it, so that `https://localhost:7108` can be registered as a Kontent.ai [preview URL](preview.md#configuring-the-kontentai-preview-url) — the preview iframe requires HTTPS. The ASP.NET Core dev certificate covers `localhost` only, not `*.localhost`, so `https://ficto-imaging.localhost:7108` resolves the right space but only after clicking through a certificate warning. Locally, `?collection=` is the practical route, and the only one that works in preview URLs.
 
 ## Changing ports
 

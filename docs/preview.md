@@ -18,6 +18,9 @@ On subsequent requests the valid cookie alone keeps `IPreviewContext.IsPreview` 
 
 To exit preview, click the banner's **Disable** link (`GET /preview/disable`), which clears the cookie.
 
+> [!TIP]
+> This is a showcase of the mechanism, not an access control. With an empty `PreviewOptions:Secret` the middleware logs a warning and accepts any non-empty `?secret=`. Real deployments put authorization in front of it — see [Gating preview in production](#gating-preview-in-production).
+
 **Why the cookie is signed.** Its value is opaque ciphertext protected by `IDataProtectionProvider`. Without signing, a visitor could type `ficto_preview=enabled` in devtools and bypass the secret check; with signing, a forged value fails `Unprotect` and is ignored. The payload is a constant — the cookie says "this browser has presented a valid secret", nothing more.
 
 ### Configuring the Kontent.ai preview URL
@@ -60,7 +63,7 @@ A shared URL secret is fine for a sample app — it is **not** a substitute for 
    });
    ```
 
-2. **Edge rules** — Cloudflare Access, Azure Front Door rules, AWS Cognito, or HTTP basic auth at a reverse proxy can gate preview requests before they reach the app. Works well when preview is exposed on a dedicated hostname (e.g. `preview.ficto.example.com`).
+2. **Edge rules** — Cloudflare Access, Azure Front Door rules, AWS Cognito, or HTTP basic auth at a reverse proxy can gate preview requests before they reach the app. Works well when preview is exposed on a dedicated hostname (e.g. `preview.ficto.example.com`); the app gives that label no special meaning, so the space then comes from `?collection=`.
 
 Layer either on top of `?secret=`. The secret is then the "turn preview display on" toggle; the auth boundary decides who may flip it.
 
