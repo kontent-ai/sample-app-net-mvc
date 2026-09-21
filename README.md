@@ -2,9 +2,9 @@
 <!-- ABOUT THE PROJECT -->
 ## About The Project
 
-A Kontent.ai sample ASP.NET Core MVC application running on **.NET 8**, built on the v19 Delivery SDK. It supersedes the [legacy .NET sample app](https://github.com/kontent-ai/sample-app-net) and doubles as a reference for the patterns the new SDK was designed around — keyed client registration, webhook-driven cache invalidation, rich-text resolution, iframe-ready preview, and [Smart Link](https://github.com/kontent-ai/smart-link) click-to-edit overlays.
+A Kontent.ai sample ASP.NET Core MVC application running on **.NET 10**, built on the v20 Delivery SDK. It supersedes the [legacy .NET sample app](https://github.com/kontent-ai/sample-app-net) and doubles as a reference for the patterns the new SDK was designed around — keyed client registration, webhook-driven cache invalidation, rich-text resolution, iframe-ready preview, and [Smart Link](https://github.com/kontent-ai/smart-link) click-to-edit overlays.
 
-The app also uses the companion [`Kontent.Ai.AspNetCore`](https://www.nuget.org/packages/Kontent.Ai.AspNetCore/) package for the ASP.NET Core–specific pieces: the `<rich-text>` tag helper for rendering structured rich-text content, the `<img-asset>` tag helper for responsive images with `srcset`/`sizes`, and `UseWebhookSignatureValidator` middleware for verifying webhook signatures.
+The app also uses the companion [`Kontent.Ai.AspNetCore`](https://www.nuget.org/packages/Kontent.Ai.AspNetCore/) package for the ASP.NET Core–specific pieces: the `<rich-text>` tag helper for rendering structured rich-text content, the `<img-asset>` tag helper for responsive images with `srcset`/`sizes`, and `UseWebhookSignatureValidator` middleware for verifying webhook signatures, and the webhook notification models with their mapping to the SDK's cache dependency keys.
 
 It's based on the **Kontent.ai Ficto multisite** project — three brand subsites (Imaging, Healthtech, Surgical) served from a single deployment with shared navigation and a common content collection for cross-brand pages.
 
@@ -15,7 +15,7 @@ Follow these steps to get the app running locally.
 
 ### Prerequisites
 
-- .NET SDK **8.0** or newer
+- .NET SDK **10.0** or newer
 - A Kontent.ai environment containing the Ficto multisite sample content
 - The environment's **Environment ID** (required)
 - A **Preview API key** (optional — needed to see unpublished drafts)
@@ -71,7 +71,7 @@ dotnet user-secrets set "WebhookOptions:Secret"              "<webhook-signing-s
 | `DeliveryOptions:PreviewApiKey` | Preview mode | Without it, preview requests silently fall back to production with a warning. |
 | `DeliveryOptions:SecureAccessApiKey` | Secure Access | Only needed if the environment has Secure Access enabled. |
 | `PreviewOptions:Secret` | Preview auto-enable | Ships as `mySecret` so preview URLs work out-of-the-box; override for anything reachable. An empty value logs a warning and admits any non-empty `?secret=`. |
-| `WebhookOptions:Secret` | Webhook-driven cache invalidation | Required HMAC secret; requests with a missing or mismatching `X-Kontent-ai-Signature` (or legacy `X-KC-Signature`) are rejected by `UseWebhookSignatureValidator`. |
+| `WebhookOptions:Secret` | Webhook-driven cache invalidation | HMAC secret; requests with a missing or mismatching `X-Kontent-ai-Signature` (or legacy `X-KC-Signature`) are rejected by `UseWebhookSignatureValidator`. Without it the app still starts, but `/webhooks/*` answers `404` and a warning is logged &mdash; the validator itself refuses to run with an empty secret. |
 
 user-secrets values are merged into configuration at runtime and are scoped to your local user profile.
 
@@ -173,6 +173,17 @@ URL resolution for content-item links (in navigation and rich text) is handled b
 
 Add a template if you introduce a new content type; anything not listed falls back to `/{type}/{slug}`.
 
+### Content models
+
+The records in `Generated/Models/` are produced by [`Kontent.Ai.ModelGenerator`](https://github.com/kontent-ai/dotnet/tree/main/src/model-generator), pinned as a local tool in `.config/dotnet-tools.json` (it needs the .NET 10 runtime). Regenerate them after a content model change:
+
+```bash
+dotnet tool restore
+dotnet tool run KontentModelGenerator --environmentId "<environment-id>" --namespace "Ficto.Generated.Models" --outputdir "./Generated/Models" --nullability semantic
+```
+
+The type provider is not generated or hand-written: `Kontent.Ai.Delivery.SourceGeneration` emits it at compile time from the `[ContentTypeCodename]` attributes, and the SDK discovers it at runtime. Generated files are overwritten on regeneration &mdash; extend a model in a separate `partial record` (see `SlugProviders.cs`), never in the generated file.
+
 ### Rich text
 
 Rich-text fields reach Razor as `IRichTextContent` on the view models and render via the `Kontent.Ai.AspNetCore` package's `<rich-text content="@Model.Content" />` tag helper — see `Views/Shared/_ContentChunk.cshtml` for a minimal example. The tag helper resolves its HTML through whatever `IHtmlResolver` is registered in DI.
@@ -185,7 +196,7 @@ Listing pages (Articles, Products) paginate through the SDK's `Skip` / `Limit` /
 
 List queries also apply **element projection** via `.WithElements(...)` to trim the payload to just the fields the card needs. `GetArticlesAsync` drops the `content` rich-text body (the heaviest field) and `GetProductsAsync` drops the SEO metadata elements — the detail queries (`*BySlugAsync`) keep the full element set for the full-page view.
 
-### Images and asset renditions (v19)
+### Images and asset renditions
 
 Asset-bearing view models expose `IAsset?` directly; mappers pass SDK values through without any intermediate projection. Views render them with the `Kontent.Ai.AspNetCore` package's `<img-asset>` tag helper, which emits `srcset`/`sizes` using the width ladder from `ImageTransformationOptions:ResponsiveWidths` in `appsettings.json`. The few CSS `background-image` sites that can't use a tag helper (hero slides in `_VisualContainerHeroUnit.cshtml`, the article/solution detail hero styles) build URLs directly via `new ImageUrlBuilder(asset.Url).WithWidth(...).Url`.
 
@@ -343,27 +354,28 @@ The synthetic listing-scope keys (`scope_items_list`, `scope_types_list`, `scope
 
 ### Invalidation matrix
 
-The endpoint only acts on notifications with `delivery_slot == "published"`. Preview events are skipped because the preview client is not cached.
+The controller binds the payload to `WebhookNotification` and hands the batch to `IDeliveryCacheManager.InvalidateAsync(notifications, client)` &mdash; both from `Kontent.Ai.AspNetCore` &mdash; so the keys are composed with the SDK's own `DeliveryCacheDependencies` helpers rather than hand-written strings. Before that it filters the batch:
 
-| `object_type` | `action` | Keys invalidated | Why |
-|---|---|---|---|
-| `content_item` | `published` | `item_<codename>` + `scope_items_list` | Could be first publish (membership shift) or republish — safe default. |
-| `content_item` | `unpublished` | `item_<codename>` | Existing listings tagged with the codename are evicted; the item cannot newly appear in unrelated listings. |
-| `content_item` | `metadata_changed` | `item_<codename>` + `scope_items_list` | Codename rename or collection move can shift filter membership. |
-| `asset` | `created` | _(no-op)_ | The new asset isn't yet referenced by any cached item. |
-| `asset` | `changed` / `metadata_changed` / `deleted` | `asset_<id>` | Items referencing the asset (asset element or rich-text inline image) carry the same tag. |
-| `content_type` | `created` | `scope_types_list` | New type joins `GetTypes()` listings; no cached item could reference it yet. |
-| `content_type` | `changed` / `deleted` | `type_<codename>` + `scope_types_list` | `type_<codename>` evicts the type definition **and** every cached item / item-list whose payload contains an item of that type (directly or via modular content / linked items / inline rich-text items). |
-| `taxonomy` | `created` | `scope_taxonomies_list` | |
-| `taxonomy` | `metadata_changed` / `deleted` | `taxonomy_<codename>` + `scope_taxonomies_list` | Items referencing terms in the group are tagged with the group codename and get evicted. |
-| `taxonomy` | `term_created` / `term_changed` / `term_deleted` / `terms_moved` | `taxonomy_<group_codename>` (from `data.system.taxonomy_group`) | Same fan-out as above — every item using a term in this group is tagged with the group codename. |
-| `language` | `created` / `changed` / `deleted` | **Full purge** via `IDeliveryCachePurger.PurgeAsync()` | No language-scope key exists; languages affect every variant of every cached entry. |
+- notifications for a different `environment_id` than the production client's are dropped (dependency keys carry no environment);
+- `content_item` notifications are only acted on when `delivery_slot == "published"`, because the preview client is not cached. Assets, content types, taxonomies and languages are shared between the slots and always count.
 
-Unknown `object_type` values are ignored and logged at `Debug`. Any notification processed in a webhook batch can opt into the full purge — if a single language event is present in the payload, the entire request is handled as a purge.
+| `object_type` | Keys invalidated | Why |
+|---|---|---|
+| `content_item` | `item_<codename>` + `scope_items_list` | Evicts every response tagged with the item; the scope key covers listings the item should newly appear in (first publish, codename or collection change). |
+| `asset` | `asset_<id>` + `item_<codename>` of every item using the asset | `asset_<id>` only reaches **rich-text** usages (inline images, asset links). An asset element carries just the file URL, so items holding the asset that way are resolved through the SDK's used-in lookup and invalidated by item key &mdash; which is why the Delivery client is passed in. |
+| `content_type` | `type_<codename>` + `scope_types_list` + `scope_items_list` | `type_<codename>` evicts the type definition **and** every cached item / item-list whose payload contains an item of that type. The items scope covers empty or projected listings that carry no type tag. |
+| `taxonomy` | `taxonomy_<group_codename>` + `scope_taxonomies_list` + `scope_items_list` | For term events the group comes from `data.system.taxonomy_group`, for group events from `data.system.codename`. Every item using a term in the group is tagged with the group codename. |
+| `language` | **Full purge** via `IDeliveryCachePurger.PurgeAsync()` | No language-scope key exists; languages affect every variant of every cached entry. A single language event turns the whole batch into a purge. |
+
+Unknown `object_type` values map to no keys and are ignored.
+
+The endpoint answers `204 No Content` once the invalidation completed. `InvalidateAsync` and `PurgeAsync` return `false` when an invalidation could not be completed; the endpoint then answers `503`, and a failed asset usage lookup (`DeliveryRequestException`) propagates as a `500`. The exception is a lookup that answers `404`: a deleted asset has no usages left to resolve and no retry would change that, so the endpoint falls back to a full purge instead. Kontent.ai retries any non-`2xx` response with backoff, which is exactly the retry a failed invalidation needs. A payload missing one of the documented members fails model binding with a `400`.
+
+One limitation: a rename notification carries only the **new** codename, so a response cached under the old key lives until it expires &mdash; another reason to keep `SiteOptions:CacheExpirationSeconds` finite.
 
 ### Webhook payload reference
 
-See [Webhooks reference](https://kontent.ai/learn/docs/webhooks/webhooks/net) for the canonical payload structure. Codenames are read from `notifications[].data.system.codename`; asset ids from `notifications[].data.system.id`; taxonomy term events read the parent group from `notifications[].data.system.taxonomy_group`.
+See [Webhooks reference](https://kontent.ai/learn/docs/webhooks/webhooks/net) for the canonical payload structure; `Kontent.Ai.AspNetCore.Webhooks.Models` mirrors it, with `WebhookObjectTypes`, `WebhookActions` and `WebhookDeliverySlots` holding the documented values. Codenames are read from `notifications[].data.system.codename`; asset ids from `notifications[].data.system.id`; taxonomy term events read the parent group from `notifications[].data.system.taxonomy_group`.
 
 
 
