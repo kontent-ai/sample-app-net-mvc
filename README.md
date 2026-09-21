@@ -1,61 +1,32 @@
 # Kontent.ai ASP.NET MVC sample app
-<!-- ABOUT THE PROJECT -->
-## About The Project
 
-A Kontent.ai sample ASP.NET Core MVC application running on **.NET 10**, built on the v20 Delivery SDK. It supersedes the [legacy .NET sample app](https://github.com/kontent-ai/sample-app-net) and doubles as a reference for the patterns the new SDK was designed around — keyed client registration, webhook-driven cache invalidation, rich-text resolution, iframe-ready preview, and [Smart Link](https://github.com/kontent-ai/smart-link) click-to-edit overlays.
+A sample ASP.NET Core MVC site on **.NET 10**, built on the v20 [Kontent.ai Delivery SDK](https://github.com/kontent-ai/dotnet/tree/main/src/delivery) and the companion [`Kontent.Ai.AspNetCore`](https://github.com/kontent-ai/dotnet/tree/main/src/aspnetcore) package. It supersedes the [legacy .NET sample app](https://github.com/kontent-ai/sample-app-net) and doubles as a reference for the patterns the SDK was designed around: named client registration, webhook-driven cache invalidation, rich-text resolution, iframe-ready preview, and [Smart Link](https://github.com/kontent-ai/smart-link) click-to-edit overlays.
 
-The app also uses the companion [`Kontent.Ai.AspNetCore`](https://www.nuget.org/packages/Kontent.Ai.AspNetCore/) package for the ASP.NET Core–specific pieces: the `<rich-text>` tag helper for rendering structured rich-text content, the `<img-asset>` tag helper for responsive images with `srcset`/`sizes`, and `UseWebhookSignatureValidator` middleware for verifying webhook signatures, and the webhook notification models with their mapping to the SDK's cache dependency keys.
+It renders the **Kontent.ai Ficto multisite** project — three brand subsites (Imaging, Healthtech, Surgical) served from one deployment, with shared navigation and a common collection for cross-brand pages.
 
-It's based on the **Kontent.ai Ficto multisite** project — three brand subsites (Imaging, Healthtech, Surgical) served from a single deployment with shared navigation and a common content collection for cross-brand pages.
+## Getting started
 
-<!-- GETTING STARTED -->
-## Getting Started
-
-Follow these steps to get the app running locally.
-
-### Prerequisites
+**Prerequisites**
 
 - .NET SDK **10.0** or newer
-- A Kontent.ai environment containing the Ficto multisite sample content
-- The environment's **Environment ID** (required)
-- A **Preview API key** (optional — needed to see unpublished drafts)
-- A **Secure Access API key** (optional — needed if Secure Access is enabled on the environment)
+- A Kontent.ai environment with the Ficto content: create a new project and pick the **Ficto multisite** template from the sample project gallery. It provides the content types, taxonomies and items the app expects.
 
-### Set up the Ficto environment
-
-In Kontent.ai, create a new project and pick the **Ficto multisite** template from the sample project gallery. That populates the environment with the content types, taxonomy groups, and items this app expects (WebsiteRoot, Page, Article, Product, Solution, NavigationItem, etc.). Everything in the sample UI — the three subsites, navigation, articles, products — is driven from that content.
-
-### Installation
-
-1. Clone this repository:
+**Run it**
 
 ```bash
 git clone https://github.com/kontent-ai/sample-app-net-mvc.git
 cd sample-app-net-mvc
+dotnet dev-certs https --trust   # one-time, per machine
+dotnet run
 ```
 
-2. Restore .NET dependencies:
+Set `DeliveryOptions:EnvironmentId` in `appsettings.json` to your environment's ID (**Environment settings → General**) — it is the only required setting. The app is served at `https://localhost:7108` (HTTP on `:5107` redirects to HTTPS).
 
-```bash
-dotnet restore
-```
+To switch subsites locally, append `?collection=ficto_imaging`, `?collection=ficto_healthtech` or `?collection=ficto_surgical`; the choice persists in a cookie. See [Multisite routing](docs/multisite.md).
 
-### Configuration & secrets
+## Configuration
 
-Set your environment ID in `appsettings.json`:
-
-- `DeliveryOptions:EnvironmentId` — the environment this app reads from.
-
-> [!NOTE]
-> You can find the environment ID under **Environment settings → General**.
-
-> [!NOTE]
-> You can manage preview and secure access API keys under **Project settings → API keys → Delivery API Keys**.
-
-> [!NOTE]
-> You can manage webhooks under **Environment settings → Webhooks**.
-
-Everything else is optional, but recommended for the feature it enables. Store secrets via user-secrets rather than in `appsettings.json` so they never get committed:
+Everything except the environment ID is optional and enables one feature. Keep secrets out of `appsettings.json`:
 
 ```bash
 dotnet user-secrets init
@@ -65,346 +36,88 @@ dotnet user-secrets set "PreviewOptions:Secret"              "<preview-shared-se
 dotnet user-secrets set "WebhookOptions:Secret"              "<webhook-signing-secret>"
 ```
 
-| Setting | Required for | Notes |
+For non-secret local overrides, use `appsettings.Development.json` — it is gitignored and loaded automatically by `dotnet run`. For deployed environments, use environment variables or a secrets manager.
+
+| Setting | Enables | Notes |
 |---|---|---|
-| `DeliveryOptions:EnvironmentId` | Any content read | The only hard requirement. |
-| `DeliveryOptions:PreviewApiKey` | Preview mode | Without it, preview requests silently fall back to production with a warning. |
-| `DeliveryOptions:SecureAccessApiKey` | Secure Access | Only needed if the environment has Secure Access enabled. |
-| `PreviewOptions:Secret` | Preview auto-enable | Ships as `mySecret` so preview URLs work out-of-the-box; override for anything reachable. An empty value logs a warning and admits any non-empty `?secret=`. |
-| `WebhookOptions:Secret` | Webhook-driven cache invalidation | HMAC secret; requests with a missing or mismatching `X-Kontent-ai-Signature` (or legacy `X-KC-Signature`) are rejected by `UseWebhookSignatureValidator`. Without it the app still starts, but `/webhooks/*` answers `404` and a warning is logged &mdash; the validator itself refuses to run with an empty secret. |
+| `DeliveryOptions:EnvironmentId` | Any content read | Required. |
+| `DeliveryOptions:PreviewApiKey` | [Preview mode](docs/preview.md) | From **Project settings → API keys**. Without it the preview client is not registered and preview requests fall back to production content with a warning. |
+| `DeliveryOptions:SecureAccessApiKey` | Secure Access | Only if the environment has Secure Access enabled. |
+| `DeliveryOptions:DefaultRenditionPreset` | Image renditions | Ships as `"default"`; applied by the SDK to every asset URL. |
+| `PreviewOptions:Secret` | Turning preview on | Ships as `mySecret` so preview URLs work out of the box; override for anything reachable. |
+| `WebhookOptions:Secret` | [Webhook cache invalidation](docs/caching-and-webhooks.md) | Signing secret from **Environment settings → Webhooks**. Without it the app still starts, but `/webhooks/*` answers `404`. |
+| `SiteOptions:Spaces` | [Multisite routing](docs/multisite.md) | Space/collection codenames; the first is the default. Defaults to the three Ficto spaces. |
+| `SiteOptions:CacheExpirationSeconds` | Cache lifetime | Default `60`. Raise it once webhooks are wired up. |
+| `SiteOptions:RouteTemplates` | URL patterns | See [URLs](#urls-and-routing). **Merges** with the defaults: `{ "article": "/blog/{slug}" }` overrides only `article`. |
+| `ImageTransformationOptions:ResponsiveWidths` | `<img-asset>` `srcset` | The width ladder used by the tag helper. |
 
-user-secrets values are merged into configuration at runtime and are scoped to your local user profile.
-
-> [!CAUTION]
-> Storing keys directly in `appsettings.json` is convenient but risks accidental commit. Prefer user-secrets (above) for local dev and environment variables / Key Vault / a secrets manager for deployed environments.
-
-If you'd rather keep local overrides in a file, drop them in `appsettings.Development.json` &mdash; it is gitignored and loaded automatically when `ASPNETCORE_ENVIRONMENT=Development` (the default for `dotnet run`). Values in it override `appsettings.json` without touching the committed file.
-
-### Site options
-
-The `SiteOptions` section (`appsettings.json`, ships empty) overrides the defaults defined on `Services/Content/SiteOptions.cs`. The section is bound once via `AddOptions<SiteOptions>()` in `Program.cs` and validated on startup. All keys are optional &mdash; omit them and the record's property initializers apply.
-
-| Key | Default | Override semantics |
-|---|---|---|
-| `CacheExpirationSeconds` | `60` | Replaces the scalar. Sets the production Delivery client's `DefaultExpiration`; raise it once webhooks are wired to avoid unnecessary re-fetches. |
-| `RouteTemplates` | `{ page: "/{slug}", article: "/articles/{slug}", product: "/products/{slug}", solution: "/solutions/{slug}" }` | **Merges** with the defaults. Specifying `"RouteTemplates": { "article": "/blog/{slug}" }` overrides just `article`; the other three keep their defaults. |
-
-Example &mdash; custom article URLs and a longer cache window:
-
-```jsonc
-"SiteOptions": {
-  "CacheExpirationSeconds": 300,
-  "RouteTemplates": {
-    "article": "/blog/{slug}"
-  }
-}
-```
-
-### Build and run
-
-Trust the ASP.NET Core dev certificate (one-time, per machine) so HTTPS works without browser warnings:
-
-```bash
-dotnet dev-certs https --trust
-```
-
-Build and run:
-
-```bash
-dotnet build
-dotnet run
-```
-
-The app is served at `https://localhost:7108` (HTTP on `:5107` redirects to HTTPS).
+The `SiteOptions` section ships empty; defaults live on `Services/Content/SiteOptions.cs` and are validated on startup.
 
 > [!NOTE]
-> Before deploying anywhere reachable, constrain `AllowedHosts` in `appsettings.json` to your expected hostname(s). The shipped `"*"` default is intentionally permissive for local development only.
+> Before deploying anywhere reachable, constrain `AllowedHosts` (ships as `"*"`), override `PreviewOptions:Secret`, and read [Gating preview in production](docs/preview.md#gating-preview-in-production).
 
-#### Switching between spaces in dev
+## How the app is built
 
-The Ficto sample is a multisite setup with three spaces (`ficto_imaging`, `ficto_healthtech`, `ficto_surgical`). In production each space is reached via its own subdomain; in local dev, use the `?collection=` query parameter instead — it's recognised by `SpaceContextMiddleware` and persisted in the `ficto_space` cookie for subsequent navigation:
+Each entry names the file to start reading from.
 
-```
-https://localhost:7108/?collection=ficto_imaging
-https://localhost:7108/?collection=ficto_surgical
-```
+### Content access
 
-See [Configuring the Kontent.ai preview URL](#configuring-the-kontentai-preview-url) for how the same `?collection=` parameter is used to target preview iframes at a specific subsite.
-
-> [!NOTE]
-> `SpaceContextMiddleware` also resolves the space from the request's subdomain, so the same subsites are reachable at `http://ficto-imaging.localhost:5107`, `http://ficto-healthtech.localhost:5107`, and `http://ficto-surgical.localhost:5107` (hyphens in the subdomain become underscores before matching the collection codename). Most modern operating systems resolve `*.localhost` to the loopback address automatically per RFC 6761; on older Windows setups you may need to add hosts-file entries.
->
-> HTTPS is **not** available on these URLs — the ASP.NET Core dev cert is issued for `localhost` only, not `*.localhost`, so browsers reject HTTPS requests to the subdomain. For the same reason they can't be used as Kontent.ai preview URLs (the preview iframe requires HTTPS), which is why the `?collection=` query parameter is the recommended approach for local development and the only one Kontent.ai supports in preview URLs.
-
-
-
-<!-- USAGE EXAMPLES -->
-## Usage
-
-The app is a content-rendered website for the fictional "Ficto" brand — three subsites sharing a common backbone. It exists as a learning reference for integrating Kontent.ai with ASP.NET Core MVC.
-
-### Multisite routing
-
-`SpaceContextMiddleware` resolves the active space for each request in this priority order:
-
-1. **Subdomain** — `ficto-imaging.example.com` → `ficto_imaging` (hyphens become underscores; the `preview.` prefix is stripped before resolution).
-2. **Query string** — `?collection=ficto_imaging`, which also persists to the `ficto_space` cookie.
-3. **Cookie** — `ficto_space` from a prior selection.
-4. **Default** — the first entry in `SiteOptions:Spaces`.
-
-Every content query is scoped to the active space's collection plus the shared `"default"` collection, so content that's intentionally cross-brand (e.g. the *About us* page) lives in one place but appears under every subsite.
-
-### Content queries
-
-All Delivery SDK access goes through `IContentService` (`Services/Content/ContentService.cs`). It:
-
-- selects the preview or production named `IDeliveryClient` based on `IPreviewContext.IsPreview`,
-- applies the active-space + `"default"` collection filter to every list and slug query,
-- returns `null` for 404s and maps other failures to a `ContentDeliveryException` so controllers can stay terse.
-
-URL resolution for content-item links (in navigation and rich text) is handled by `IRouteResolver` using the templates in `SiteOptions:RouteTemplates`:
-
-| Content type | URL pattern |
-|---|---|
-| `page` | `/{slug}` |
-| `article` | `/articles/{slug}` |
-| `product` | `/products/{slug}` |
-| `solution` | `/solutions/{slug}` |
-
-Add a template if you introduce a new content type; anything not listed falls back to `/{type}/{slug}`.
+All Delivery SDK access goes through `IContentService` (`Services/Content/ContentService.cs`). It selects the `"production"` or `"preview"` named `IDeliveryClient` based on `IPreviewContext.IsPreview`, scopes every query to the active space's collection plus the shared `"default"` collection, returns `null`/empty for a 404, and maps every other failure to `ContentDeliveryException`. Clients are registered in `Program.cs`; only the production client is cached.
 
 ### Content models
 
-The records in `Generated/Models/` are produced by [`Kontent.Ai.ModelGenerator`](https://github.com/kontent-ai/dotnet/tree/main/src/model-generator), pinned as a local tool in `.config/dotnet-tools.json` (it needs the .NET 10 runtime). Regenerate them after a content model change:
+The records in `Generated/Models/` are produced by [`Kontent.Ai.ModelGenerator`](https://github.com/kontent-ai/dotnet/tree/main/src/model-generator), pinned as a local tool in `.config/dotnet-tools.json`. Regenerate after a content model change:
 
 ```bash
 dotnet tool restore
 dotnet tool run KontentModelGenerator --environmentId "<environment-id>" --namespace "Ficto.Generated.Models" --outputdir "./Generated/Models" --nullability semantic
 ```
 
-The type provider is not generated or hand-written: `Kontent.Ai.Delivery.SourceGeneration` emits it at compile time from the `[ContentTypeCodename]` attributes, and the SDK discovers it at runtime. Generated files are overwritten on regeneration &mdash; extend a model in a separate `partial record` (see `SlugProviders.cs`), never in the generated file.
+No type provider is generated or hand-written: `Kontent.Ai.Delivery.SourceGeneration` emits it at compile time from the `[ContentTypeCodename]` attributes. Generated files are overwritten on regeneration — extend a model in a separate `partial record` (see `SlugProviders.cs`), never in the generated file.
+
+Generated records are never bound to views. Mappers in `Models/Mappers/` turn them into the view models in `Models/`.
+
+### URLs and routing
+
+`IRouteResolver` (`Services/Routing/RouteResolver.cs`) resolves content-item links in navigation and rich text from `SiteOptions:RouteTemplates`:
+
+| Content type | Default URL pattern |
+|---|---|
+| `page` | `/{slug}` |
+| `article` | `/articles/{slug}` |
+| `product` | `/products/{slug}` |
+| `solution` | `/solutions/{slug}` |
+
+Add a template when you introduce a routable content type; anything unlisted falls back to `/{type}/{slug}`. `SpaceContextMiddleware` resolves the active subsite from subdomain, query string or cookie — see [Multisite routing](docs/multisite.md).
 
 ### Rich text
 
-Rich-text fields reach Razor as `IRichTextContent` on the view models and render via the `Kontent.Ai.AspNetCore` package's `<rich-text content="@Model.Content" />` tag helper — see `Views/Shared/_ContentChunk.cshtml` for a minimal example. The tag helper resolves its HTML through whatever `IHtmlResolver` is registered in DI.
+Rich-text elements reach Razor as `IRichTextContent` and render through the `<rich-text content="@Model.Content" />` tag helper (minimal example: `Views/Shared/_ContentChunk.cshtml`). `RichTextResolver` (`Services/Content/`) builds the single `IHtmlResolver` behind it: inline Fact / Action / Callout components get their own templates, content-item links go through `IRouteResolver`, and in-document anchors become `#slug` deep links.
 
-`RichTextResolver` (in `Services/Content/`) builds that single resolver. Inline linked items (Fact, Action, Callout) render through component-specific templates; links to other items resolve through `IRouteResolver` so `<a href>` values always match the routing table above. Custom anchor handling turns in-document references into deep-link `#slug` targets so table-of-contents links work.
+### Listings, paging and taxonomies
 
-### Paging, filtering, and taxonomies
+Article and product listings page with `Skip` / `Limit` / `WithTotalCount` and return a `PagedResult<T>`, so the view renders "Showing N–M of TOTAL" without a count query. Products also filter by the `product_category` taxonomy via `ContainsAny`. List queries use `.WithElements(...)` to drop what a card never renders (the article body, product SEO metadata); the `*BySlugAsync` detail queries fetch everything.
 
-Listing pages (Articles, Products) paginate through the SDK's `Skip` / `Limit` / `WithTotalCount` and return a `PagedResult<T>` so the view can render "Showing N–M of TOTAL" without a second count query. Products filter additionally by taxonomy — category codenames from the query string are passed into `.Where(i => i.Element("category").ContainsAny(...))` against the `product_category` taxonomy group.
+### Images
 
-List queries also apply **element projection** via `.WithElements(...)` to trim the payload to just the fields the card needs. `GetArticlesAsync` drops the `content` rich-text body (the heaviest field) and `GetProductsAsync` drops the SEO metadata elements — the detail queries (`*BySlugAsync`) keep the full element set for the full-page view.
-
-### Images and asset renditions
-
-Asset-bearing view models expose `IAsset?` directly; mappers pass SDK values through without any intermediate projection. Views render them with the `Kontent.Ai.AspNetCore` package's `<img-asset>` tag helper, which emits `srcset`/`sizes` using the width ladder from `ImageTransformationOptions:ResponsiveWidths` in `appsettings.json`. The few CSS `background-image` sites that can't use a tag helper (hero slides in `_VisualContainerHeroUnit.cshtml`, the article/solution detail hero styles) build URLs directly via `new ImageUrlBuilder(asset.Url).WithWidth(...).Url`.
-
-Kontent.ai's rendition presets let editors define image variants once in the environment, and the SDK applies them automatically. The sample uses a single SDK-level setting:
-
-- **`DeliveryOptions:DefaultRenditionPreset`** in `appsettings.json` (set to `"default"`) — every `IAsset.Url` emitted by the SDK already contains the rendition transformation query, so the `<img-asset>` tag helper's generated URLs inherit the rendition crop for free.
+View models expose `IAsset?` directly and views render it with the `<img-asset>` tag helper, which emits `srcset`/`sizes` from `ImageTransformationOptions:ResponsiveWidths`. Because `DeliveryOptions:DefaultRenditionPreset` is set, every asset URL already carries the editor-defined rendition. CSS `background-image` sites that cannot use a tag helper (e.g. `_VisualContainerHeroUnit.cshtml`) build URLs with `ImageUrlBuilder`.
 
 ### Navigation
 
-The header menu is driven from a `WebsiteRoot` item in the active space. `NavigationViewComponent` fetches it via `IContentService.GetNavigationAsync()`, which uses `GetItem<WebsiteRoot>(spaceCodename)` with `Depth(3)` — enough to reach the top-level container, its nav items, and any dropdown subitems.
+`NavigationViewComponent` renders the header from the active space's `WebsiteRoot` item, fetched with `Depth(3)` — enough for the container, its items and one level of dropdown.
 
+### Preview and Smart Link
 
+`?secret=<PreviewOptions:Secret>` issues a signed cookie that switches reads to the uncached preview client; in preview, the Smart Link SDK is loaded and views carry the `data-kontent-*` attributes for click-to-edit. Setup of the Kontent.ai preview URLs, production gating and how to decorate a new content type: [Preview mode and Smart Link](docs/preview.md).
 
-## Preview mode
+### Caching and webhooks
 
-Preview mode switches the active `IDeliveryClient` to the preview-keyed instance so editors see unpublished drafts. A single query parameter &mdash; `?secret=<PreviewOptions:Secret>` &mdash; is what flips it on. The sample ships with `PreviewOptions:Secret = "mySecret"` so everything works out-of-the-box; override it in user-secrets for anything reachable.
+`/webhooks/kontent` verifies the Kontent.ai signature and invalidates exactly the cached responses a change affects, with a time-based expiry as the safety net. Registering the webhook, what each notification evicts and the endpoint's retry semantics: [Caching and webhook-driven invalidation](docs/caching-and-webhooks.md).
 
-### How it works
-
-`SpaceContextMiddleware` runs on every request. If the request carries `?secret=` and the value matches `PreviewOptions:Secret` (compared with `CryptographicOperations.FixedTimeEquals`), the middleware:
-
-1. Issues a signed `ficto_preview` cookie via `IPreviewTokenProtector` (HttpOnly, SameSite=None, Secure, 1-day expiry &mdash; required for cross-site iframe use from Kontent.ai).
-2. 302-redirects to the same URL with `?secret=` stripped, so the token never leaks into rendered HTML or the editor's URL bar.
-
-On subsequent requests the valid cookie alone keeps `IPreviewContext.IsPreview` on, `ContentService` routes reads through the `"preview"` named Delivery client (from `DeliveryOptions:PreviewApiKey`), and the green banner shows at the top of every page. If the preview client isn't configured, the app logs a warning and silently serves production content &mdash; drafts just won't appear, no hard failure.
-
-To exit preview, click the banner's **Disable** link (`GET /preview/disable`), which clears the cookie.
-
-### Configuring the Kontent.ai preview URL
-
-Point Kontent.ai at your local app so its live-preview iframe loads the rendered pages.
-
-1. In Kontent.ai, open **Environment Settings → Preview URLs**.
-2. On the **Space domains** tab, set the domain for every space (`ficto_imaging`, `ficto_healthtech`, `ficto_surgical`) to:
-
-   ```
-   localhost:7108
-   ```
-
-   (Adjust the port if you've customised `applicationUrl` — see [Port overrides](#port-overrides) below.)
-
-3. Switch to the **Preview URLs for content types** tab and configure the template for each content type the app renders:
-
-   | Content type | Preview URL template |
-   |---|---|
-   | `website_root` | `https://{Space}?collection={Collection}&secret=mySecret` |
-   | `page` | `https://{Space}/{URLslug}?collection={Collection}&secret=mySecret` |
-   | `article` | `https://{Space}/articles/{URLslug}?collection={Collection}&secret=mySecret` |
-   | `solution` | `https://{Space}/solutions/{URLslug}?collection={Collection}&secret=mySecret` |
-   | `product` | `https://{Space}/products/{URLslug}?collection={Collection}&secret=mySecret` |
-
-   `{Space}`, `{Collection}`, and `{URLslug}` are Kontent.ai macros &mdash; Kontent.ai expands them per item / collection at preview time. The `secret=mySecret` value must match `PreviewOptions:Secret`; override it in user-secrets and update the templates accordingly before using a shared environment.
-
-Once the iframe loads any of these URLs, the middleware sets the cookie, strips the secret from the URL, and subsequent clicks inside the iframe stay in preview mode via the `SameSite=None; Secure` cookie.
-
-#### Port overrides
-
-The `:7108` / `:5107` pair is just the default in `Properties/launchSettings.json`. Each URL in `applicationUrl` declares its own scheme explicitly &mdash; the port isn't bound to HTTP or HTTPS by position:
-
-```json
-"applicationUrl": "https://localhost:7108;http://localhost:5107"
-```
-
-Change either port freely (or swap in different ones). The ASP.NET Core dev cert is bound to the hostname `localhost`, not to a specific port, so HTTPS keeps working on whatever port you pick. Update the **Space domains** in Kontent.ai to match whichever HTTPS port you've configured &mdash; the iframe must load over HTTPS because Kontent.ai itself is served over HTTPS.
-
-### ⚠ Gating preview in production
-
-A shared URL secret is fine for a sample app &mdash; it is **not** a substitute for real authorization. Anyone who learns the secret sees drafts. For any reachable deployment, put a real auth boundary in front of preview requests using one of these idiomatic ASP.NET patterns:
-
-1. **Standard ASP.NET authentication middleware** &mdash; configure `AddAuthentication` / `AddAuthorization` with your IdP (OIDC, Entra ID, cookie auth, etc.) and short-circuit unauthenticated preview requests before `SpaceContextMiddleware` runs. For example:
-
-   ```csharp
-   app.Use(async (ctx, next) =>
-   {
-       var entering = ctx.Request.Query.ContainsKey("secret");
-       var inPreview = ctx.Request.Cookies.ContainsKey(PreviewController.CookieName);
-       if ((entering || inPreview) && !(ctx.User.Identity?.IsAuthenticated ?? false))
-       {
-           await ctx.ChallengeAsync();
-           return;
-       }
-       await next();
-   });
-   ```
-
-2. **Edge rules** &mdash; Cloudflare Access, Azure Front Door rules, AWS Cognito, or plain HTTP basic auth at a reverse proxy can all gate preview requests before they ever hit the app. Works well when preview is exposed on a dedicated hostname (e.g. `preview.ficto.example.com`).
-
-Layer either approach on top of the `?secret=` mechanism. The secret then serves as the "turn preview display on" toggle; the auth boundary decides who's allowed to flip it.
-
-### Why the cookie is signed
-
-The `ficto_preview` cookie's value is opaque ciphertext protected by `IDataProtectionProvider`. Without signing, a visitor could type `ficto_preview=enabled` in devtools and bypass the secret check entirely; with signing, a forged value fails `Unprotect` and the middleware ignores it. The payload itself is a constant &mdash; the cookie says "this browser has presented a valid secret," nothing more.
-
-## Smart Link (click-to-edit overlays)
-
-The app integrates the [Kontent.ai Smart Link SDK](https://github.com/kontent-ai/smart-link) so editors in preview mode can click on one of the decorated elements and jump straight to editing the content in question.
-
-### How it's wired
-
-- **Script include** — `_Layout.cshtml` renders `Views/Shared/_SmartLinkScript.cshtml` inside `<head>` when `IPreviewContext.IsPreview` is true, pulling `kontent-smart-link@5` from the jsDelivr CDN and calling `initializeOnLoad()`. Production pages never load the SDK.
-- **Environment + language attributes** — `_Layout.cshtml` puts `data-kontent-environment-id` and `data-kontent-language-codename` on `<body>` so the SDK can read them from any descendant. The environment ID comes from `DeliveryOptions:EnvironmentId`; language is hard-coded to `default` (the Ficto sample is single-language).
-- **Item ID in view models** — every view model that maps a content item exposes a `Guid? ItemId` property populated from the Delivery SDK's `IContentItem<T>.System.Id`. Views emit it as `data-kontent-item-id="@Model.ItemId"`; Razor's conditional-attribute rendering omits the attribute entirely when `ItemId` is `null`.
-- **Element codenames in views** — views decorate field-rendering tags with `data-kontent-element-codename="<codename>"` using the element codenames from the generated models (`Generated/Models/*.cs`, e.g. `product_base__name`, `title`, `reference__label`).
-- **Rich-text inline components** — `RichTextResolver` emits `data-kontent-component-id` on the root of each inline Fact / Action / Callout template so editors can click into components embedded inside a rich-text field. These attributes are harmless in production (the SDK never loads) so the resolver stays a pure singleton with no preview-state dependency.
-
-Attribute hierarchy matches the SDK's contract:
-
-```
-<body data-kontent-environment-id="…" data-kontent-language-codename="default">
-  …
-  <section data-kontent-item-id="…">
-    <h1 data-kontent-element-codename="title">…</h1>
-    <img data-kontent-element-codename="main_image" … />
-  </section>
-  …
-</body>
-```
-
-### Activating the overlays
-
-- **Inside Kontent.ai live preview** — when the app is loaded in Kontent.ai's preview iframe, the SDK auto-activates via iframe messaging. Nothing to do beyond a correctly configured preview URL (see [Configuring the Kontent.ai preview URL](#configuring-the-kontentai-preview-url)).
-- **Standalone browser tab** — after enabling preview, append `?ksl-enabled` to any URL to activate overlays outside the iframe. Useful for debugging since browser devtools are fully accessible.
-
-### Extending the decoration
-
-To add Smart Link support to a new content type:
-
-1. Add a `Guid? ItemId { get; init; }` property to the view model.
-2. Change the mapper's `TSource` from `T` (bare elements) to `IContentItem<T>` (wrapper), read data via `source.Elements`, and set `ItemId = source.System.Id`.
-3. Update call sites to pass the wrapper instead of `.Elements`.
-4. In the view, wrap the item's outer container with `data-kontent-item-id="@Model.ItemId"` and decorate each field-rendering tag with `data-kontent-element-codename="<element codename>"` (copy codenames from `Generated/Models/<Type>.cs`'s `[JsonPropertyName]` attributes).
-
-## Webhook-driven cache invalidation
-
-The app caches Delivery API responses via `Kontent.Ai.Delivery.Caching` (FusionCache backend) on the **production** client only &mdash; the preview client is deliberately uncached so editors see changes immediately. Every cached entry also has a time-based expiry that acts as a safety net in case a webhook is missed or not configured. The default is **60 seconds**, controlled by `SiteOptions:CacheExpirationSeconds` in `appsettings.json`; raise it once webhooks are wired up to keep content fresh without re-fetching on every request.
-
-FusionCache logs a `call` and a `return` line at `Information` for every cache operation, and a single page fans out into dozens of cached lookups, so `appsettings.json` raises the `ZiggyCreatures.Caching.Fusion` category to `Warning`. Fail-safe activations and factory or distributed-cache errors are logged at `Warning` and still show. To watch the cache work, set `Logging:LogLevel:ZiggyCreatures.Caching.Fusion` back to `Information` (or `Debug`) &mdash; for example in `appsettings.Development.json`.
-
-The `/webhooks/kontent` endpoint receives Kontent.ai webhook notifications and invalidates the corresponding cache dependency keys for precise eviction on top of that time-based baseline. Signature validation happens upstream in `UseWebhookSignatureValidator` (from `Kontent.Ai.AspNetCore`), which verifies the `X-Kontent-ai-Signature` (and legacy `X-KC-Signature`) HMAC against `WebhookOptions:Secret` before the controller ever sees the request.
-
-### Registering the webhook
-
-Kontent.ai dispatches webhooks from the public internet, so it can't POST directly to `localhost`. For local development, expose the app through a tunnel — [ngrok](https://ngrok.com/), [Cloudflare Tunnel](https://developers.cloudflare.com/cloudflare-one/connections/connect-networks/), or equivalent — and use the tunnel's public HTTPS URL when registering the webhook:
-
-```bash
-ngrok http https://localhost:7108
-# → forwarding https://<random>.ngrok-free.app → https://localhost:7108
-```
-
-Then, in Kontent.ai under **Environment settings → Webhooks**, create a webhook pointing at `https://<random>.ngrok-free.app/webhooks/kontent`. Copy the signing key Kontent.ai generates for the webhook into `WebhookOptions:Secret` (via user-secrets) so signature validation succeeds. For deployed environments, point the webhook at your public domain directly — no tunnel needed.
-
-### How the cascade works
-
-The SDK does not traverse a dependency graph at invalidation time. Instead, every cached response is **tagged at write time** with a fan-out set of keys — for an item or item-list response that includes the response item codenames, every linked/modular-content item codename, every referenced asset id, every referenced taxonomy group codename, and the content type codename of every primary and modular-content item. Invalidating a single tag (e.g. `item_homepage`, `type_article`, `taxonomy_personas`) removes every cached entry that was tagged with it.
-
-The synthetic listing-scope keys (`scope_items_list`, `scope_types_list`, `scope_taxonomies_list`) are the safety net for **list-membership changes** — events where a new item should now appear in a previously cached filter that was never tagged with the new item's codename.
-
-### Invalidation matrix
-
-The controller binds the payload to `WebhookNotification` and hands the batch to `IDeliveryCacheManager.InvalidateAsync(notifications, client)` &mdash; both from `Kontent.Ai.AspNetCore` &mdash; so the keys are composed with the SDK's own `DeliveryCacheDependencies` helpers rather than hand-written strings. Before that it filters the batch:
-
-- notifications for a different `environment_id` than the production client's are dropped (dependency keys carry no environment);
-- `content_item` notifications are only acted on when `delivery_slot == "published"`, because the preview client is not cached. Assets, content types, taxonomies and languages are shared between the slots and always count.
-
-| `object_type` | Keys invalidated | Why |
-|---|---|---|
-| `content_item` | `item_<codename>` + `scope_items_list` | Evicts every response tagged with the item; the scope key covers listings the item should newly appear in (first publish, codename or collection change). |
-| `asset` | `asset_<id>` + `item_<codename>` of every item using the asset | `asset_<id>` only reaches **rich-text** usages (inline images, asset links). An asset element carries just the file URL, so items holding the asset that way are resolved through the SDK's used-in lookup and invalidated by item key &mdash; which is why the Delivery client is passed in. |
-| `content_type` | `type_<codename>` + `scope_types_list` + `scope_items_list` | `type_<codename>` evicts the type definition **and** every cached item / item-list whose payload contains an item of that type. The items scope covers empty or projected listings that carry no type tag. |
-| `taxonomy` | `taxonomy_<group_codename>` + `scope_taxonomies_list` + `scope_items_list` | For term events the group comes from `data.system.taxonomy_group`, for group events from `data.system.codename`. Every item using a term in the group is tagged with the group codename. |
-| `language` | **Full purge** via `IDeliveryCachePurger.PurgeAsync()` | No language-scope key exists; languages affect every variant of every cached entry. A single language event turns the whole batch into a purge. |
-
-Unknown `object_type` values map to no keys and are ignored.
-
-The endpoint answers `204 No Content` once the invalidation completed. `InvalidateAsync` and `PurgeAsync` return `false` when an invalidation could not be completed; the endpoint then answers `503`, and a failed asset usage lookup (`DeliveryRequestException`) propagates as a `500`. The exception is a lookup that answers `404`: a deleted asset has no usages left to resolve and no retry would change that, so the endpoint falls back to a full purge instead. Kontent.ai retries any non-`2xx` response with backoff, which is exactly the retry a failed invalidation needs. A payload missing one of the documented members fails model binding with a `400`.
-
-One limitation: a rename notification carries only the **new** codename, so a response cached under the old key lives until it expires &mdash; another reason to keep `SiteOptions:CacheExpirationSeconds` finite.
-
-### Webhook payload reference
-
-See [Webhooks reference](https://kontent.ai/learn/docs/webhooks/webhooks/net) for the canonical payload structure; `Kontent.Ai.AspNetCore.Webhooks.Models` mirrors it, with `WebhookObjectTypes`, `WebhookActions` and `WebhookDeliverySlots` holding the documented values. Codenames are read from `notifications[].data.system.codename`; asset ids from `notifications[].data.system.id`; taxonomy term events read the parent group from `notifications[].data.system.taxonomy_group`.
-
-
-
-<!-- CONTRIBUTING -->
 ## Contributing
 
-For Contributing please see  <a href="./CONTRIBUTING.md">`CONTRIBUTING.md`</a> for more information.
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md). Conventions for working in this codebase — for people and coding agents alike — are in [`AGENTS.md`](./AGENTS.md).
 
-
-
-<!-- LICENSE -->
 ## License
 
-Distributed under the MIT License. See [`LICENSE.md`](./LICENSE.md) for more information.
-
-
-<!-- MARKDOWN LINKS & IMAGES -->
-<!-- https://github.com/kontent-ai/Home/wiki/Checklist-for-publishing-a-new-OS-project#badges-->
-[contributors-shield]: https://img.shields.io/github/contributors/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
-[contributors-url]: https://github.com/kontent-ai/sample-app-net-mvc/graphs/contributors
-[forks-shield]: https://img.shields.io/github/forks/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
-[forks-url]: https://github.com/kontent-ai/sample-app-net-mvc/network/members
-[stars-shield]: https://img.shields.io/github/stars/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
-[stars-url]: https://github.com/kontent-ai/sample-app-net-mvc/stargazers
-[issues-shield]: https://img.shields.io/github/issues/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
-[issues-url]:https://github.com/kontent-ai/sample-app-net-mvc/issues
-[license-shield]: https://img.shields.io/github/license/kontent-ai/sample-app-net-mvc.svg?style=for-the-badge
-[license-url]:https://github.com/kontent-ai/sample-app-net-mvc/blob/main/LICENSE.md
-[discussion-shield]: https://img.shields.io/discord/821885171984891914?color=%237289DA&label=Kontent%2Eai%20Discord&logo=discord&style=for-the-badge
-[discussion-url]: https://discord.com/invite/SKCxwPtevJ
+Distributed under the MIT License. See [`LICENSE.md`](./LICENSE.md).
