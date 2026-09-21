@@ -58,29 +58,29 @@ services.AddSingleton<IRouteResolver, RouteResolver>();
 
 // Kontent.ai Delivery clients — production uses published content, preview uses draft content.
 // Both share the same environment ID and endpoint config from DeliveryOptions.
-services.AddDeliveryClient("production", options =>
+// A client's cache is configured on the same builder that registers the client.
+services.AddDeliveryClient("production", delivery =>
 {
-    configuration.GetSection("DeliveryOptions").Bind(options);
-    options.UsePreviewApi = false;
-});
-services.AddDeliveryMemoryCache("production", (sp, opts) =>
-{
-    var site = sp.GetRequiredService<IOptions<SiteOptions>>().Value;
-    opts.DefaultExpiration = TimeSpan.FromSeconds(site.CacheExpirationSeconds);
-    opts.IsFailSafeEnabled = true;
+    delivery.Options
+        .BindConfiguration(DeliveryOptions.DefaultConfigurationSectionName)
+        .Configure(options => options.UsePreviewApi = false);
+    delivery.UseMemoryCache((sp, cache) =>
+    {
+        var site = sp.GetRequiredService<IOptions<SiteOptions>>().Value;
+        cache.DefaultExpiration = TimeSpan.FromSeconds(site.CacheExpirationSeconds);
+        cache.IsFailSafeEnabled = true;
+    });
 });
 
 // Preview client is only registered when PreviewApiKey is set in appsettings.json.
 // Without it the app still starts; preview URLs fall back to production content with a warning.
-// No cache is registered for the preview client — editors expect to see changes immediately.
+// No cache is attached to the preview client — editors expect to see changes immediately.
 var previewApiKey = configuration["DeliveryOptions:PreviewApiKey"];
 if (!string.IsNullOrWhiteSpace(previewApiKey))
 {
-    services.AddDeliveryClient("preview", options =>
-    {
-        configuration.GetSection("DeliveryOptions").Bind(options);
-        options.UsePreviewApi = true;
-    });
+    services.AddDeliveryClient("preview", delivery => delivery.Options
+        .BindConfiguration(DeliveryOptions.DefaultConfigurationSectionName)
+        .Configure(options => options.UsePreviewApi(options.PreviewApiKey!)));
 }
 
 // Mappers
@@ -126,9 +126,26 @@ app.UseMiddleware<SpaceContextMiddleware>();
 // Verifies the X-Kontent-ai-Signature (and legacy X-KC-Signature) HMAC header on webhook
 // requests before they reach the controller. 401 on mismatch; the controller never sees
 // an unauthenticated request and no longer needs to handle validation or body buffering.
-app.UseWebhookSignatureValidator(
-    ctx => ctx.Request.Path.StartsWithSegments("/webhooks", StringComparison.OrdinalIgnoreCase),
-    configuration.GetSection("WebhookOptions"));
+// The validator refuses to start without WebhookOptions:Secret (an empty key would admit forged
+// requests). Like the preview client, webhooks are optional here: without a secret the app still
+// starts, the endpoint answers 404, and the cache falls back to time-based expiry alone.
+static bool IsWebhookRequest(HttpContext ctx) =>
+    ctx.Request.Path.StartsWithSegments("/webhooks", StringComparison.OrdinalIgnoreCase);
+
+if (!string.IsNullOrWhiteSpace(configuration["WebhookOptions:Secret"]))
+{
+    app.UseWebhookSignatureValidator(IsWebhookRequest);
+}
+else
+{
+    app.Logger.LogWarning(
+        "WebhookOptions:Secret is not configured — the /webhooks endpoints are disabled and cached content is refreshed by expiry only.");
+    app.UseWhen(IsWebhookRequest, branch => branch.Run(ctx =>
+    {
+        ctx.Response.StatusCode = StatusCodes.Status404NotFound;
+        return Task.CompletedTask;
+    }));
+}
 
 app.UseAuthorization();
 
