@@ -333,6 +333,8 @@ To add Smart Link support to a new content type:
 
 The app caches Delivery API responses via `Kontent.Ai.Delivery.Caching` (FusionCache backend) on the **production** client only &mdash; the preview client is deliberately uncached so editors see changes immediately. Every cached entry also has a time-based expiry that acts as a safety net in case a webhook is missed or not configured. The default is **60 seconds**, controlled by `SiteOptions:CacheExpirationSeconds` in `appsettings.json`; raise it once webhooks are wired up to keep content fresh without re-fetching on every request.
 
+FusionCache logs a `call` and a `return` line at `Information` for every cache operation, and a single page fans out into dozens of cached lookups, so `appsettings.json` raises the `ZiggyCreatures.Caching.Fusion` category to `Warning`. Fail-safe activations and factory or distributed-cache errors are logged at `Warning` and still show. To watch the cache work, set `Logging:LogLevel:ZiggyCreatures.Caching.Fusion` back to `Information` (or `Debug`) &mdash; for example in `appsettings.Development.json`.
+
 The `/webhooks/kontent` endpoint receives Kontent.ai webhook notifications and invalidates the corresponding cache dependency keys for precise eviction on top of that time-based baseline. Signature validation happens upstream in `UseWebhookSignatureValidator` (from `Kontent.Ai.AspNetCore`), which verifies the `X-Kontent-ai-Signature` (and legacy `X-KC-Signature`) HMAC against `WebhookOptions:Secret` before the controller ever sees the request.
 
 ### Registering the webhook
