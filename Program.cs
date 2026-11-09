@@ -97,10 +97,10 @@ services.AddScoped<PageMapper>();
 services.AddScoped<ArticleMapper>();
 services.AddScoped<WebsiteRootMapper>();
 
-// Rich-text resolution: a single IHtmlResolver instance, used by the <rich-text> tag helper
-// and by mappers that call .ToHtmlAsync(). Content-item links go through IRouteResolver;
-// Fact/Action/Callout components get inline HTML templates (distinct from their block-level rendering);
-// any other embedded type renders nothing and logs a warning.
+// Rich-text resolution: a single IHtmlResolver instance, used by the <rich-text> tag helper.
+// Content-item links go through IRouteResolver; Fact/Action/Callout components get inline HTML
+// templates (distinct from their block-level rendering); any other embedded type renders nothing
+// and logs one warning per content type.
 services.AddKontentRichText((sp, builder) =>
     RichTextResolver.Configure(
         builder,

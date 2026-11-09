@@ -92,7 +92,7 @@ Add a template when you introduce a routable content type; anything unlisted fal
 
 ### Rich text
 
-Rich-text elements reach Razor as `IRichTextContent` and render through the `<rich-text content="@Model.Content" />` tag helper (minimal example: `Views/Shared/_ContentChunk.cshtml`). `RichTextResolver` (`Services/Content/`) builds the single `IHtmlResolver` behind it: inline Fact / Action / Callout components get their own templates, any other embedded type renders nothing and logs a warning, content-item links go through `IRouteResolver`, and in-document anchors become `#slug` deep links.
+Rich-text elements reach Razor as `IRichTextContent` and render through the `<rich-text content="@Model.Content" />` tag helper (minimal example: `Views/Shared/_ContentChunk.cshtml`). `RichTextResolver` (`Services/Content/`) builds the single `IHtmlResolver` behind it: inline Fact / Action / Callout components get their own templates, any other embedded type renders nothing and logs one warning per content type, content-item links go through `IRouteResolver`, and in-document anchors become `#slug` deep links.
 
 ### Listings, paging and taxonomies
 

@@ -1,3 +1,4 @@
+using System.Collections.Concurrent;
 using System.Text;
 using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
@@ -13,9 +14,10 @@ namespace Ficto.Services.Content;
 
 /// <summary>
 /// Configures the shared <see cref="IHtmlResolverBuilder"/> used by the <c>&lt;rich-text&gt;</c>
-/// tag helper (resolved from DI via <c>AddKontentRichText</c>). The delegates below are pure
-/// functions over their inputs plus the (singleton) <see cref="IRouteResolver"/>, so there's no
-/// per-request state and no dependency on scoped services.
+/// tag helper (resolved from DI via <c>AddKontentRichText</c>). The delegates below depend only on
+/// singletons (the <see cref="IRouteResolver"/> and the logger), so there's no per-request state
+/// and no dependency on scoped services. Their one side effect is the fallback's warning, logged
+/// once per content type.
 ///
 /// The three embedded-content resolvers (Fact, ActionModel, Callout) render inline HTML directly —
 /// inline appearances are a distinct, simpler presentation than the block/card layouts used by
@@ -25,6 +27,43 @@ namespace Ficto.Services.Content;
 public static class RichTextResolver
 {
     public static void Configure(IHtmlResolverBuilder builder, IRouteResolver routes, ILogger logger)
+    {
+        var fallback = CreateFallback(logger);
+
+        // Callout bodies get every resolver except Callout's own, so a callout nested in a callout
+        // reaches the fallback. The SDK hydrates circular linked items into real object cycles, and
+        // a callout that rendered callouts could recurse until the stack overflowed.
+        var calloutBodyResolver = AddSharedResolvers(new HtmlResolverBuilder(), routes, fallback).Build();
+
+        AddSharedResolvers(builder, routes, fallback)
+            .WithContentResolver<Callout>(async content => await RenderCalloutAsync(content, calloutBodyResolver));
+    }
+
+    // Anything else embedded in rich text, such as a content type added in Kontent.ai after this
+    // build, renders nothing for visitors instead of the SDK's diagnostic HTML comment, and logs a
+    // warning so the missing resolver shows up where developers look. Rich text is resolved on every
+    // request, so each content type warns only the first time it is seen.
+    private static Func<IEmbeddedContent, string> CreateFallback(ILogger logger)
+    {
+        var warnedTypes = new ConcurrentDictionary<string, byte>();
+
+        return content =>
+        {
+            if (warnedTypes.TryAdd(content.System.Type, 0))
+            {
+                logger.LogWarning(
+                    "No rich-text resolver for embedded content of type {ContentType} (first seen on {Codename}); items of this type are not rendered.",
+                    content.System.Type, content.System.Codename);
+            }
+
+            return string.Empty;
+        };
+    }
+
+    private static IHtmlResolverBuilder AddSharedResolvers(
+        IHtmlResolverBuilder builder,
+        IRouteResolver routes,
+        Func<IEmbeddedContent, string> fallback)
     {
         builder
             .WithContentItemLinkResolver(async (link, resolveChildren) =>
@@ -57,20 +96,10 @@ public static class RichTextResolver
             });
         }
 
-        builder
+        return builder
             .WithContentResolver<Fact>(content => new ValueTask<string>(RenderFact(content, routes)))
             .WithContentResolver<ActionModel>(content => new ValueTask<string>(RenderAction(content, routes)))
-            .WithContentResolver<Callout>(async content => await RenderCalloutAsync(content))
-            // Anything else embedded in rich text, such as a content type added in Kontent.ai after this
-            // build, renders nothing for visitors instead of the SDK's diagnostic HTML comment, and logs
-            // a warning so the missing resolver shows up where developers look.
-            .WithFallbackContentResolver(content =>
-            {
-                logger.LogWarning(
-                    "No rich-text resolver for embedded content of type {ContentType} ({Codename}); it was not rendered.",
-                    content.System.Type, content.System.Codename);
-                return string.Empty;
-            });
+            .WithFallbackContentResolver(fallback);
     }
 
     // Emitted as a presence-only attribute on inline components so Kontent.ai Smart Link can
@@ -105,13 +134,11 @@ public static class RichTextResolver
         return $"""<a class="rt-action" href="{Enc(routes.ResolveUrl(reference))}"{KontentAttr(source)}>{Enc(action.ReferenceLabel)}</a>""";
     }
 
-    private static async Task<string> RenderCalloutAsync(IContentItem<Callout> source)
+    private static async Task<string> RenderCalloutAsync(IContentItem<Callout> source, IHtmlResolver bodyResolver)
     {
         var callout = source.Elements;
         var type = callout.Type.FirstOrDefault()?.Codename ?? "info";
-        // Callout.Content is a RichTextContent element rendered with the SDK's default resolver
-        // chain — callouts hold plain rich text, not further embedded items.
-        var body = await callout.Content.ToHtmlAsync();
+        var body = await callout.Content.ToHtmlAsync(bodyResolver);
         return $"""<aside class="rt-callout rt-callout--{Enc(type)}"{KontentAttr(source)}>{body}</aside>""";
     }
 
