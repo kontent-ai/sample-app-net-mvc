@@ -19,11 +19,12 @@ namespace Ficto.Services.Content;
 ///
 /// The three embedded-content resolvers (Fact, ActionModel, Callout) render inline HTML directly —
 /// inline appearances are a distinct, simpler presentation than the block/card layouts used by
-/// the <c>PageBlockMapperFactory</c> → partial pipeline elsewhere in the app.
+/// the <c>PageBlockMapperFactory</c> → partial pipeline elsewhere in the app. Any other embedded
+/// type falls through to the fallback resolver.
 /// </summary>
 public static class RichTextResolver
 {
-    public static void Configure(IHtmlResolverBuilder builder, IRouteResolver routes)
+    public static void Configure(IHtmlResolverBuilder builder, IRouteResolver routes, ILogger logger)
     {
         builder
             .WithContentItemLinkResolver(async (link, resolveChildren) =>
@@ -59,7 +60,17 @@ public static class RichTextResolver
         builder
             .WithContentResolver<Fact>(content => new ValueTask<string>(RenderFact(content, routes)))
             .WithContentResolver<ActionModel>(content => new ValueTask<string>(RenderAction(content, routes)))
-            .WithContentResolver<Callout>(async content => await RenderCalloutAsync(content));
+            .WithContentResolver<Callout>(async content => await RenderCalloutAsync(content))
+            // Anything else embedded in rich text, such as a content type added in Kontent.ai after this
+            // build, renders nothing for visitors instead of the SDK's diagnostic HTML comment, and logs
+            // a warning so the missing resolver shows up where developers look.
+            .WithFallbackContentResolver(content =>
+            {
+                logger.LogWarning(
+                    "No rich-text resolver for embedded content of type {ContentType} ({Codename}); it was not rendered.",
+                    content.System.Type, content.System.Codename);
+                return string.Empty;
+            });
     }
 
     // Emitted as a presence-only attribute on inline components so Kontent.ai Smart Link can
